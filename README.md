@@ -30,6 +30,51 @@ WeatherGPT is a next-generation weather dashboard and conversational assistant b
 
 ---
 
+## 🔄 System Architecture & Flowchart
+
+```mermaid
+graph TD
+    %% Entities
+    User((User))
+    UI[Frontend: React + Vite + Tailwind]
+    Backend[Backend: Express.js Node Server]
+    
+    %% External APIs
+    OpenMeteo[Open-Meteo APIs: Weather, Geocode, AQI]
+    Windy[Windy.com Radar Embed]
+    Gemini[Google Gemini AI LLM]
+    
+    %% Flow
+    User -->|1. Searches Location| UI
+    UI -->|2. Geocodes City| OpenMeteo
+    OpenMeteo -->|3. Returns Lat/Lng| UI
+    
+    UI -->|4. Fetches Weather & AQI| OpenMeteo
+    OpenMeteo -->|5. Returns Live Data| UI
+    
+    UI -.->|Renders| Backgrounds[Dynamic Atmospheric Backgrounds]
+    UI -.->|Renders| Forecast[7-Day Time-Travel Forecast]
+    UI -.->|Renders| Windy
+    
+    User -->|6. Asks Weather Question| UI
+    UI -->|7. Sends Context + Query| Backend
+    Backend -->|8. Applies Strict Prompting| Gemini
+    Gemini -->|9. Returns Structured JSON| Backend
+    Backend -->|10. Proxies Response| UI
+    
+    UI -.->|Triggers| TTS[Text-to-Speech Engine]
+    UI -.->|Renders| Alerts[Severe Weather Banners]
+
+    %% Styling
+    classDef frontend fill:#38B2AC,stroke:#fff,stroke-width:2px,color:#fff;
+    classDef backend fill:#646CFF,stroke:#fff,stroke-width:2px,color:#fff;
+    classDef api fill:#E8A33D,stroke:#fff,stroke-width:2px,color:#fff;
+    
+    class UI frontend;
+    class Backend backend;
+    class OpenMeteo,Windy,Gemini api;
+```
+
 ## 🔄 Core Workflows
 
 ### 1. Search & Data Ingestion
