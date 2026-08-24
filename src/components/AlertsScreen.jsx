@@ -51,14 +51,16 @@ export default function AlertsScreen() {
       alerts.push({
         id: 'rain',
         title: `Heavy Rain & Flood Risk in ${locName}`,
-        desc: isProb ? `High probability (${maxRain}%) of severe rain.` : `High precipitation (${maxRain}mm) expected. Low-lying areas may face waterlogging. Avoid unnecessary travel.`,
+        desc: isProb ? `High probability (${maxRain}%) of severe rain.` : `High precipitation (${maxRain}mm) expected. Low-lying areas may face waterlogging.`,
+        precaution: `Avoid unnecessary travel. Move livestock to higher ground and secure outdoor equipment.`,
         level: 'Severe'
       });
     } else if (maxRain > cautionThreshold) {
       alerts.push({
         id: 'rain-mod',
         title: `Moderate Rain in ${locName}`,
-        desc: isProb ? `Moderate chance (${maxRain}%) of rain.` : `Steady rainfall expected (${maxRain}mm). Roads may be slippery.`,
+        desc: isProb ? `Moderate chance (${maxRain}%) of rain.` : `Steady rainfall expected (${maxRain}mm).`,
+        precaution: `Roads may be slippery. If spraying crops, consider delaying until the rain clears.`,
         level: 'Caution'
       });
     }
@@ -68,7 +70,8 @@ export default function AlertsScreen() {
       alerts.push({
         id: 'wind',
         title: `High Wind Warning for ${locName}`,
-        desc: `Dangerous wind gusts up to ${weather.windSpeed} km/h detected. Secure loose objects and avoid being near large trees.`,
+        desc: `Dangerous wind gusts up to ${weather.windSpeed} km/h detected.`,
+        precaution: `Secure loose objects, close all windows, and avoid parking or walking under large trees.`,
         level: 'Severe'
       });
     }
@@ -78,7 +81,8 @@ export default function AlertsScreen() {
       alerts.push({
         id: 'vis',
         title: `Poor Visibility in ${locName}`,
-        desc: `Visibility is reduced to ${(weather.visibility/1000).toFixed(1)}km. Drive with caution and use fog lights.`,
+        desc: `Visibility is severely reduced to ${(weather.visibility/1000).toFixed(1)}km.`,
+        precaution: `If driving, maintain a safe distance and use your fog lights or low beams.`,
         level: 'Caution'
       });
     }
@@ -88,7 +92,8 @@ export default function AlertsScreen() {
       alerts.push({
         id: 'uv',
         title: `Extreme UV Index in ${locName}`,
-        desc: `UV Index is dangerously high (${weather.uvIndex}). Avoid direct sun exposure between 10 AM and 4 PM.`,
+        desc: `UV Index is dangerously high at level ${weather.uvIndex}.`,
+        precaution: `Avoid direct sun exposure between 10 AM and 4 PM. Wear protective clothing and stay hydrated.`,
         level: 'Caution'
       });
     }
@@ -98,6 +103,7 @@ export default function AlertsScreen() {
         id: 'all-clear',
         title: `All Clear for ${locName}`,
         desc: `No severe weather alerts are currently active for this region.`,
+        precaution: `Conditions are safe for normal agricultural and travel activities.`,
         level: 'Good'
       });
     }
@@ -135,14 +141,25 @@ export default function AlertsScreen() {
                   alert.level === 'Info' ? 'border-blue-500/30' : 'border-green-500/30'}`}>
                 <div className="flex justify-between items-start mb-3">
                   <h3 className="text-xl font-semibold">{alert.title}</h3>
-                  <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider 
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider shrink-0 ml-4
                     ${alert.level === 'Severe' ? 'bg-red-500/20 text-red-400' : 
                       alert.level === 'Caution' ? 'bg-amber-500/20 text-amber-400' : 
                       alert.level === 'Info' ? 'bg-blue-500/20 text-blue-400' : 'bg-green-500/20 text-green-400'}`}>
                     {alert.level}
                   </span>
                 </div>
-                <p className="text-white/70 leading-relaxed text-sm mb-4">{alert.desc}</p>
+                <p className="text-white/80 leading-relaxed text-[15px] mb-4">{alert.desc}</p>
+                
+                <div className={`mt-4 pt-4 border-t flex items-start gap-3
+                  ${alert.level === 'Severe' ? 'border-red-500/20' : 
+                    alert.level === 'Caution' ? 'border-amber-500/20' : 
+                    alert.level === 'Info' ? 'border-blue-500/20' : 'border-green-500/20'}`}>
+                  <svg className={`shrink-0 w-5 h-5 mt-0.5 ${alert.level === 'Severe' ? 'text-red-400' : alert.level === 'Caution' ? 'text-amber-400' : alert.level === 'Info' ? 'text-blue-400' : 'text-green-400'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                  <div>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-white/50 mb-1">Precaution / Action</h4>
+                    <p className={`font-medium text-sm ${alert.level === 'Severe' ? 'text-red-200' : alert.level === 'Caution' ? 'text-amber-200' : 'text-white/90'}`}>{alert.precaution}</p>
+                  </div>
+                </div>
               </div>
             ))}
           </div>

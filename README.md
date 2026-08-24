@@ -11,7 +11,7 @@ WeatherGPT is a next-generation weather dashboard and conversational assistant b
 *   **Glassmorphism Design**: High-performance, frosted glass UI elements ensure readability while letting the atmospheric backgrounds shine through.
 *   **Time-Travel Forecasting**: The 7-Day forecast cards are fully interactive. Clicking on a future day instantly transitions the entire dashboard (background, temperatures, UV index, precipitation) to reflect that specific day's forecasted conditions.
 
-### 2. Conversational AI Assistant (Powered by Gemini)
+### 2. Conversational AI Assistant (Powered by Groq)
 *   **Natural Language Queries**: Instead of just reading graphs, users can ask questions like *"Is it safe to spray pesticides tomorrow?"* or *"When will the rain stop?"*
 *   **Multilingual Context**: The AI automatically detects the selected language and replies natively in **English, Hindi, Assamese, or Bengali**.
 *   **Actionable Insights**: The AI is prompted to provide short, conversational answers and explicitly flag severe weather conditions with plain-language advisories.
@@ -25,7 +25,7 @@ WeatherGPT is a next-generation weather dashboard and conversational assistant b
 *   **Health Indicators**: Dynamic progress bars and conditional health advisories (Good, Moderate, Unhealthy) adapt instantly to the current AQI levels.
 
 ### 5. Accessibility First (a11y)
-*   **Text-to-Speech (TTS)**: Every AI response can be read aloud with a single click, mapped to local regional accents (e.g., `hi-IN`).
+*   **Voice Input**: Users can ask weather queries using their voice.
 *   **High Contrast & Large Text**: Built-in toggles allow visually impaired users to comfortably read critical weather data.
 
 ---
@@ -40,14 +40,15 @@ graph TD
     Backend[Backend: Express.js Node Server]
     
     %% External APIs
-    OpenMeteo[Open-Meteo APIs: Weather, Geocode, AQI]
+    Nominatim[Nominatim Geocoding API]
+    OpenMeteo[Open-Meteo APIs: Weather, AQI]
     Windy[Windy.com Radar Embed]
-    Gemini[Google Gemini AI LLM]
+    Groq[Groq AI LLM]
     
     %% Flow
     User -->|1. Searches Location| UI
-    UI -->|2. Geocodes City| OpenMeteo
-    OpenMeteo -->|3. Returns Lat/Lng| UI
+    UI -->|2. Geocodes City| Nominatim
+    Nominatim -->|3. Returns Lat/Lng| UI
     
     UI -->|4. Fetches Weather & AQI| OpenMeteo
     OpenMeteo -->|5. Returns Live Data| UI
@@ -58,11 +59,10 @@ graph TD
     
     User -->|6. Asks Weather Question| UI
     UI -->|7. Sends Context + Query| Backend
-    Backend -->|8. Applies Strict Prompting| Gemini
-    Gemini -->|9. Returns Structured JSON| Backend
+    Backend -->|8. Applies Strict Prompting| Groq
+    Groq -->|9. Returns Structured JSON| Backend
     Backend -->|10. Proxies Response| UI
     
-    UI -.->|Triggers| TTS[Text-to-Speech Engine]
     UI -.->|Renders| Alerts[Severe Weather Banners]
 
     %% Styling
@@ -72,14 +72,14 @@ graph TD
     
     class UI frontend;
     class Backend backend;
-    class OpenMeteo,Windy,Gemini api;
+    class Nominatim,OpenMeteo,Windy,Groq api;
 ```
 
 ## 🔄 Core Workflows
 
 ### 1. Search & Data Ingestion
-1.  **User Input**: User searches for a location (e.g., "Guwahati").
-2.  **Geocoding**: The input is passed to the Open-Meteo Geocoding API to retrieve precise Latitude and Longitude coordinates.
+1.  **User Input**: User searches for a location (e.g., "Ladakh").
+2.  **Geocoding**: The input is passed to Open-Meteo or Nominatim (OpenStreetMap) to retrieve precise Latitude and Longitude coordinates.
 3.  **Parallel Fetching**: The app concurrently fetches:
     *   Standard Weather Data (Temp, Wind, Humidity, Hourly/Daily arrays).
     *   Air Quality Data (Live US AQI).
@@ -88,8 +88,8 @@ graph TD
 ### 2. AI Chat Workflow
 1.  **Query Submission**: User types a question in the Chat UI.
 2.  **Context Injection**: The frontend bundles the user's query with the *current live weather data* (Temp, Wind, Conditions) and sends it to the Express backend (`server.js`).
-3.  **Prompt Engineering**: The Express server injects a strict System Prompt, forcing the Gemini LLM to respond in a specific JSON format (`{ answer, followUp, advisory, severity }`).
-4.  **UI Rendering**: The structured JSON is parsed by the frontend, rendering a beautiful conversational bubble, optional severe alert banners, and enabling the Text-to-Speech engine.
+3.  **Prompt Engineering**: The Express server injects a strict System Prompt, forcing the Groq LLM to respond in a specific JSON format (`{ answer, followUp, advisory, severity }`).
+4.  **UI Rendering**: The structured JSON is parsed by the frontend, rendering a beautiful conversational bubble, and optional severe alert banners.
 
 ### 3. Time-Travel Forecast Workflow
 1.  **Selection**: User clicks a future day (e.g., "Thursday") on the 7-Day forecast grid.
@@ -104,8 +104,9 @@ graph TD
 *   **Frontend Framework**: React 18 (Vite)
 *   **Styling**: Tailwind CSS
 *   **State Management**: React Context API + `useReducer`
-*   **Weather APIs**: Open-Meteo (Weather, Geocoding, Air Quality)
-*   **AI Engine**: Google Gemini (via Express.js Proxy)
+*   **Weather APIs**: Open-Meteo (Weather, Air Quality)
+*   **Geocoding**: Nominatim (OpenStreetMap) + Open-Meteo
+*   **AI Engine**: Groq (via Express.js Proxy)
 *   **Radar**: Windy.com Interactive Embed
 
 ## 🚀 Running Locally
@@ -116,9 +117,9 @@ graph TD
    ```
 
 2. **Environment Setup**
-   Create a `.env` file in the root directory and add your Gemini API Key:
+   Create a `.env` file in the root directory and add your Groq API Key:
    ```env
-   GEMINI_API_KEY=your_api_key_here
+   GROQ_API_KEY=your_api_key_here
    ```
 
 3. **Start the Development Servers**

@@ -16,6 +16,7 @@ const initialState = {
   isLargeText: localStorage.getItem('weathergpt-largetext') === 'true',
   isHighContrast: localStorage.getItem('weathergpt-highcontrast') === 'true',
   lastCachedResponse: JSON.parse(localStorage.getItem('weathergpt-cache') || 'null'),
+  savedLocations: JSON.parse(localStorage.getItem('weathergpt-saved-locations') || '[]'), // [{ name, lat, lng }]
 };
 
 function appReducer(state, action) {
@@ -108,6 +109,22 @@ function appReducer(state, action) {
       const newVal = !state.isHighContrast;
       localStorage.setItem('weathergpt-highcontrast', String(newVal));
       return { ...state, isHighContrast: newVal };
+    }
+
+    case 'SAVE_LOCATION': {
+      const loc = action.payload; // { name, lat, lng }
+      // Remove duplicate if exists, then prepend, cap at 5
+      const filtered = state.savedLocations.filter(l => l.name !== loc.name);
+      const updated = [loc, ...filtered].slice(0, 5);
+      localStorage.setItem('weathergpt-saved-locations', JSON.stringify(updated));
+      return { ...state, savedLocations: updated };
+    }
+
+    case 'REMOVE_LOCATION': {
+      const name = action.payload; // location name string
+      const remaining = state.savedLocations.filter(l => l.name !== name);
+      localStorage.setItem('weathergpt-saved-locations', JSON.stringify(remaining));
+      return { ...state, savedLocations: remaining };
     }
 
     default:

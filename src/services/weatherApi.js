@@ -66,7 +66,26 @@ export async function geocodeLocation(name, lang = 'en') {
       };
     }
   } catch (err) {
-    console.error('Geocoding error:', err);
+    console.error('Open-Meteo geocoding error:', err);
+  }
+
+  // If Open-Meteo fails, try Nominatim (OpenStreetMap) which has much better village/district coverage
+  try {
+    const nominatimRes = await fetch(
+      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(name)}&format=json&limit=1&accept-language=${lang}`
+    );
+    const nominatimData = await nominatimRes.json();
+    if (nominatimData && nominatimData.length > 0) {
+      const r = nominatimData[0];
+      return {
+        lat: parseFloat(r.lat),
+        lng: parseFloat(r.lon),
+        name: r.name || r.display_name.split(',')[0],
+        state: '', // Nominatim search results don't neatly split state at this level without extra params, but name is enough
+      };
+    }
+  } catch (err) {
+    console.error('Nominatim geocoding error:', err);
   }
 
   return null; // Location not found
@@ -142,5 +161,26 @@ export async function getWeather(lat, lng) {
   };
 }
 
-export { NER_CITIES };
+/**
+ * Reverse geocode coordinates to a city/town name.
+ */
+export async function reverseGeocode(lat, lng) {
+  try {
+    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10`);
+    if (res.ok) {
+      const data = await res.json();
+      const name = data.address?.city || data.address?.town || data.address?.village || data.address?.county || data.address?.state || "Unknown Location";
+      return {
+        name: name,
+        state: data.address?.state || '',
+        lat: lat,
+        lng: lng
+      };
+    }
+  } catch (err) {
+    console.error('Reverse geocoding error:', err);
+  }
+  return { name: "Current Location", state: "", lat, lng };
+}
 
+export { NER_CITIES };

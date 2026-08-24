@@ -16,8 +16,19 @@ export default function ChatInput() {
   const placeholder = PLACEHOLDERS[state.language] || PLACEHOLDERS.en;
 
   // Handle sending a message
-  const handleSend = async (messageText) => {
-    const text = (messageText || input).trim();
+  const handleSend = async (eOrMessageText) => {
+    let text = input;
+    
+    // If called from form submission, prevent page reload
+    if (eOrMessageText && typeof eOrMessageText.preventDefault === 'function') {
+      eOrMessageText.preventDefault();
+    } 
+    // If called directly with a string (e.g. from suggestions)
+    else if (typeof eOrMessageText === 'string') {
+      text = eOrMessageText;
+    }
+
+    text = text.trim();
     if (!text || state.isLoading) return;
 
     setInput('');

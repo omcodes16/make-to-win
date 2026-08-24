@@ -13,15 +13,6 @@ import MessageList from './MessageList';
 
 export default function ChatScreen() {
   const { state } = useApp();
-  const messagesEndRef = useRef(null);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [state.messages, state.isLoading]);
 
   // Use dynamic theme based on currently known weather condition
   const weather = state.weatherStageData?.weather;
@@ -29,7 +20,7 @@ export default function ChatScreen() {
   const theme = weather && weatherInfo ? getTheme(weather, weatherInfo) : getTheme({ temperature: 20 }, { key: 'partlyCloudy' });
 
   return (
-    <div className="flex flex-col h-screen bg-[#0a0c1a] bg-cover bg-fixed bg-center transition-all duration-1000" style={{ backgroundImage: `url(${theme.bgImage})` }}>
+    <div className="flex flex-col h-screen bg-[#0a0c1a] bg-cover bg-fixed bg-center transition-all duration-1000 overflow-hidden" style={{ backgroundImage: `url(${theme.bgImage})` }}>
       {/* Overlay Gradients */}
       <div className={`fixed inset-0 bg-gradient-to-b ${theme.overlay} backdrop-blur-md pointer-events-none transition-colors duration-1000`}></div>
       <div className={`absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] ${theme.accent} via-transparent to-transparent pointer-events-none z-0 transition-colors duration-1000`}></div>
@@ -37,9 +28,11 @@ export default function ChatScreen() {
       <Header />
       <OfflineBanner />
 
-      {/* Main chat area */}
-      <main className="flex-1 pt-[100px] pb-[100px] relative z-10 w-full max-w-3xl mx-auto px-4 flex flex-col">
-        <MessageList />
+      {/* Main chat area — scrollable, ends above the input */}
+      <main className="flex-1 overflow-y-auto relative z-10 pt-[72px] pb-[140px]">
+        <div className="w-full max-w-3xl mx-auto px-4">
+          <MessageList />
+        </div>
       </main>
 
       {/* Input pinned at bottom */}

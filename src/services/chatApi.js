@@ -1,6 +1,6 @@
 /**
  * Chat API service — sends user message + weather context to the Express proxy,
- * which forwards to Gemini. Returns structured AI response.
+ * which forwards to Groq. Returns structured AI response.
  */
 export async function sendMessage(message, language, weatherData) {
   const res = await fetch('/api/chat', {

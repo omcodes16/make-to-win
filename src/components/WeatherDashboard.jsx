@@ -139,6 +139,27 @@ export default function WeatherDashboard() {
             <div className="flex items-center gap-2 text-white/90 mb-2 font-medium text-lg">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E8A33D" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
               {stageData.locationName} {selectedDay > 0 && <span className="text-white/50 ml-2">({dailyData[selectedDay].day})</span>}
+              <button
+                onClick={() => {
+                  const isSaved = state.savedLocations.some(l => l.name === stageData.locationName);
+                  if (isSaved) {
+                    dispatch({ type: 'REMOVE_LOCATION', payload: stageData.locationName });
+                  } else {
+                    dispatch({ type: 'SAVE_LOCATION', payload: { name: stageData.locationName, lat: stageData.lat, lng: stageData.lng } });
+                  }
+                }}
+                className={`ml-1 w-7 h-7 flex items-center justify-center rounded-full transition-all ${
+                  state.savedLocations.some(l => l.name === stageData.locationName)
+                    ? 'text-amber-400 bg-amber-500/20 border border-amber-500/30 hover:bg-amber-500/30'
+                    : 'text-white/40 bg-white/5 border border-white/10 hover:text-amber-400 hover:bg-amber-500/10'
+                }`}
+                aria-label={state.savedLocations.some(l => l.name === stageData.locationName) ? 'Remove from saved' : 'Save location'}
+                title={state.savedLocations.some(l => l.name === stageData.locationName) ? 'Remove from saved locations' : 'Save this location'}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill={state.savedLocations.some(l => l.name === stageData.locationName) ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                </svg>
+              </button>
             </div>
             <div className="flex items-center gap-4 mb-2">
               <div className="text-[120px] font-medium leading-none tracking-tighter drop-shadow-2xl">{displayTemp}°</div>
