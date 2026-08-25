@@ -114,50 +114,53 @@ export default function AlertsScreen() {
   const liveAlerts = computeAlerts();
 
   return (
-    <div className="min-h-screen bg-[#0a0c1a] text-white overflow-y-auto pb-20 relative font-body bg-cover bg-fixed bg-center transition-all duration-1000" style={{ backgroundImage: `url(${theme.bgImage})` }}>
-      {/* Overlay Gradients - extra dark for alerts */}
-      <div className={`fixed inset-0 bg-gradient-to-b ${theme.overlay} pointer-events-none transition-colors duration-1000 opacity-90`}></div>
-      <div className={`fixed inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] ${theme.accent} via-transparent to-transparent pointer-events-none transition-colors duration-1000`}></div>
+    <div className="min-h-screen bg-[#0a0c1a] text-white overflow-y-auto pb-24 md:pb-20 relative font-body transition-colors duration-1000">
+      {/* Fixed Background Image (Hardware Accelerated) */}
+      <div className="fixed inset-0 z-0 bg-cover bg-center transition-opacity duration-1000" style={{ backgroundImage: `url(${theme.bgImage})` }}></div>
+
+      {/* Overlays */}
+      <div className={`fixed inset-0 z-0 bg-gradient-to-b ${theme.overlay} pointer-events-none transition-colors duration-1000 opacity-90`}></div>
+      <div className={`fixed inset-0 z-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] ${theme.accent} via-transparent to-transparent pointer-events-none transition-colors duration-1000`}></div>
       
       <Header />
 
-      <div className="relative z-10 max-w-[1200px] mx-auto px-6 pt-32 flex flex-col md:flex-row gap-8">
+      <div className="relative z-10 max-w-[1200px] mx-auto px-3 sm:px-6 pt-20 sm:pt-28 md:pt-32 flex flex-col md:flex-row gap-6 sm:gap-8">
         
         {/* Left Column: High Alerts */}
         <div className="flex-1">
-          <div className="flex items-center gap-3 mb-6">
+          <div className="flex items-center gap-3 mb-4 sm:mb-6">
             <span className="relative flex h-4 w-4">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-4 w-4 bg-red-500"></span>
             </span>
-            <h2 className="text-2xl font-bold tracking-wide">Live High Alerts</h2>
+            <h2 className="text-xl sm:text-2xl font-bold tracking-wide">Live High Alerts</h2>
           </div>
 
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-3 sm:gap-4">
             {liveAlerts.map(alert => (
-              <div key={alert.id} className={`bg-white/5 backdrop-blur-xl border rounded-2xl p-6 shadow-xl 
+              <div key={alert.id} className={`bg-white/5 backdrop-blur-xl border rounded-2xl p-4 sm:p-6 shadow-xl 
                 ${alert.level === 'Severe' ? 'border-red-500/50 shadow-[0_0_20px_rgba(239,68,68,0.15)]' : 
                   alert.level === 'Caution' ? 'border-amber-500/50' : 
                   alert.level === 'Info' ? 'border-blue-500/30' : 'border-green-500/30'}`}>
-                <div className="flex justify-between items-start mb-3">
-                  <h3 className="text-xl font-semibold">{alert.title}</h3>
-                  <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider shrink-0 ml-4
+                <div className="flex justify-between items-start mb-2 sm:mb-3 gap-2">
+                  <h3 className="text-base sm:text-xl font-semibold leading-snug">{alert.title}</h3>
+                  <span className={`px-2 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider shrink-0
                     ${alert.level === 'Severe' ? 'bg-red-500/20 text-red-400' : 
                       alert.level === 'Caution' ? 'bg-amber-500/20 text-amber-400' : 
                       alert.level === 'Info' ? 'bg-blue-500/20 text-blue-400' : 'bg-green-500/20 text-green-400'}`}>
                     {alert.level}
                   </span>
                 </div>
-                <p className="text-white/80 leading-relaxed text-[15px] mb-4">{alert.desc}</p>
+                <p className="text-white/80 leading-relaxed text-sm sm:text-[15px] mb-3 sm:mb-4">{alert.desc}</p>
                 
-                <div className={`mt-4 pt-4 border-t flex items-start gap-3
+                <div className={`mt-3 sm:mt-4 pt-3 sm:pt-4 border-t flex items-start gap-2 sm:gap-3
                   ${alert.level === 'Severe' ? 'border-red-500/20' : 
                     alert.level === 'Caution' ? 'border-amber-500/20' : 
                     alert.level === 'Info' ? 'border-blue-500/20' : 'border-green-500/20'}`}>
-                  <svg className={`shrink-0 w-5 h-5 mt-0.5 ${alert.level === 'Severe' ? 'text-red-400' : alert.level === 'Caution' ? 'text-amber-400' : alert.level === 'Info' ? 'text-blue-400' : 'text-green-400'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                  <svg className={`shrink-0 w-4 h-4 sm:w-5 sm:h-5 mt-0.5 ${alert.level === 'Severe' ? 'text-red-400' : alert.level === 'Caution' ? 'text-amber-400' : alert.level === 'Info' ? 'text-blue-400' : 'text-green-400'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
                   <div>
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-white/50 mb-1">Precaution / Action</h4>
-                    <p className={`font-medium text-sm ${alert.level === 'Severe' ? 'text-red-200' : alert.level === 'Caution' ? 'text-amber-200' : 'text-white/90'}`}>{alert.precaution}</p>
+                    <h4 className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-white/50 mb-1">Precaution / Action</h4>
+                    <p className={`font-medium text-xs sm:text-sm ${alert.level === 'Severe' ? 'text-red-200' : alert.level === 'Caution' ? 'text-amber-200' : 'text-white/90'}`}>{alert.precaution}</p>
                   </div>
                 </div>
               </div>
@@ -167,15 +170,15 @@ export default function AlertsScreen() {
 
         {/* Right Column: Local News */}
         <div className="w-full md:w-1/3">
-          <h2 className="text-xl font-bold tracking-wide mb-6">Real-Time India Weather News</h2>
+          <h2 className="text-lg sm:text-xl font-bold tracking-wide mb-4 sm:mb-6">Real-Time India Weather News</h2>
           
-          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-xl flex flex-col gap-6">
+          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-4 sm:p-6 shadow-xl flex flex-col gap-4 sm:gap-6">
             {isLoadingNews ? (
               <div className="text-white/50 text-sm animate-pulse text-center py-4">Fetching live news...</div>
             ) : (
               news.map(item => (
-                <a key={item.id} href={item.link} target="_blank" rel="noreferrer" className="block border-b border-white/10 pb-4 last:border-0 last:pb-0 hover:bg-white/5 rounded-lg -mx-2 px-2 transition-colors">
-                  <h4 className="font-medium text-[15px] mb-2 text-white/90">{item.title}</h4>
+                <a key={item.id} href={item.link} target="_blank" rel="noreferrer" className="block border-b border-white/10 pb-3 sm:pb-4 last:border-0 last:pb-0 hover:bg-white/5 rounded-lg -mx-2 px-2 transition-colors">
+                  <h4 className="font-medium text-sm sm:text-[15px] mb-1 sm:mb-2 text-white/90 leading-snug">{item.title}</h4>
                   <div className="flex justify-between text-xs text-white/50">
                     <span>{item.source}</span>
                     <span>{new Date(item.time).toLocaleDateString()}</span>

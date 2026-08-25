@@ -8,9 +8,12 @@ export default function Onboarding() {
   const theme = WEATHER_THEMES.clear;
   
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-cover bg-fixed bg-center relative" style={{ backgroundImage: `url(${theme.bgImage})` }}>
+    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-[#0a0c1a] relative transition-colors duration-1000">
+      {/* Fixed Background Image */}
+      <div className="fixed inset-0 z-0 bg-cover bg-center transition-opacity duration-1000" style={{ backgroundImage: `url(${theme.bgImage})` }}></div>
+      
       {/* Overlay */}
-      <div className={`absolute inset-0 bg-gradient-to-br ${theme.overlay} pointer-events-none z-0`}></div>
+      <div className={`fixed inset-0 z-0 bg-gradient-to-br ${theme.overlay} pointer-events-none`}></div>
 
       <div className="w-full max-w-sm flex flex-col items-center animate-fade-in relative z-10 space-y-8">
         

@@ -184,3 +184,24 @@
 .animate-fade-in {
   animation: fadeIn 0.4s ease-out forwards;
 }
+
+/* Safe area support for iOS notch/home indicator */
+.safe-pb {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Prevent content from being hidden under mobile browser bars */
+html, body {
+  height: 100%;
+  overflow-x: hidden;
+}
+
+/* Smooth touch scrolling everywhere */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Prevent overflow issues on small screens */
+img, svg {
+  max-width: 100%;
+}

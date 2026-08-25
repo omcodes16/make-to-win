@@ -154,192 +154,203 @@ export default function Header() {
       }
     );
   };
-
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-[#0a0c1a]/80 backdrop-blur-md border-b border-white/10 pt-3 pb-3">
-      <div className="mx-auto px-6 flex items-center justify-between max-w-[1400px]">
-        
-        {/* Left: App name */}
-        <div className="flex items-center gap-3 w-1/3">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 flex items-center justify-center shadow-[0_0_15px_rgba(59,130,246,0.5)]">
-            <span className="text-white text-xs font-bold">W</span>
-          </div>
-          <h1 className="font-heading font-semibold text-lg tracking-tight text-white drop-shadow-md hidden sm:block">
-            WeatherGPT
-          </h1>
+    <>
+      <header className="fixed top-0 left-0 right-0 z-50 bg-[#0a0c1a]/80 backdrop-blur-md border-b border-white/10 pt-3 pb-3">
+        <div className="mx-auto px-3 sm:px-6 flex items-center justify-between max-w-[1400px]">
           
-          <button 
-            onClick={handleLiveLocation}
-            disabled={isLocating}
-            className="ml-2 flex items-center gap-1 px-3 py-1.5 rounded-full bg-blue-500/20 hover:bg-blue-500/40 border border-blue-400/30 transition-colors text-blue-100 text-xs sm:text-sm whitespace-nowrap"
-          >
-            {isLocating ? (
-              <span className="w-3 h-3 border-2 border-white/50 border-t-white rounded-full animate-spin"></span>
-            ) : (
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-            )}
-            {state.currentWeather?.locationName ? state.currentWeather.locationName : 'Live Location'}
-          </button>
-        </div>
-
-        {/* Center: Dual Mode Tabs */}
-        <div className="flex justify-center flex-1 max-w-md mx-4">
-          <div className="flex w-full rounded-full p-1 bg-white/5 border border-white/10 shadow-inner overflow-x-auto scrollbar-hide">
-            <button
-              onClick={() => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'chat' })}
-              className={`flex-1 px-4 py-1.5 text-xs sm:text-sm font-medium rounded-full transition-all duration-300 whitespace-nowrap ${
-                state.activeTab === 'chat'
-                  ? 'bg-white/15 text-white shadow-[0_0_10px_rgba(255,255,255,0.1)] border border-white/20'
-                  : 'text-white/50 hover:text-white'
-              }`}
+          {/* Left: App name */}
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 flex items-center justify-center shadow-[0_0_15px_rgba(59,130,246,0.5)] flex-shrink-0">
+              <span className="text-white text-xs font-bold">W</span>
+            </div>
+            <h1 className="font-heading font-semibold text-base tracking-tight text-white drop-shadow-md hidden sm:block">
+              WeatherGPT
+            </h1>
+            
+            <button 
+              onClick={handleLiveLocation}
+              disabled={isLocating}
+              className="flex items-center gap-1 px-2 sm:px-3 py-1.5 rounded-full bg-blue-500/20 hover:bg-blue-500/40 border border-blue-400/30 transition-colors text-blue-100 text-xs whitespace-nowrap max-w-[120px] sm:max-w-[180px] overflow-hidden"
             >
-              {t.tabChat}
-            </button>
-            <button
-              onClick={() => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'stage' })}
-              className={`flex-1 px-4 py-1.5 text-xs sm:text-sm font-medium rounded-full transition-all duration-300 whitespace-nowrap ${
-                state.activeTab === 'stage'
-                  ? 'bg-white/15 text-white shadow-[0_0_10px_rgba(255,255,255,0.1)] border border-white/20'
-                  : 'text-white/50 hover:text-white'
-              }`}
-            >
-              {t.tabStage}
-            </button>
-            <button
-              onClick={() => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'alerts' })}
-              className={`flex-1 px-4 py-1.5 text-xs sm:text-sm font-medium rounded-full transition-all duration-300 whitespace-nowrap ${
-                state.activeTab === 'alerts'
-                  ? 'bg-red-500/20 text-red-400 shadow-[0_0_15px_rgba(239,68,68,0.2)] border border-red-500/30'
-                  : 'text-white/50 hover:text-white'
-              }`}
-            >
-              <span className="flex items-center justify-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
-                {t.tabAlerts}
+              {isLocating ? (
+                <span className="w-3 h-3 border-2 border-white/50 border-t-white rounded-full animate-spin flex-shrink-0"></span>
+              ) : (
+                <svg className="flex-shrink-0" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+              )}
+              <span className="truncate">
+                {state.currentWeather?.locationName ? state.currentWeather.locationName : 'Live'}
               </span>
             </button>
           </div>
-        </div>
 
-        {/* Right: Controls */}
-        <div className="flex items-center justify-end gap-3 w-1/3">
-          {/* Accessibility toggle */}
-          <button
-            onClick={() => setShowA11y(!showA11y)}
-            className="w-9 h-9 flex items-center justify-center rounded-full transition-colors text-white/70 hover:bg-white/10 bg-white/5 border border-white/10"
-            aria-label="Accessibility settings"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10"/>
-              <path d="M12 8a1 1 0 100-2 1 1 0 000 2zm-3 4h6m-5 4h4"/>
-            </svg>
-          </button>
+          {/* Center: Tabs — desktop only */}
+          <div className="hidden md:flex justify-center flex-1 max-w-md mx-4">
+            <div className="flex w-full rounded-full p-1 bg-white/5 border border-white/10 shadow-inner">
+              <button
+                onClick={() => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'chat' })}
+                className={`flex-1 px-4 py-1.5 text-sm font-medium rounded-full transition-all duration-300 whitespace-nowrap ${
+                  state.activeTab === 'chat'
+                    ? 'bg-white/15 text-white shadow-[0_0_10px_rgba(255,255,255,0.1)] border border-white/20'
+                    : 'text-white/50 hover:text-white'
+                }`}
+              >
+                {t.tabChat}
+              </button>
+              <button
+                onClick={() => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'stage' })}
+                className={`flex-1 px-4 py-1.5 text-sm font-medium rounded-full transition-all duration-300 whitespace-nowrap ${
+                  state.activeTab === 'stage'
+                    ? 'bg-white/15 text-white shadow-[0_0_10px_rgba(255,255,255,0.1)] border border-white/20'
+                    : 'text-white/50 hover:text-white'
+                }`}
+              >
+                {t.tabStage}
+              </button>
+              <button
+                onClick={() => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'alerts' })}
+                className={`flex-1 px-4 py-1.5 text-sm font-medium rounded-full transition-all duration-300 whitespace-nowrap ${
+                  state.activeTab === 'alerts'
+                    ? 'bg-red-500/20 text-red-400 shadow-[0_0_15px_rgba(239,68,68,0.2)] border border-red-500/30'
+                    : 'text-white/50 hover:text-white'
+                }`}
+              >
+                <span className="flex items-center justify-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
+                  {t.tabAlerts}
+                </span>
+              </button>
+            </div>
+          </div>
 
-          {/* Saved Locations bookmark */}
-          <div className="relative" ref={savedRef}>
+          {/* Right: Controls */}
+          <div className="flex items-center justify-end gap-1.5 sm:gap-3">
+            {/* Accessibility toggle */}
             <button
-              onClick={() => { setShowSaved(!showSaved); setShowLangPicker(false); }}
-              className={`w-9 h-9 flex items-center justify-center rounded-full transition-colors border ${
-                showSaved || state.savedLocations.length > 0
-                  ? 'text-amber-400 bg-amber-500/10 border-amber-500/30 hover:bg-amber-500/20'
-                  : 'text-white/70 bg-white/5 border-white/10 hover:bg-white/10'
-              }`}
-              aria-label="Saved locations"
+              onClick={() => setShowA11y(!showA11y)}
+              className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full transition-colors text-white/70 hover:bg-white/10 bg-white/5 border border-white/10"
+              aria-label="Accessibility settings"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill={state.savedLocations.length > 0 ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 8a1 1 0 100-2 1 1 0 000 2zm-3 4h6m-5 4h4"/>
               </svg>
             </button>
 
-            {showSaved && (
-              <div className="absolute right-0 top-full mt-2 rounded-2xl shadow-[0_0_25px_rgba(0,0,0,0.6)] py-3 w-[280px] z-50 border bg-[#1a1c29] border-white/10 text-white">
-                <div className="px-4 pb-2 mb-2 border-b border-white/10 flex items-center gap-2">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1" className="text-amber-400"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
-                  <span className="text-sm font-semibold text-white/90">Saved Locations</span>
-                  {state.savedLocations.length > 0 && (
-                    <span className="ml-auto text-xs text-white/40">{state.savedLocations.length}/5</span>
+            {/* Saved Locations bookmark */}
+            <div className="relative" ref={savedRef}>
+              <button
+                onClick={() => { setShowSaved(!showSaved); setShowLangPicker(false); }}
+                className={`w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full transition-colors border ${
+                  showSaved || state.savedLocations.length > 0
+                    ? 'text-amber-400 bg-amber-500/10 border-amber-500/30 hover:bg-amber-500/20'
+                    : 'text-white/70 bg-white/5 border-white/10 hover:bg-white/10'
+                }`}
+                aria-label="Saved locations"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill={state.savedLocations.length > 0 ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                </svg>
+              </button>
+
+              {showSaved && (
+                <div className="absolute right-0 top-full mt-2 rounded-2xl shadow-[0_0_25px_rgba(0,0,0,0.6)] py-3 w-[260px] sm:w-[280px] z-50 border bg-[#1a1c29] border-white/10 text-white">
+                  <div className="px-4 pb-2 mb-2 border-b border-white/10 flex items-center gap-2">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1" className="text-amber-400"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+                    <span className="text-sm font-semibold text-white/90">Saved Locations</span>
+                    {state.savedLocations.length > 0 && (
+                      <span className="ml-auto text-xs text-white/40">{state.savedLocations.length}/5</span>
+                    )}
+                  </div>
+                  {state.savedLocations.length === 0 ? (
+                    <div className="px-4 py-4 text-center">
+                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-white/20 mx-auto mb-3"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+                      <p className="text-white/40 text-xs leading-relaxed">No saved locations yet. Search a city and tap the bookmark icon.</p>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col">
+                      {state.savedLocations.map((loc) => {
+                        const w = savedWeather[loc.name];
+                        return (
+                          <div key={loc.name} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 transition-colors group">
+                            <button onClick={() => handleSelectSaved(loc)} className="flex-1 flex items-center gap-3 text-left min-w-0">
+                              <span className="text-xl shrink-0">{loadingSaved ? '⏳' : (w?.icon || '🌤️')}</span>
+                              <div className="flex-1 min-w-0">
+                                <div className="text-sm font-medium text-white/90 truncate">{loc.name}</div>
+                              </div>
+                              <span className="text-sm font-semibold text-white/70 shrink-0">{loadingSaved ? '...' : (w ? `${w.temp}°` : '--')}</span>
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); dispatch({ type: 'REMOVE_LOCATION', payload: loc.name }); }}
+                              className="w-6 h-6 flex items-center justify-center rounded-full text-white/30 hover:text-red-400 hover:bg-red-500/10 transition-colors opacity-0 group-hover:opacity-100"
+                            >
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
                   )}
                 </div>
+              )}
+            </div>
 
-                {state.savedLocations.length === 0 ? (
-                  <div className="px-4 py-4 text-center">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-white/20 mx-auto mb-3"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
-                    <p className="text-white/40 text-xs leading-relaxed">No saved locations yet — search a city in Weather View and tap the bookmark icon to save it here.</p>
-                  </div>
-                ) : (
-                  <div className="flex flex-col">
-                    {state.savedLocations.map((loc) => {
-                      const w = savedWeather[loc.name];
-                      return (
-                        <div key={loc.name} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 transition-colors group">
-                          <button
-                            onClick={() => handleSelectSaved(loc)}
-                            className="flex-1 flex items-center gap-3 text-left min-w-0"
-                          >
-                            <span className="text-xl shrink-0">{loadingSaved ? '⏳' : (w?.icon || '🌤️')}</span>
-                            <div className="flex-1 min-w-0">
-                              <div className="text-sm font-medium text-white/90 truncate">{loc.name}</div>
-                            </div>
-                            <span className="text-sm font-semibold text-white/70 shrink-0">{loadingSaved ? '...' : (w ? `${w.temp}°` : '--')}</span>
-                          </button>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); dispatch({ type: 'REMOVE_LOCATION', payload: loc.name }); }}
-                            className="w-6 h-6 flex items-center justify-center rounded-full text-white/30 hover:text-red-400 hover:bg-red-500/10 transition-colors opacity-0 group-hover:opacity-100"
-                            aria-label={`Remove ${loc.name}`}
-                          >
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Language pill */}
-          <div className="relative">
-            <button
-              onClick={() => { setShowLangPicker(!showLangPicker); setShowSaved(false); }}
-              className="px-4 py-1.5 rounded-full text-sm font-medium transition-colors flex items-center gap-1 bg-white/5 hover:bg-white/10 text-white border border-white/10"
-              aria-label={`Language: ${currentLang.label}`}
-            >
-              {currentLang.nativeLabel}
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg>
-            </button>
-
-            {showLangPicker && (
-              <div className="absolute right-0 top-full mt-2 rounded-xl shadow-[0_0_15px_rgba(0,0,0,0.5)] py-1 min-w-[140px] z-50 border bg-[#1a1c29] border-white/10 text-white">
-                {LANGUAGES.map(lang => (
-                  <button
-                    key={lang.code}
-                    onClick={() => {
-                      dispatch({ type: 'SET_LANGUAGE', payload: lang.code });
-                      setShowLangPicker(false);
-                    }}
-                    className={`w-full text-left px-4 py-2 text-sm transition-colors hover:bg-white/10 ${
-                      state.language === lang.code 
-                        ? 'text-blue-400 font-medium' 
-                        : ''
-                    }`}
-                  >
-                    {lang.nativeLabel}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-          
-          {/* Profile Icon Placeholder */}
-          <div className="w-9 h-9 rounded-full flex items-center justify-center bg-white/10 text-white border border-white/10">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            {/* Language pill */}
+            <div className="relative">
+              <button
+                onClick={() => { setShowLangPicker(!showLangPicker); setShowSaved(false); }}
+                className="px-2.5 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-colors flex items-center gap-1 bg-white/5 hover:bg-white/10 text-white border border-white/10"
+              >
+                <span className="hidden sm:inline">{currentLang.nativeLabel}</span>
+                <span className="sm:hidden uppercase">{currentLang.code}</span>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              {showLangPicker && (
+                <div className="absolute right-0 top-full mt-2 rounded-xl shadow-[0_0_15px_rgba(0,0,0,0.5)] py-1 min-w-[140px] z-50 border bg-[#1a1c29] border-white/10 text-white">
+                  {LANGUAGES.map(lang => (
+                    <button
+                      key={lang.code}
+                      onClick={() => { dispatch({ type: 'SET_LANGUAGE', payload: lang.code }); setShowLangPicker(false); }}
+                      className={`w-full text-left px-4 py-2 text-sm transition-colors hover:bg-white/10 ${state.language === lang.code ? 'text-blue-400 font-medium' : ''}`}
+                    >
+                      {lang.nativeLabel}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Accessibility panel slides down */}
-      {showA11y && <AccessibilityPanel onClose={() => setShowA11y(false)} />}
-    </header>
+        {/* Accessibility panel */}
+        {showA11y && <AccessibilityPanel onClose={() => setShowA11y(false)} />}
+      </header>
+
+      {/* Mobile Bottom Tab Bar */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0a0c1a]/90 backdrop-blur-md border-t border-white/10 flex safe-pb">
+        <button
+          onClick={() => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'chat' })}
+          className={`flex-1 flex flex-col items-center justify-center py-3 gap-1 transition-colors ${state.activeTab === 'chat' ? 'text-blue-400' : 'text-white/40'}`}
+        >
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+          <span className="text-[10px] font-semibold">{t.tabChat}</span>
+        </button>
+        <button
+          onClick={() => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'stage' })}
+          className={`flex-1 flex flex-col items-center justify-center py-3 gap-1 transition-colors ${state.activeTab === 'stage' ? 'text-blue-400' : 'text-white/40'}`}
+        >
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+          <span className="text-[10px] font-semibold">{t.tabStage}</span>
+        </button>
+        <button
+          onClick={() => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'alerts' })}
+          className={`flex-1 flex flex-col items-center justify-center py-3 gap-1 transition-colors relative ${state.activeTab === 'alerts' ? 'text-red-400' : 'text-white/40'}`}
+        >
+          <span className="absolute top-2 right-[calc(50%-14px)] w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+          <span className="text-[10px] font-semibold">{t.tabAlerts}</span>
+        </button>
+      </nav>
+    </>
   );
 }
