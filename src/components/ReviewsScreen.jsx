@@ -17,6 +17,11 @@ export default function ReviewsScreen() {
   // Form State
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
+  const [accuracyRating, setAccuracyRating] = useState(0);
+  const [hoverAccuracy, setHoverAccuracy] = useState(0);
+  const [easeRating, setEaseRating] = useState(0);
+  const [hoverEase, setHoverEase] = useState(0);
+  
   const [userName, setUserName] = useState('');
   const [reviewText, setReviewText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -47,13 +52,15 @@ export default function ReviewsScreen() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (rating === 0 || !reviewText.trim() || !userName.trim()) return;
+    if (rating === 0 || accuracyRating === 0 || easeRating === 0 || !reviewText.trim() || !userName.trim()) return;
 
     setIsSubmitting(true);
     const newReview = {
       id: Date.now(),
       name: userName.trim(),
       rating,
+      accuracy: accuracyRating,
+      easeOfUse: easeRating,
       text: reviewText.trim(),
       date: 'Just now',
       helpful: 0,
@@ -71,7 +78,7 @@ export default function ReviewsScreen() {
       });
       setReviews(updatedReviews);
       localStorage.setItem('weathergpt-reviews', JSON.stringify(updatedReviews));
-      setRating(0);
+      setRating(0); setAccuracyRating(0); setEaseRating(0);
       setReviewText('');
       setUserName('');
     } catch (err) {
@@ -79,7 +86,7 @@ export default function ReviewsScreen() {
       // Fallback local save
       setReviews(updatedReviews);
       localStorage.setItem('weathergpt-reviews', JSON.stringify(updatedReviews));
-      setRating(0);
+      setRating(0); setAccuracyRating(0); setEaseRating(0);
       setReviewText('');
       setUserName('');
     } finally {
@@ -89,7 +96,10 @@ export default function ReviewsScreen() {
 
   // Calculate Stats
   const totalReviews = reviews.length;
-  const avgRating = totalReviews > 0 ? (reviews.reduce((acc, r) => acc + r.rating, 0) / totalReviews).toFixed(1) : 0;
+  const avgRating = totalReviews > 0 ? (reviews.reduce((acc, r) => acc + (r.rating || 0), 0) / totalReviews).toFixed(1) : 0;
+  const avgAccuracy = totalReviews > 0 ? (reviews.reduce((acc, r) => acc + (r.accuracy || r.rating || 0), 0) / totalReviews).toFixed(1) : 0;
+  const avgEaseOfUse = totalReviews > 0 ? (reviews.reduce((acc, r) => acc + (r.easeOfUse || r.rating || 0), 0) / totalReviews).toFixed(1) : 0;
+  
   
   const ratingCounts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
   reviews.forEach(r => { if (ratingCounts[r.rating] !== undefined) ratingCounts[r.rating]++; });
@@ -128,11 +138,11 @@ export default function ReviewsScreen() {
             <div className="text-xs text-white/50 uppercase tracking-wider font-semibold">Total Reviews</div>
           </div>
           <div className="flex-1 min-w-[120px] pt-4 sm:pt-0 border-t sm:border-t-0 border-white/10">
-            <div className="text-3xl font-bold text-white mb-3">4.9</div>
+            <div className="text-3xl font-bold text-white mb-3">{avgAccuracy}</div>
             <div className="text-xs text-white/50 uppercase tracking-wider font-semibold">Accuracy</div>
           </div>
           <div className="flex-1 min-w-[120px] pt-4 sm:pt-0 border-t sm:border-t-0 border-white/10">
-            <div className="text-3xl font-bold text-white mb-3">4.7</div>
+            <div className="text-3xl font-bold text-white mb-3">{avgEaseOfUse}</div>
             <div className="text-xs text-white/50 uppercase tracking-wider font-semibold">Ease of Use</div>
           </div>
         </div>
@@ -166,21 +176,61 @@ export default function ReviewsScreen() {
             <p className="text-sm text-white/50 mb-6">How would you rate your experience?</p>
             
             <form onSubmit={handleSubmit}>
-              <div className="flex gap-2 mb-6">
-                {[1, 2, 3, 4, 5].map(star => (
-                  <button
-                    key={star}
-                    type="button"
-                    onClick={() => setRating(star)}
-                    onMouseEnter={() => setHoverRating(star)}
-                    onMouseLeave={() => setHoverRating(0)}
-                    className="text-3xl transition-transform hover:scale-110 focus:outline-none"
-                  >
-                    <span className={star <= (hoverRating || rating) ? 'text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.5)]' : 'text-white/10'}>
-                      ★
-                    </span>
-                  </button>
-                ))}
+              {/* Overall Rating */}
+              <div className="mb-4">
+                <p className="text-xs text-white/50 mb-2 uppercase tracking-wider">Overall Experience</p>
+                <div className="flex gap-2">
+                  {[1, 2, 3, 4, 5].map(star => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setRating(star)}
+                      onMouseEnter={() => setHoverRating(star)}
+                      onMouseLeave={() => setHoverRating(0)}
+                      className="text-2xl transition-transform hover:scale-110 focus:outline-none"
+                    >
+                      <span className={star <= (hoverRating || rating) ? 'text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.5)]' : 'text-white/10'}>★</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Accuracy Rating */}
+              <div className="mb-4">
+                <p className="text-xs text-white/50 mb-2 uppercase tracking-wider">Forecast Accuracy</p>
+                <div className="flex gap-2">
+                  {[1, 2, 3, 4, 5].map(star => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setAccuracyRating(star)}
+                      onMouseEnter={() => setHoverAccuracy(star)}
+                      onMouseLeave={() => setHoverAccuracy(0)}
+                      className="text-2xl transition-transform hover:scale-110 focus:outline-none"
+                    >
+                      <span className={star <= (hoverAccuracy || accuracyRating) ? 'text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.5)]' : 'text-white/10'}>★</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Ease of Use Rating */}
+              <div className="mb-6">
+                <p className="text-xs text-white/50 mb-2 uppercase tracking-wider">Ease of Use</p>
+                <div className="flex gap-2">
+                  {[1, 2, 3, 4, 5].map(star => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setEaseRating(star)}
+                      onMouseEnter={() => setHoverEase(star)}
+                      onMouseLeave={() => setHoverEase(0)}
+                      className="text-2xl transition-transform hover:scale-110 focus:outline-none"
+                    >
+                      <span className={star <= (hoverEase || easeRating) ? 'text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.5)]' : 'text-white/10'}>★</span>
+                    </button>
+                  ))}
+                </div>
               </div>
               <input
                 type="text"
@@ -202,7 +252,7 @@ export default function ReviewsScreen() {
                 <span className="text-xs text-white/40">{reviewText.length}/500</span>
                 <button
                   type="submit"
-                  disabled={rating === 0 || !reviewText.trim() || !userName.trim() || isSubmitting}
+                  disabled={rating === 0 || accuracyRating === 0 || easeRating === 0 || !reviewText.trim() || !userName.trim() || isSubmitting}
                   className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:bg-white/10 disabled:text-white/40 text-white rounded-full font-medium transition-colors text-sm shadow-lg flex items-center gap-2"
                 >
                   {isSubmitting ? (
