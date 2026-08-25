@@ -39,68 +39,41 @@ export default function ChatInput() {
       // 1. Extract location from the message
       const locationName = extractLocation(text);
 
-      if (!locationName) {
-        // Ask for location
-        dispatch({
-          type: 'ADD_ASSISTANT_MESSAGE',
-          payload: {
-            answer: getLocationPrompt(state.language),
-            severity: 'none',
-          },
-        });
-        dispatch({ type: 'SET_LOADING', payload: false });
-        return;
-      }
+      let location = null;
+        let weatherData = null;
+        let weatherInfo = null;
+        let severityCheck = null;
+        
+        // Always try to fetch weather if we think it's a location, but don't block if we can't
+        if (locationName) {
+          location = await geocodeLocation(locationName, state.language);
+          if (location) {
+            weatherData = await getWeather(location.lat, location.lng);
+            weatherInfo = getWeatherInfo(weatherData.weatherCode);
+            severityCheck = checkSeverity(weatherData, location.name);
+            if (severityCheck && severityCheck.isSevere) {
+              dispatch({ type: 'SET_SEVERE_ALERT', payload: severityCheck });
+            }
+          }
+        }
 
-      // 2. Geocode the location
-      const location = await geocodeLocation(locationName, state.language);
+        // Send to AI via proxy - pass full weather context if available
+        const aiResponse = await sendChatMessage(text, state.language, weatherData ? {
+          location: location.name,
+          state: location.state,
+          ...weatherData,
+          conditionLabel: weatherInfo.label,
+        } : null);
 
-      if (!location) {
-        dispatch({
-          type: 'ADD_ERROR_MESSAGE',
-          payload: state.language === 'en'
-            ? `Couldn't find "${locationName}". Try the district name instead.`
-            : state.language === 'hi'
-              ? `"${locationName}" नहीं मिला। जिले का नाम आजमाएं।`
-              : `"${locationName}" বিচাৰি পোৱা নগ'ল। জিলাৰ নাম দিয়ক।`,
-        });
-        dispatch({ type: 'SET_LOADING', payload: false });
-        return;
-      }
-
-      // 3. Fetch weather data
-      const weatherData = await getWeather(location.lat, location.lng);
-      const weatherInfo = getWeatherInfo(weatherData.weatherCode);
-
-      // Update Sky Band condition
-      dispatch({ type: 'SET_WEATHER_CONDITION', payload: weatherInfo.condition });
-
-      // Store current weather for display
-      dispatch({
-        type: 'SET_CURRENT_WEATHER',
-        payload: { ...weatherData, locationName: location.name, lat: location.lat, lng: location.lng },
-      });
-
-      // 4. Check for severe conditions
-      const severityCheck = checkSeverity(weatherData, location.name);
-      if (severityCheck && severityCheck.isSevere) {
-        dispatch({ type: 'SET_SEVERE_ALERT', payload: severityCheck });
-      }
-
-      // 5. Send to Gemini via proxy — pass full weather context
-      const aiResponse = await sendChatMessage(text, state.language, {
-        location: location.name,
-        state: location.state,
-        ...weatherData,
-        conditionLabel: weatherInfo.label,
-      });
-
-      // 6. Cache raw weather data for offline use
-      const weatherCache = {
-        locationName: location.name,
-        ...weatherData,
-      };
-      localStorage.setItem('weathergpt-weather-cache', JSON.stringify(weatherCache));
+        // Cache raw weather data for offline use
+        let weatherCache = undefined;
+        if (weatherData) {
+          weatherCache = {
+            locationName: location.name,
+            ...weatherData,
+          };
+          localStorage.setItem('weathergpt-weather-cache', JSON.stringify(weatherCache));
+        }
 
       // 7. Add assistant response
       dispatch({
