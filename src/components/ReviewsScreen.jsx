@@ -9,12 +9,6 @@ import Header from './Header';
 // ----------------------------------------------------------------------------
 const NPOINT_API_URL = 'https://api.npoint.io/e6aa544b3fe9a473d014'; 
 
-const MOCK_REVIEWS = [
-  { id: 1, name: 'Priya Patel', rating: 5, text: 'Amazing platform! Gave me accurate weather updates during our trek in the hills.', date: '3 days ago', helpful: 18, tags: ['Accurate', 'Helpful Alerts'] },
-  { id: 2, name: 'Vikram Joshi', rating: 4, text: 'Love the AI chat feature. It feels like talking to a real meteorologist!', date: '1 week ago', helpful: 15, tags: ['AI Chat', 'Easy to Use'] },
-  { id: 3, name: 'Sneha Reddy', rating: 5, text: 'Great for daily use. UI is smooth and information is really detailed.', date: '2 weeks ago', helpful: 9, tags: ['Detailed Info'] },
-];
-
 export default function ReviewsScreen() {
   const { state } = useApp();
   const [reviews, setReviews] = useState([]);
@@ -23,6 +17,7 @@ export default function ReviewsScreen() {
   // Form State
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
+  const [userName, setUserName] = useState('');
   const [reviewText, setReviewText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -34,15 +29,15 @@ export default function ReviewsScreen() {
         const response = await fetch(NPOINT_API_URL);
         if (response.ok) {
           const data = await response.json();
-          // If npoint is empty or invalid, fallback to mock data
-          setReviews(Array.isArray(data) && data.length > 0 ? data : MOCK_REVIEWS);
+          // If npoint is empty or invalid, fallback to empty array
+          setReviews(Array.isArray(data) ? data : []);
         } else {
           throw new Error('Failed to fetch from npoint');
         }
       } catch (err) {
-        console.warn('Using fallback local storage / mock data due to Npoint API error.');
+        console.warn('Using fallback local storage due to Npoint API error.');
         const local = JSON.parse(localStorage.getItem('weathergpt-reviews') || 'null');
-        setReviews(local || MOCK_REVIEWS);
+        setReviews(local || []);
       } finally {
         setIsLoading(false);
       }
@@ -52,14 +47,14 @@ export default function ReviewsScreen() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (rating === 0 || !reviewText.trim()) return;
+    if (rating === 0 || !reviewText.trim() || !userName.trim()) return;
 
     setIsSubmitting(true);
     const newReview = {
       id: Date.now(),
-      name: 'Guest User', // Or fetch from auth if you have it
+      name: userName.trim(),
       rating,
-      text: reviewText,
+      text: reviewText.trim(),
       date: 'Just now',
       helpful: 0,
       tags: ['New']
@@ -78,6 +73,7 @@ export default function ReviewsScreen() {
       localStorage.setItem('weathergpt-reviews', JSON.stringify(updatedReviews));
       setRating(0);
       setReviewText('');
+      setUserName('');
     } catch (err) {
       console.error('Failed to submit review', err);
       // Fallback local save
@@ -85,6 +81,7 @@ export default function ReviewsScreen() {
       localStorage.setItem('weathergpt-reviews', JSON.stringify(updatedReviews));
       setRating(0);
       setReviewText('');
+      setUserName('');
     } finally {
       setIsSubmitting(false);
     }
@@ -185,6 +182,14 @@ export default function ReviewsScreen() {
                   </button>
                 ))}
               </div>
+              <input
+                type="text"
+                placeholder="Your Name"
+                value={userName}
+                onChange={(e) => setUserName(e.target.value)}
+                maxLength={50}
+                className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors text-sm mb-3 placeholder:text-white/30"
+              />
               <textarea
                 rows="3"
                 placeholder="Share your experience..."
@@ -197,7 +202,7 @@ export default function ReviewsScreen() {
                 <span className="text-xs text-white/40">{reviewText.length}/500</span>
                 <button
                   type="submit"
-                  disabled={rating === 0 || !reviewText.trim() || isSubmitting}
+                  disabled={rating === 0 || !reviewText.trim() || !userName.trim() || isSubmitting}
                   className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:bg-white/10 disabled:text-white/40 text-white rounded-full font-medium transition-colors text-sm shadow-lg flex items-center gap-2"
                 >
                   {isSubmitting ? (
