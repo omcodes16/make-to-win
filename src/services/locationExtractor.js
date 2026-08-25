@@ -81,6 +81,8 @@ const BENGALI_CITY_NAMES = {
 };
 
 // Common non-location words to skip (English, Hindi, Assamese, Bengali)
+// Common greetings and non-location words to skip
+const GREETINGS = new Set(['hi', 'hy', 'hyy', 'hey', 'hello', 'namaste', 'kaise', 'kya', 'good', 'morning', 'evening', 'night', 'bye', 'ok', 'okay', 'thanks', 'thank', 'help', 'weather', 'hai', 'ho']);
 const SKIP_WORDS = new Set([
   // English
   'will', 'is', 'what', 'how', 'can', 'should', 'does', 'the', 'today',
@@ -142,10 +144,27 @@ export function extractLocation(message) {
   // 5. If the message is very short (1-2 words), treat the whole thing
   //    as a potential location name — the user is likely just typing a city
   const words = trimmed.split(/\s+/);
+  
+  // 5. If the message is very short (1-2 words), check if it's just a greeting
   if (words.length <= 2) {
-    // Clean up punctuation and return the raw text for geocoding
-    const cleaned = trimmed.replace(/[?,!.।॥]/g, '').trim();
-    if (cleaned.length >= 2) return cleaned;
+    const cleaned = trimmed.replace(/[?,!.।॥]/g, '').trim().toLowerCase();
+    
+    // If it's a known greeting or a skip word, DO NOT treat it as a location
+    let isGreeting = true;
+    for (const w of words) {
+        const wLower = w.replace(/[?,!.।॥]/g, '').toLowerCase();
+        if (!GREETINGS.has(wLower) && !SKIP_WORDS.has(wLower)) {
+            isGreeting = false;
+            break;
+        }
+    }
+    
+    if (isGreeting) {
+        return null; // It's just a greeting, not a location
+    }
+    
+    // Otherwise, assume it's a city name they typed directly
+    if (cleaned.length >= 2) return trimmed.replace(/[?,!.।॥]/g, '').trim();
   }
 
   // 6. For longer messages, find candidate words that aren't common/skip words
