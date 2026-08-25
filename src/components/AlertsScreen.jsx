@@ -8,8 +8,9 @@ export default function AlertsScreen() {
   const { state } = useApp();
   
   // Derive active location and weather data
-  const locationName = state.stageData.locationName || state.location.name;
-  const weather = state.stageData.weatherData || state.currentWeather;
+  const stageData = state.weatherStageData || {};
+  const locationName = stageData.locationName || '';
+  const weather = stageData.weather || state.currentWeather;
 
   const lang = state.language;
   const ft = require('../utils/featureTranslations').FEATURE_I18N[lang] || require('../utils/featureTranslations').FEATURE_I18N.en;
@@ -38,12 +39,11 @@ export default function AlertsScreen() {
 
   // Compute live alerts based on actual location data
   const computeAlerts = () => {
-    if (!state.weatherStageData || !state.weatherStageData.weather) {
+    if (!weather || !weather.daily) {
       return [{ id: 'no-data', type: 'info', title: 'No Location Selected', desc: 'Please search for a city in the Weather View to see local alerts.', level: 'Info' }];
     }
     
-    const weather = state.weatherStageData.weather;
-    const locName = state.weatherStageData.locationName;
+    const locName = locationName;
     const alerts = [];
 
     // 1. Heavy Rain / Flood Warning
