@@ -84,17 +84,7 @@ export default function ChatInput() {
           relevantStat: aiResponse.relevantStat || '',
           advisory: aiResponse.advisory || (severityCheck ? severityCheck.summary : ''),
           severity: aiResponse.severity || (severityCheck?.isSevere ? 'severe' : 'none'),
-          weatherData: {
-            temperature: weatherData.temperature,
-            feelsLike: weatherData.feelsLike,
-            humidity: weatherData.humidity,
-            windSpeed: weatherData.windSpeed,
-            precipitation: weatherData.precipitation,
-            weatherCode: weatherData.weatherCode,
-            uvIndex: weatherData.uvIndex,
-            visibility: weatherData.visibility,
-            locationName: location.name,
-          },
+          weatherData: weatherCache,
         },
       });
     } catch (err) {
