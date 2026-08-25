@@ -25,6 +25,8 @@ export default function ReviewsScreen() {
   const [userName, setUserName] = useState('');
   const [reviewText, setReviewText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const [likedReviews, setLikedReviews] = useState([]);
 
   useEffect(() => {
     // Fetch reviews from npoint API
@@ -49,6 +51,29 @@ export default function ReviewsScreen() {
     };
     fetchReviews();
   }, []);
+
+  const handleHelpful = async (reviewId) => {
+    if (likedReviews.includes(reviewId)) return;
+
+    const updatedReviews = reviews.map(r => 
+      r.id === reviewId ? { ...r, helpful: (r.helpful || 0) + 1 } : r
+    );
+    
+    // Optimistic UI update
+    setReviews(updatedReviews);
+    setLikedReviews([...likedReviews, reviewId]);
+
+    try {
+      await fetch(NPOINT_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedReviews)
+      });
+      localStorage.setItem('weathergpt-reviews', JSON.stringify(updatedReviews));
+    } catch (err) {
+      console.error('Failed to save helpful count to DB', err);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -302,9 +327,15 @@ export default function ReviewsScreen() {
                         <span key={i} className="px-2.5 py-1 rounded bg-white/5 border border-white/10 text-[10px] sm:text-xs text-white/60">{tag}</span>
                       ))}
                     </div>
-                    <button className="flex items-center gap-1.5 text-xs text-white/40 hover:text-blue-400 transition-colors">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>
-                      Helpful ({review.helpful})
+                    <button 
+                      onClick={() => handleHelpful(review.id)}
+                      disabled={likedReviews.includes(review.id)}
+                      className={`flex items-center gap-1.5 text-xs transition-colors ${
+                        likedReviews.includes(review.id) ? 'text-blue-400' : 'text-white/40 hover:text-blue-400'
+                      }`}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill={likedReviews.includes(review.id) ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>
+                      Helpful ({review.helpful || 0})
                     </button>
                   </div>
                 </div>
