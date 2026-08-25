@@ -159,11 +159,9 @@ export default function Header() {
       <header className="fixed top-0 left-0 right-0 z-50 bg-[#0a0c1a]/80 backdrop-blur-md border-b border-white/10 pt-3 pb-3">
         <div className="mx-auto px-3 sm:px-6 flex items-center justify-between max-w-[1400px]">
           
-          {/* Left: App name */}
+          {/* Left: App name & Logo */}
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 flex items-center justify-center shadow-[0_0_15px_rgba(59,130,246,0.5)] flex-shrink-0">
-              <span className="text-white text-xs font-bold">W</span>
-            </div>
+            <img src="/logo.png" alt="SIH Code Matrix Logo" className="w-9 h-9 object-contain rounded-md flex-shrink-0 shadow-[0_0_10px_rgba(255,255,255,0.2)] bg-white" />
             <h1 className="font-heading font-semibold text-base tracking-tight text-white drop-shadow-md hidden sm:block">
               WeatherGPT
             </h1>

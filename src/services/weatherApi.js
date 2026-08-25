@@ -96,12 +96,12 @@ export async function geocodeLocation(name, lang = 'en') {
  * URL matches the exact spec:
  * current: temperature_2m, relative_humidity_2m, apparent_temperature, precipitation,
  *          rain, weather_code, wind_speed_10m, wind_direction_10m, uv_index, visibility
- * daily:   temperature_2m_max, temperature_2m_min, precipitation_probability_max,
+ * daily:   temperature_2m_max, temperature_2m_min, precipitation_sum, precipitation_probability_max,
  *          uv_index_max, sunrise, sunset
  * timezone: Asia/Kolkata, forecast_days: 7
  */
 export async function getWeather(lat, lng) {
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,rain,weather_code,wind_speed_10m,wind_direction_10m,uv_index,visibility&hourly=temperature_2m,precipitation_probability,wind_speed_10m,wind_direction_10m,weather_code&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,uv_index_max,sunrise,sunset,weather_code&timezone=Asia%2FKolkata&forecast_days=7`;
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,rain,weather_code,wind_speed_10m,wind_direction_10m,uv_index,visibility&hourly=temperature_2m,precipitation_probability,wind_speed_10m,wind_direction_10m,weather_code&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,uv_index_max,sunrise,sunset,weather_code&timezone=Asia%2FKolkata&forecast_days=7`;
   const aqiUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lng}&current=us_aqi&timezone=Asia%2FKolkata`;
 
   const [res, aqiRes] = await Promise.all([fetch(url), fetch(aqiUrl)]);
@@ -150,6 +150,7 @@ export async function getWeather(lat, lng) {
       maxTemp: data.daily.temperature_2m_max,
       minTemp: data.daily.temperature_2m_min,
       precipProbMax: data.daily.precipitation_probability_max,
+      precipitationSum: data.daily.precipitation_sum,
       uvIndexMax: data.daily.uv_index_max,
       sunrise: data.daily.sunrise,
       sunset: data.daily.sunset,

@@ -195,22 +195,43 @@ app.get('/api/news', async (req, res) => {
     // Simple robust regex parsing for RSS XML
     const items = xml.split('<item>').slice(1).map(itemBlock => {
       const getTag = (tag) => {
-        const match = itemBlock.match(new RegExp(`<${tag}>(.*?)<\/${tag}>`));
+        const match = itemBlock.match(new RegExp(`<${tag}>(.*?)<\/${tag}>`, 's'));
         return match ? match[1].replace(/<!\[CDATA\[(.*?)\]\]>/g, '$1') : '';
       };
       
       const titleFull = getTag('title');
+      const desc = getTag('description');
+      
       // Google News often appends " - Publisher" to the title. We can split it.
       const lastDash = titleFull.lastIndexOf(' - ');
       const title = lastDash > 0 ? titleFull.substring(0, lastDash) : titleFull;
       const source = lastDash > 0 ? titleFull.substring(lastDash + 3) : 'Google News';
       
+      // Try to extract image from description
+      let imageMatch = desc.match(/<img[^>]+src=["']([^"']+)["']/i);
+      let image = imageMatch ? imageMatch[1] : null;
+
+      // Fallbacks if no image found in RSS
+      if (!image) {
+        const tLower = title.toLowerCase();
+        if (tLower.includes('flood') || tLower.includes('rain')) {
+          image = 'https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?auto=format&fit=crop&w=200&q=80';
+        } else if (tLower.includes('cyclone') || tLower.includes('storm')) {
+          image = 'https://images.unsplash.com/photo-1527482797697-8795b05a13fe?auto=format&fit=crop&w=200&q=80';
+        } else if (tLower.includes('heat') || tLower.includes('sun') || tLower.includes('warm')) {
+          image = 'https://images.unsplash.com/photo-1504370805625-d32c54b16100?auto=format&fit=crop&w=200&q=80';
+        } else {
+          image = 'https://images.unsplash.com/photo-1534274988757-a28bf1a57c17?auto=format&fit=crop&w=200&q=80';
+        }
+      }
+
       return {
         id: getTag('guid') || Math.random().toString(36),
         title: title,
         link: getTag('link'),
         source: source,
-        time: getTag('pubDate')
+        time: getTag('pubDate'),
+        image: image
       };
     });
     

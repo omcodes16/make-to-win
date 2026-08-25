@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import RadarMap from './RadarMap';
+import HistoricalAnalytics from './HistoricalAnalytics';
 import { geocodeLocation, getWeather } from '../services/weatherApi';
 import { getWeatherInfo } from '../utils/weatherConditions';
 import { UI_TRANSLATIONS } from '../utils/translations';
@@ -425,8 +426,10 @@ export default function WeatherDashboard() {
               </div>
             </div>
           </div>
-          
         </div>
+
+        {/* Historical Data Section */}
+        <HistoricalAnalytics lat={stageData.lat} lon={stageData.lng} />
 
       </div>
     </div>
