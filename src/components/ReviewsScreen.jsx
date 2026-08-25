@@ -7,7 +7,7 @@ import Header from './Header';
 // Replace this with your actual npoint JSON bin URL
 // It should return an array of review objects: [{ id, name, rating, text, date, helpful }]
 // ----------------------------------------------------------------------------
-const NPOINT_API_URL = 'https://api.npoint.io/e0b9b3e10023a1a361c4'; 
+const NPOINT_API_URL = 'https://api.npoint.io/e6aa544b3fe9a473d014'; 
 
 const MOCK_REVIEWS = [
   { id: 1, name: 'Priya Patel', rating: 5, text: 'Amazing platform! Gave me accurate weather updates during our trek in the hills.', date: '3 days ago', helpful: 18, tags: ['Accurate', 'Helpful Alerts'] },
