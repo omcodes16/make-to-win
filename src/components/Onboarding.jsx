@@ -8,7 +8,7 @@ export default function Onboarding() {
   const theme = WEATHER_THEMES.clear;
   
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-[#0a0c1a] relative transition-colors duration-1000">
+    <div className="min-h-[100dvh] flex flex-col items-center justify-center p-6 bg-[#0a0c1a] relative transition-colors duration-1000">
       {/* Fixed Background Image */}
       <div className="fixed inset-0 z-0 bg-cover bg-center transition-opacity duration-1000" style={{ backgroundImage: `url(${theme.bgImage})` }}></div>
       

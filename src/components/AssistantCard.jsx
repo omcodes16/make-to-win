@@ -59,7 +59,7 @@ export default function AssistantCard({ message }) {
               className={`px-5 py-3 text-sm font-medium ${
                 severity === 'severe'
                   ? 'bg-red-500/20 text-red-400 border-t border-red-500/20'
-                  : 'bg-amber-500/20 text-amber-400 border-t border-amber-500/20'
+                  : 'bg-yellow-500/20 text-yellow-400 border-t border-yellow-500/20'
               }`}
             >
               {severity === 'severe' ? '⚠️' : '🔔'} {advisory}

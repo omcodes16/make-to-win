@@ -45,7 +45,7 @@ export default function WeatherDashboard() {
   if (!stageData) {
     const defaultTheme = getTheme(null, null);
     return (
-      <div className="min-h-screen bg-[#0a0c1a] flex flex-col transition-colors duration-1000">
+      <div className="min-h-[100dvh] bg-[#0a0c1a] flex flex-col transition-colors duration-1000">
         {/* Fixed Background Image (Hardware Accelerated, Smooth) */}
         <div className="fixed inset-0 z-0 bg-cover bg-center transition-opacity duration-1000" style={{ backgroundImage: `url(${defaultTheme.bgImage})` }}></div>
         <div className={`fixed inset-0 z-0 bg-gradient-to-b ${defaultTheme.overlay} pointer-events-none transition-colors duration-1000`}></div>
@@ -149,7 +149,7 @@ export default function WeatherDashboard() {
   // ──────────────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-[#0a0c1a] text-white overflow-y-auto pb-24 md:pb-20 relative font-body transition-colors duration-1000">
+    <div className="min-h-[100dvh] bg-[#0a0c1a] text-white overflow-y-auto pb-24 md:pb-20 relative font-body transition-colors duration-1000">
       {/* Fixed Background Image (Hardware Accelerated, Smooth) */}
       <div className="fixed inset-0 z-0 bg-cover bg-center transition-opacity duration-1000" style={{ backgroundImage: `url(${theme.bgImage})` }}></div>
       

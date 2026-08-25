@@ -56,11 +56,15 @@
 }
 
 .large-text .text-sm {
-  font-size: 16px;
+  font-size: 16px !important;
 }
 
 .large-text .text-xs {
-  font-size: 14px;
+  font-size: 14px !important;
+}
+
+.large-text .text-\[15px\] {
+  font-size: 18px !important;
 }
 
 /* High contrast mode */
@@ -70,6 +74,42 @@
 
 .high-contrast .sky-band {
   filter: contrast(1.4) saturate(1.3);
+}
+
+.high-contrast .text-white\/70,
+.high-contrast .text-white\/60,
+.high-contrast .text-white\/40 {
+  color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+.high-contrast .bg-white\/5 {
+  background-color: rgba(255, 255, 255, 0.2) !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+}
+
+.high-contrast .bg-amber-500\/20,
+.high-contrast .bg-yellow-500\/20 {
+  background-color: rgba(217, 119, 6, 0.9) !important;
+}
+
+.high-contrast .text-amber-400,
+.high-contrast .text-yellow-400 {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+}
+
+.high-contrast .bg-red-500\/20 {
+  background-color: rgba(220, 38, 38, 0.9) !important;
+}
+
+.high-contrast .text-red-400 {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+}
+
+.high-contrast .text-\[15px\] {
+  font-weight: 500;
 }
 
 /* Smooth scrolling for chat */
@@ -178,7 +218,7 @@
 
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(5px); }
-  to { opacity: 1; transform: translateY(0); }
+  to { opacity: 1; transform: none; }
 }
 
 .animate-fade-in {

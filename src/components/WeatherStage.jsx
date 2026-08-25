@@ -92,7 +92,7 @@ export default function WeatherStage() {
   const weatherInfo = stageData?.weather ? getWeatherInfo(stageData.weather.weatherCode, state.language) : null;
 
   return (
-    <div className="min-h-screen bg-base flex flex-col">
+    <div className="min-h-[100dvh] bg-base flex flex-col">
       <SkyBand overrideCondition={weatherInfo?.condition || 'clear'} overrideLoading={isLoading} />
       <Header />
       <OfflineBanner />

@@ -20,7 +20,7 @@ export default function ChatScreen() {
   const theme = weather && weatherInfo ? getTheme(weather, weatherInfo) : getTheme({ temperature: 20 }, { key: 'partlyCloudy' });
 
   return (
-    <div className="flex flex-col h-screen bg-[#0a0c1a] transition-colors duration-1000 overflow-hidden">
+    <div className="flex flex-col h-[100dvh] bg-[#0a0c1a] transition-colors duration-1000 overflow-hidden">
       {/* Fixed Background Image (Hardware Accelerated) */}
       <div className="fixed inset-0 z-0 bg-cover bg-center transition-opacity duration-1000" style={{ backgroundImage: `url(${theme.bgImage})` }}></div>
       

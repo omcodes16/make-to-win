@@ -1,3 +1,5 @@
+const colors = require('tailwindcss/colors');
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./index.html', './src/**/*.{js,jsx}'],
@@ -6,8 +8,14 @@ export default {
       colors: {
         base: '#F7F8FA',
         dusk: '#1B2A4A',
-        teal: '#2F6F6D',
-        amber: '#E8A33D',
+        teal: {
+          ...colors.teal,
+          DEFAULT: '#2F6F6D',
+        },
+        amber: {
+          ...colors.amber,
+          DEFAULT: '#E8A33D',
+        },
         clay: '#C1443C',
         cloud: '#E8ECF1',
       },
