@@ -244,9 +244,8 @@ app.get('/api/news', async (req, res) => {
 });
 
 // Serve static files in production
-app.use(express.static(join(__dirname, 'dist')));
-app.get('*', (req, res) => {
-  res.sendFile(join(__dirname, 'dist', 'index.html'));
+app.get('/', (req, res) => {
+  res.json({ status: 'active', message: 'WeatherGPT Backend is running!' });
 });
 
 app.listen(PORT, () => {
