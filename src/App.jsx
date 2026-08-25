@@ -5,6 +5,8 @@ import ChatScreen from './components/ChatScreen';
 import WeatherDashboard from './components/WeatherDashboard';
 import AlertsScreen from './components/AlertsScreen';
 
+import ReviewsScreen from './components/ReviewsScreen';
+
 function AppContent() {
   const { state } = useApp();
   
@@ -16,6 +18,7 @@ function AppContent() {
     <div key={state.activeTab} className="animate-fade-in">
       {state.activeTab === 'alerts' ? <AlertsScreen /> : 
        state.activeTab === 'stage' ? <WeatherDashboard /> : 
+       state.activeTab === 'reviews' ? <ReviewsScreen /> : 
        <ChatScreen />}
     </div>
   );

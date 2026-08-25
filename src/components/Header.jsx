@@ -235,6 +235,19 @@ export default function Header() {
               </svg>
             </button>
 
+            {/* Reviews Page Button */}
+            <button
+              onClick={() => { dispatch({ type: 'SET_ACTIVE_TAB', payload: 'reviews' }); setShowSaved(false); setShowLangPicker(false); setShowA11y(false); }}
+              className={`w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full transition-colors border ${
+                state.activeTab === 'reviews'
+                  ? 'text-yellow-400 bg-yellow-500/10 border-yellow-500/30'
+                  : 'text-white/70 bg-white/5 border-white/10 hover:bg-white/10'
+              }`}
+              aria-label="User Reviews"
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill={state.activeTab === 'reviews' ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </button>
+
             {/* Saved Locations bookmark */}
             <div className="relative" ref={savedRef}>
               <button
