@@ -1,13 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { getTheme } from '../utils/themes';
+import { getSeasonalContext } from '../utils/climateSeasonal';
 import Header from './Header';
 
 export default function AlertsScreen() {
   const { state } = useApp();
   
-  // Try to use the searched location's weather, otherwise default to severe theme
-  const weather = state.weatherStageData?.weather;
+  // Derive active location and weather data
+  const locationName = state.stageData.locationName || state.location.name;
+  const weather = state.stageData.weatherData || state.currentWeather;
+
+  // Compute seasonal context
+  const currentMonthIndex = new Date().getMonth();
+  const seasonalCtx = getSeasonalContext(locationName, currentMonthIndex);
   const weatherInfo = weather ? { condition: 'severe', key: 'severe' } : null; // Force severe theme or match location
   const theme = weather ? getTheme(weather, weatherInfo) : getTheme({ temperature: 20 }, { key: 'severeStorm' });
   
@@ -168,9 +174,33 @@ export default function AlertsScreen() {
           </div>
         </div>
 
-        {/* Right Column: Local News */}
-        <div className="w-full md:w-1/3">
-          <h2 className="text-lg sm:text-xl font-bold tracking-wide mb-4 sm:mb-6">Real-Time India Weather News</h2>
+        {/* Right Column: Local News & Climate Context */}
+        <div className="w-full md:w-1/3 flex flex-col gap-6">
+          
+          {/* Feature 7: Seasonal Context Card */}
+          {seasonalCtx.found && (
+            <div>
+              <h2 className="text-lg sm:text-xl font-bold tracking-wide mb-4">Historical Climate Context</h2>
+              <div className="bg-indigo-950/40 backdrop-blur-xl border border-indigo-400/30 rounded-2xl p-5 shadow-xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-4 opacity-10 text-6xl">📅</div>
+                <div className="text-xs font-bold uppercase text-indigo-300 tracking-wider mb-3">Normal for {seasonalCtx.month} in {seasonalCtx.city}</div>
+                <p className="text-sm text-white/90 leading-relaxed relative z-10">{seasonalCtx.summary}</p>
+                <div className="grid grid-cols-2 gap-3 mt-4 border-t border-indigo-400/20 pt-4">
+                  <div>
+                    <div className="text-[10px] text-white/50 uppercase tracking-widest mb-1">Avg Rain</div>
+                    <div className="text-lg font-bold">{seasonalCtx.avgRainfall} mm</div>
+                  </div>
+                  <div>
+                    <div className="text-[10px] text-white/50 uppercase tracking-widest mb-1">Avg Temp</div>
+                    <div className="text-lg font-bold">{seasonalCtx.avgMinTemp}° – {seasonalCtx.avgMaxTemp}°</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div>
+            <h2 className="text-lg sm:text-xl font-bold tracking-wide mb-4 sm:mb-6">Real-Time India Weather News</h2>
           
           <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-4 sm:p-6 shadow-xl flex flex-col gap-4 sm:gap-6">
             {isLoadingNews ? (
@@ -190,6 +220,7 @@ export default function AlertsScreen() {
             <a href="https://news.google.com/search?q=weather+india" target="_blank" rel="noreferrer" className="w-full block text-center mt-2 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-sm font-medium transition-colors">
               View All on Google News
             </a>
+          </div>
           </div>
         </div>
 
