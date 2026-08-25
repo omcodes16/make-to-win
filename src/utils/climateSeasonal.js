@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Seasonal Climate Baseline - PS 26068
  * IMD-based monthly norms for major Indian cities / NE India.
  * Rainfall mm/month, temp °C.
@@ -28,8 +28,11 @@ function getSeason(m) {
   if (m >= 11 || m <= 1) return 'Winter';
   return 'Pre-Monsoon / Summer';
 }
-export function getSeasonalContext(locationName, monthIndex) {
+import { FEATURE_I18N } from './featureTranslations';
+
+export function getSeasonalContext(locationName, monthIndex, lang = 'en') {
   if (!locationName) return { found: false };
+  const t = FEATURE_I18N[lang] || FEATURE_I18N.en;
   const norm = locationName.toLowerCase().trim();
   const month = monthIndex ?? new Date().getMonth();
   let match = null;
@@ -45,7 +48,7 @@ export function getSeasonalContext(locationName, monthIndex) {
     avgRainfall: match.rainfall[month],
     avgMaxTemp: match.maxTemp[month],
     avgMinTemp: match.minTemp[month],
-    summary: `In ${MONTHS[month]}, ${match.name} typically gets ~${match.rainfall[month]}mm rainfall, with temps ${match.minTemp[month]}–${match.maxTemp[month]}°C. Season: ${getSeason(month)}.`,
+    summary: t.seasonSummary(MONTHS[month], match.name, match.rainfall[month], match.minTemp[month], match.maxTemp[month], getSeason(month)),
   };
 }
 export function getSeasonalAnomaly(locationName, actualRainfall, actualTemp, monthIndex) {

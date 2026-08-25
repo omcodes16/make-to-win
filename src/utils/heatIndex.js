@@ -1,7 +1,4 @@
-﻿/**
- * Heat Index Utility - PS 26068
- * US NWS Rothfusz regression formula.
- */
+import { FEATURE_I18N } from './featureTranslations';
 
 export function computeHeatIndex(tempC, humidity) {
   if (tempC < 27) return tempC;
@@ -25,10 +22,11 @@ export function computeHeatIndex(tempC, humidity) {
   return Math.round(((HI - 32) * 5) / 9);
 }
 
-export function getHeatRisk(heatIndexC) {
-  if (heatIndexC >= 54) return { level: 'extreme-danger', label: 'Extreme Danger', icon: '☠️', color: 'text-red-300', bg: 'bg-red-900/40', border: 'border-red-500/60', dot: 'bg-red-400', advice: 'Heat stroke highly likely. Avoid all outdoor activity. Seek air-conditioned shelter immediately.' };
-  if (heatIndexC >= 41) return { level: 'danger', label: 'Danger', icon: '🔴', color: 'text-orange-300', bg: 'bg-orange-900/30', border: 'border-orange-500/50', dot: 'bg-orange-400', advice: 'Heat cramps and exhaustion likely. Limit exertion. Drink water every 15 mins.' };
-  if (heatIndexC >= 32) return { level: 'extreme-caution', label: 'Extreme Caution', icon: '🟠', color: 'text-amber-300', bg: 'bg-amber-900/25', border: 'border-amber-500/40', dot: 'bg-amber-400', advice: 'Fatigue possible with prolonged exposure. Farmers should avoid noon field work.' };
-  if (heatIndexC >= 27) return { level: 'caution', label: 'Caution', icon: '🟡', color: 'text-yellow-300', bg: 'bg-yellow-900/20', border: 'border-yellow-500/30', dot: 'bg-yellow-400', advice: 'Fatigue possible with prolonged exertion. Stay hydrated and take breaks.' };
-  return { level: 'comfortable', label: 'Comfortable', icon: '🟢', color: 'text-green-300', bg: 'bg-green-900/20', border: 'border-green-500/30', dot: 'bg-green-400', advice: 'Comfortable conditions. Suitable for outdoor work and activities.' };
+export function getHeatRisk(heatIndexC, lang = 'en') {
+  const t = FEATURE_I18N[lang] || FEATURE_I18N.en;
+  if (heatIndexC >= 54) return { level: 'extreme-danger', label: t.heatExtremeDanger, icon: '☠️', color: 'text-red-300', bg: 'bg-red-900/40', border: 'border-red-500/60', dot: 'bg-red-400', advice: t.heatAdvExtremeDanger };
+  if (heatIndexC >= 41) return { level: 'danger', label: t.heatDanger, icon: '🔴', color: 'text-orange-300', bg: 'bg-orange-900/30', border: 'border-orange-500/50', dot: 'bg-orange-400', advice: t.heatAdvDanger };
+  if (heatIndexC >= 32) return { level: 'extreme-caution', label: t.heatExtremeCaution, icon: '🟠', color: 'text-amber-300', bg: 'bg-amber-900/25', border: 'border-amber-500/40', dot: 'bg-amber-400', advice: t.heatAdvExtremeCaution };
+  if (heatIndexC >= 27) return { level: 'caution', label: t.heatCaution, icon: '🟡', color: 'text-yellow-300', bg: 'bg-yellow-900/20', border: 'border-yellow-500/30', dot: 'bg-yellow-400', advice: t.heatAdvCaution };
+  return { level: 'comfortable', label: t.heatComfortable, icon: '🟢', color: 'text-green-300', bg: 'bg-green-900/20', border: 'border-green-500/30', dot: 'bg-green-400', advice: t.heatAdvComfortable };
 }

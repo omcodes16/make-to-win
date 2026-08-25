@@ -10,6 +10,7 @@ import Header from './Header';
 import { computeHeatIndex, getHeatRisk } from '../utils/heatIndex';
 import { getFarmerAdvisory } from '../utils/farmerAdvisory';
 import { getSeasonalContext } from '../utils/climateSeasonal';
+import { FEATURE_I18N } from '../utils/featureTranslations';
 
 
 export default function WeatherDashboard() {
@@ -115,30 +116,32 @@ export default function WeatherDashboard() {
   }
 
   // ── PS 26068 Feature Computations ─────────────────────────────────────────
+  const lang = state.language;
+  const ft = FEATURE_I18N[lang] || FEATURE_I18N.en;
 
   // Feature 3: Heat Index Risk (NWS Rothfusz formula)
   const heatIndex = isToday ? computeHeatIndex(weather.temperature, weather.humidity) : null;
-  const heatRisk = heatIndex !== null ? getHeatRisk(heatIndex) : null;
+  const heatRisk = heatIndex !== null ? getHeatRisk(heatIndex, lang) : null;
 
   // Feature 1: Farmer Field Advisory
-  const farmerAdvisory = getFarmerAdvisory(weather, selectedDay);
+  const farmerAdvisory = getFarmerAdvisory(weather, selectedDay, lang);
 
   // Feature 7: Seasonal Climate Context
   const currentMonthIndex = new Date().getMonth();
-  const seasonalCtx = getSeasonalContext(stageData.locationName, currentMonthIndex);
+  const seasonalCtx = getSeasonalContext(stageData.locationName, currentMonthIndex, lang);
 
   // Feature 2: Health Impact (AQI + UV + Humidity)
   const healthImpacts = (() => {
     const impacts = [];
     if (isToday) {
-      if (weather.aqi > 150) impacts.push({ icon: '🫁', text: `AQI ${weather.aqi} is Unhealthy — respiratory irritation likely. Sensitive groups (children, elderly, asthma patients) should stay indoors.`, color: 'text-red-300' });
-      else if (weather.aqi > 100) impacts.push({ icon: '😷', text: `AQI ${weather.aqi} is Moderate — some pollutants may cause mild irritation for sensitive individuals.`, color: 'text-amber-300' });
-      if (weather.uvIndex >= 9) impacts.push({ icon: '🔆', text: `UV Index ${weather.uvIndex} is Very High — 15 mins of unprotected sun can cause skin damage. Use SPF 50+.`, color: 'text-orange-300' });
-      else if (weather.uvIndex >= 6) impacts.push({ icon: '☀️', text: `UV Index ${weather.uvIndex} is High — wear sunscreen and protective clothing between 10 AM–4 PM.`, color: 'text-amber-300' });
+      if (weather.aqi > 150) impacts.push({ icon: '🫁', text: ft.healthAqiUnhealthy(weather.aqi), color: 'text-red-300' });
+      else if (weather.aqi > 100) impacts.push({ icon: '😷', text: ft.healthAqiMod(weather.aqi), color: 'text-amber-300' });
+      if (weather.uvIndex >= 9) impacts.push({ icon: '🔆', text: ft.healthUvVeryHigh(weather.uvIndex), color: 'text-orange-300' });
+      else if (weather.uvIndex >= 6) impacts.push({ icon: '☀️', text: ft.healthUvHigh(weather.uvIndex), color: 'text-amber-300' });
       if (heatRisk && heatRisk.level !== 'comfortable') impacts.push({ icon: '🌡️', text: heatRisk.advice, color: heatRisk.color });
-      if (weather.humidity > 85) impacts.push({ icon: '💦', text: `Humidity at ${weather.humidity}% — sweat evaporation is slow. Physical exertion feels much more exhausting than the temperature alone suggests.`, color: 'text-blue-300' });
+      if (weather.humidity > 85) impacts.push({ icon: '💦', text: ft.healthHumidity(weather.humidity), color: 'text-blue-300' });
     }
-    if (impacts.length === 0) impacts.push({ icon: '✅', text: 'Air quality and UV conditions are within safe limits. Good day for outdoor activities.', color: 'text-green-300' });
+    if (impacts.length === 0) impacts.push({ icon: '✅', text: ft.healthGood, color: 'text-green-300' });
     return impacts;
   })();
 
@@ -275,7 +278,7 @@ export default function WeatherDashboard() {
                farmerAdvisory.icon === 'good' ? '✅' : '🌤️'}
             </div>
             <div className="flex-1">
-              <div className="text-xs sm:text-sm font-semibold uppercase tracking-wider mb-1 opacity-80">Farmer Advisory</div>
+              <div className="text-xs sm:text-sm font-semibold uppercase tracking-wider mb-1 opacity-80">{lang === 'hi' ? 'किसान सलाह' : lang === 'bn' ? 'কৃষক পরামর্শ' : lang === 'as' ? 'কৃষক পৰামৰ্শ' : 'Farmer Advisory'}</div>
               <h3 className="text-base sm:text-lg font-bold mb-1 sm:mb-2">{farmerAdvisory.title}</h3>
               <p className="text-sm sm:text-base opacity-90 leading-relaxed">{farmerAdvisory.advice}</p>
             </div>
@@ -333,7 +336,7 @@ export default function WeatherDashboard() {
             {/* Feature 2: Climate & Health Impact */}
             {isToday && healthImpacts.length > 0 && (
               <div className="mt-2 pt-4 sm:pt-5 border-t border-white/10">
-                <div className="text-white/80 font-medium text-[10px] sm:text-xs tracking-wide uppercase mb-3">Health & Activity Impact</div>
+                <div className="text-white/80 font-medium text-[10px] sm:text-xs tracking-wide uppercase mb-3">{ft.healthTitle}</div>
                 <div className="flex flex-col gap-3">
                   {healthImpacts.map((impact, i) => (
                     <div key={i} className="flex items-start gap-3">

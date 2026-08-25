@@ -11,9 +11,12 @@ export default function AlertsScreen() {
   const locationName = state.stageData.locationName || state.location.name;
   const weather = state.stageData.weatherData || state.currentWeather;
 
+  const lang = state.language;
+  const ft = require('../utils/featureTranslations').FEATURE_I18N[lang] || require('../utils/featureTranslations').FEATURE_I18N.en;
+
   // Compute seasonal context
   const currentMonthIndex = new Date().getMonth();
-  const seasonalCtx = getSeasonalContext(locationName, currentMonthIndex);
+  const seasonalCtx = getSeasonalContext(locationName, currentMonthIndex, lang);
   const weatherInfo = weather ? { condition: 'severe', key: 'severe' } : null; // Force severe theme or match location
   const theme = weather ? getTheme(weather, weatherInfo) : getTheme({ temperature: 20 }, { key: 'severeStorm' });
   
@@ -180,18 +183,18 @@ export default function AlertsScreen() {
           {/* Feature 7: Seasonal Context Card */}
           {seasonalCtx.found && (
             <div>
-              <h2 className="text-lg sm:text-xl font-bold tracking-wide mb-4">Historical Climate Context</h2>
+              <h2 className="text-lg sm:text-xl font-bold tracking-wide mb-4">{ft.seasonTitle}</h2>
               <div className="bg-indigo-950/40 backdrop-blur-xl border border-indigo-400/30 rounded-2xl p-5 shadow-xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-4 opacity-10 text-6xl">📅</div>
-                <div className="text-xs font-bold uppercase text-indigo-300 tracking-wider mb-3">Normal for {seasonalCtx.month} in {seasonalCtx.city}</div>
+                <div className="text-xs font-bold uppercase text-indigo-300 tracking-wider mb-3">{ft.seasonNormalFor(seasonalCtx.month, seasonalCtx.city)}</div>
                 <p className="text-sm text-white/90 leading-relaxed relative z-10">{seasonalCtx.summary}</p>
                 <div className="grid grid-cols-2 gap-3 mt-4 border-t border-indigo-400/20 pt-4">
                   <div>
-                    <div className="text-[10px] text-white/50 uppercase tracking-widest mb-1">Avg Rain</div>
+                    <div className="text-[10px] text-white/50 uppercase tracking-widest mb-1">{ft.seasonAvgRain}</div>
                     <div className="text-lg font-bold">{seasonalCtx.avgRainfall} mm</div>
                   </div>
                   <div>
-                    <div className="text-[10px] text-white/50 uppercase tracking-widest mb-1">Avg Temp</div>
+                    <div className="text-[10px] text-white/50 uppercase tracking-widest mb-1">{ft.seasonAvgTemp}</div>
                     <div className="text-lg font-bold">{seasonalCtx.avgMinTemp}° – {seasonalCtx.avgMaxTemp}°</div>
                   </div>
                 </div>
