@@ -57,7 +57,7 @@ RESPOND ONLY IN THIS EXACT JSON FORMAT, no markdown fences:
 {
   "answer": "Detailed, easy-to-understand, conversational answer with actionable advice.",
   "followUp": "Optional seasonal comparison or anomaly note, or empty string.",
-  "relevantStat": "Single most relevant data point as a short label.",
+  "relevantStat": "Single most relevant data point as a short label (e.g. 'RAIN: 0 MM', 'HUMIDITY: 80%'). DO NOT include Temperature here, as it is already shown in the UI.",
   "advisory": "Plain-language advisory with concrete action if conditions warrant caution, or empty string.",
   "severity": "none or caution or severe",
   "suggestedQuestions": ["Question 1?", "Question 2?"]
