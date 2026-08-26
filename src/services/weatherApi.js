@@ -101,7 +101,7 @@ export async function geocodeLocation(name, lang = 'en') {
  * timezone: Asia/Kolkata, forecast_days: 7
  */
 export async function getWeather(lat, lng) {
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,rain,weather_code,wind_speed_10m,wind_direction_10m,uv_index,visibility&hourly=temperature_2m,precipitation_probability,wind_speed_10m,wind_direction_10m,weather_code&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,uv_index_max,sunrise,sunset,weather_code&timezone=Asia%2FKolkata&forecast_days=7`;
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,rain,weather_code,wind_speed_10m,wind_direction_10m,uv_index,visibility&hourly=temperature_2m,precipitation_probability,wind_speed_10m,wind_direction_10m,weather_code&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,uv_index_max,sunrise,sunset,weather_code&timezone=Asia%2FKolkata&forecast_days=7&models=best_match,gfs_seamless,icon_seamless,ecmwf_ifs04`;
   const aqiUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lng}&current=us_aqi&timezone=Asia%2FKolkata`;
 
   const [res, aqiRes] = await Promise.all([fetch(url), fetch(aqiUrl)]);
@@ -137,24 +137,42 @@ export async function getWeather(lat, lng) {
     // Hourly forecast (next 24 hours)
     hourly: {
       time: data.hourly.time,
-      temperature: data.hourly.temperature_2m,
-      precipProb: data.hourly.precipitation_probability,
-      windSpeed: data.hourly.wind_speed_10m,
-      windDirection: data.hourly.wind_direction_10m,
-      weatherCode: data.hourly.weather_code,
+      temperature: data.hourly.temperature_2m_best_match,
+      precipProb: data.hourly.precipitation_probability_best_match,
+      windSpeed: data.hourly.wind_speed_10m_best_match,
+      windDirection: data.hourly.wind_direction_10m_best_match,
+      weatherCode: data.hourly.weather_code_best_match,
     },
 
     // 7-day forecast
     daily: {
       time: data.daily.time,
-      maxTemp: data.daily.temperature_2m_max,
-      minTemp: data.daily.temperature_2m_min,
-      precipProbMax: data.daily.precipitation_probability_max,
-      precipitationSum: data.daily.precipitation_sum,
-      uvIndexMax: data.daily.uv_index_max,
-      sunrise: data.daily.sunrise,
-      sunset: data.daily.sunset,
-      weatherCode: data.daily.weather_code,
+      maxTemp: data.daily.temperature_2m_max_best_match,
+      minTemp: data.daily.temperature_2m_min_best_match,
+      precipProbMax: data.daily.precipitation_probability_max_best_match,
+      precipitationSum: data.daily.precipitation_sum_best_match,
+      uvIndexMax: data.daily.uv_index_max_best_match,
+      sunrise: data.daily.sunrise_best_match,
+      sunset: data.daily.sunset_best_match,
+      weatherCode: data.daily.weather_code_best_match,
+    },
+
+    // NWP Model Transparency Data
+    modelData: {
+      daily: {
+        gfs: {
+          maxTemp: data.daily.temperature_2m_max_gfs_seamless,
+          precipProbMax: data.daily.precipitation_probability_max_gfs_seamless,
+        },
+        icon: {
+          maxTemp: data.daily.temperature_2m_max_icon_seamless,
+          precipProbMax: data.daily.precipitation_probability_max_icon_seamless,
+        },
+        ecmwf: {
+          maxTemp: data.daily.temperature_2m_max_ecmwf_ifs04,
+          precipProbMax: data.daily.precipitation_probability_max_ecmwf_ifs04,
+        }
+      }
     },
 
     // Metadata for caching

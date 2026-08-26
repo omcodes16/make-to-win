@@ -12,6 +12,7 @@ import { computeHeatIndex, getHeatRisk } from '../utils/heatIndex';
 import { getFarmerAdvisory } from '../utils/farmerAdvisory';
 import { getSeasonalContext } from '../utils/climateSeasonal';
 import { FEATURE_I18N } from '../utils/featureTranslations';
+import ModelConfidence from './ModelConfidence';
 
 
 export default function WeatherDashboard() {
@@ -239,6 +240,9 @@ export default function WeatherDashboard() {
             ))}
           </div>
         </div>
+
+        {/* Model Confidence Panel */}
+        <ModelConfidence modelData={weather?.modelData} selectedDay={selectedDay} language={state.language} />
 
         {/* Hourly Forecast */}
         {isToday && (
