@@ -203,3 +203,72 @@ export async function reverseGeocode(lat, lng) {
 }
 
 export { NER_CITIES };
+
+/**
+ * Fetches specialized data based on the selected user profile.
+ * Completely separate from the main weather fetch to ensure no existing logic breaks.
+ */
+export async function getSpecializedData(lat, lng, profile) {
+  try {
+    let url = '';
+    const currentHour = new Date().getHours();
+    
+    if (profile === 'farmer') {
+      url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&hourly=soil_temperature_6cm,soil_moisture_1_to_3cm,et0_fao_evapotranspiration&timezone=Asia%2FKolkata`;
+    } 
+    else if (profile === 'fisherman') {
+      url = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lng}&hourly=wave_height,wave_period,wave_direction&timezone=Asia%2FKolkata`;
+    } 
+    else if (profile === 'aviation') {
+      url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&hourly=visibility,cloudcover_low,windgusts_10m,cape&timezone=Asia%2FKolkata`;
+    } 
+    else if (profile === 'urbanPlanning') {
+      const aqiUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lng}&hourly=pm10,pm2_5&timezone=Asia%2FKolkata`;
+      const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&hourly=uv_index,apparent_temperature&timezone=Asia%2FKolkata`;
+      
+      const [aqiRes, weatherRes] = await Promise.all([fetch(aqiUrl), fetch(weatherUrl)]);
+      if (aqiRes.ok && weatherRes.ok) {
+        const aqiData = await aqiRes.json();
+        const weatherData = await weatherRes.json();
+        return {
+          pm2_5: aqiData.hourly.pm2_5[currentHour],
+          pm10: aqiData.hourly.pm10[currentHour],
+          uv_index: weatherData.hourly.uv_index[currentHour],
+          feels_like: weatherData.hourly.apparent_temperature[currentHour],
+        };
+      }
+      throw new Error('Failed to fetch urban data');
+    }
+    else {
+      return null;
+    }
+
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`Specialized API error: ${res.status}`);
+    const data = await res.json();
+    
+    if (profile === 'farmer') {
+      return {
+        soil_temp: data.hourly.soil_temperature_6cm[currentHour],
+        soil_moisture: data.hourly.soil_moisture_1_to_3cm[currentHour],
+        evapotranspiration: data.hourly.et0_fao_evapotranspiration[currentHour]
+      };
+    } else if (profile === 'fisherman') {
+      return {
+        wave_height: data.hourly.wave_height[currentHour],
+        wave_period: data.hourly.wave_period[currentHour],
+        wave_direction: data.hourly.wave_direction[currentHour]
+      };
+    } else if (profile === 'aviation') {
+      return {
+        visibility: data.hourly.visibility[currentHour],
+        cloudcover_low: data.hourly.cloudcover_low[currentHour],
+        windgusts: data.hourly.windgusts_10m[currentHour],
+        cape: data.hourly.cape[currentHour]
+      };
+    }
+  } catch (err) {
+    console.error('Error fetching specialized data:', err);
+    return null;
+  }
+}

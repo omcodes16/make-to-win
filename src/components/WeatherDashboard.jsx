@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import RadarMap from './RadarMap';
 import HistoricalAnalytics from './HistoricalAnalytics';
+
 import { geocodeLocation, getWeather } from '../services/weatherApi';
 import { getWeatherInfo } from '../utils/weatherConditions';
 import { UI_TRANSLATIONS } from '../utils/translations';
@@ -77,10 +78,12 @@ export default function WeatherDashboard() {
               <button type="submit" className="px-4 sm:px-6 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-medium transition-colors text-sm sm:text-base">Go</button>
             </form>
           </div>
-        </div>
-      </div>
-    );
-  }
+        
+      
+    </div>
+  </div>
+  );
+}
 
   // Derive Display Values (Today vs Future Day)
   const isToday = selectedDay === 0;
@@ -288,17 +291,20 @@ export default function WeatherDashboard() {
             <div className="text-white/80 font-medium text-xs sm:text-sm tracking-wide">
               {state.userProfile === 'farmer' ? '🌾' : state.userProfile === 'fisherman' ? '🎣' : state.userProfile === 'aviation' ? '✈️' : state.userProfile === 'urbanPlanning' ? '🏙️' : '🌍'} Action Advisory
             </div>
-            <select 
-              value={state.userProfile}
-              onChange={(e) => dispatch({ type: 'SET_PROFILE', payload: e.target.value })}
-              className="bg-white/10 border border-white/20 text-white text-xs rounded-lg px-2 py-1 focus:outline-none focus:border-indigo-400"
-            >
-              <option value="general" className="bg-[#1a1c29]">General</option>
-              <option value="farmer" className="bg-[#1a1c29]">Farmer (किसान)</option>
-              <option value="fisherman" className="bg-[#1a1c29]">Fisherman (मछुआरा)</option>
-              <option value="aviation" className="bg-[#1a1c29]">Aviation (उड्डयन)</option>
-              <option value="urbanPlanning" className="bg-[#1a1c29]">Urban Planner (शहरी योजनाकार)</option>
-            </select>
+                          <div className="flex gap-2 items-center">
+                              <select 
+                value={state.userProfile}
+                onChange={(e) => dispatch({ type: 'SET_PROFILE', payload: e.target.value })}
+                className="bg-white/10 border border-white/20 text-white text-xs rounded-lg px-2 py-1 focus:outline-none focus:border-indigo-400"
+              >
+                <option value="general" className="bg-[#1a1c29]">General</option>
+                <option value="farmer" className="bg-[#1a1c29]">Farmer (किसान)</option>
+                <option value="fisherman" className="bg-[#1a1c29]">Fisherman (मछुआरा)</option>
+                <option value="aviation" className="bg-[#1a1c29]">Aviation (उड़ान)</option>
+                <option value="urbanPlanning" className="bg-[#1a1c29]">Urban Planner (शहर योजना)</option>
+              </select>
+                
+              </div>
           </div>
           
           {activeAdvisory ? (

@@ -265,6 +265,20 @@ ${modelNote}`;
   try {
     const jsonStr = finalContent.replace(/```json\n?|\n?```/g, '').trim();
     const finalJson = JSON.parse(jsonStr);
+
+      // Fallback for missing suggested questions
+      if (!Array.isArray(finalJson.suggestedQuestions) || finalJson.suggestedQuestions.length === 0) {
+        const lang = req.body.language || 'en';
+        if (lang === 'hi') {
+          finalJson.suggestedQuestions = ['आने वाले दिनों का मौसम कैसा रहेगा?', 'क्या कोई अलर्ट है?'];
+        } else if (lang === 'bn') {
+          finalJson.suggestedQuestions = ['আগামী কয়েকদিনের আবহাওয়া কেমন থাকবে?', 'কোনো সতর্কতা আছে কি?'];
+        } else if (lang === 'as') {
+          finalJson.suggestedQuestions = ['অহা কেইদিনমানৰ বতৰ কেনেকুৱা হ’ব?', 'কিবা সতৰ্কবাণী আছে নেকি?'];
+        } else {
+          finalJson.suggestedQuestions = ['What is the forecast for tomorrow?', 'Are there any active alerts?'];
+        }
+      }
     
     // Forcefully remove temperature from relevantStat to prevent UI duplication
     if (finalJson.relevantStat) {
@@ -289,7 +303,7 @@ ${modelNote}`;
       followUp: '',
       advisory: '',
       severity: 'none',
-      suggestedQuestions: [],
+      suggestedQuestions: req.body.language === 'hi' ? ['आने वाले दिनों का मौसम कैसा रहेगा?'] : req.body.language === 'bn' ? ['আগামী কয়েকদিনের আবহাওয়া কেমন থাকবে?'] : req.body.language === 'as' ? ['অহা কেইদিনমানৰ বতৰ কেনেকুৱা হ’ব?'] : ['What is the forecast for tomorrow?', 'Are there any active alerts?'],
     });
   }
 });

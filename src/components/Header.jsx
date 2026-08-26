@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import { LANGUAGES } from '../utils/constants';
 import AccessibilityPanel from './AccessibilityPanel';
+import ProfessionModal from './ProfessionModal';
+import { FarmerIcon, FishermanIcon, AviationIcon, UrbanIcon } from './HubIcons';
 import { UI_TRANSLATIONS } from '../utils/translations';
 import { reverseGeocode, getWeather } from '../services/weatherApi';
 import { getWeatherInfo, checkSeverity } from '../utils/weatherConditions';
@@ -10,6 +12,7 @@ import { sendMessage as sendChatMessage } from '../services/chatApi';
 export default function Header() {
   const { state, dispatch } = useApp();
   const [showLangPicker, setShowLangPicker] = useState(false);
+  const [isHubOpen, setIsHubOpen] = useState(false);
   const [showA11y, setShowA11y] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
   const [showSaved, setShowSaved] = useState(false);
@@ -232,8 +235,27 @@ export default function Header() {
           {/* Right: Controls */}
           <div className="flex items-center justify-end gap-1.5 sm:gap-3">
             {/* Accessibility toggle */}
-            <button
-              onClick={() => setShowA11y(!showA11y)}
+              {state.userProfile !== 'general' && state.weatherStageData && (() => {
+                const iconClass = "w-4 h-4 mr-1";
+                let Icon = null;
+                if (state.userProfile === 'farmer') Icon = <FarmerIcon className={`${iconClass} text-emerald-300`} />;
+                else if (state.userProfile === 'fisherman') Icon = <FishermanIcon className={`${iconClass} text-blue-300`} />;
+                else if (state.userProfile === 'aviation') Icon = <AviationIcon className={`${iconClass} text-indigo-300`} />;
+                else if (state.userProfile === 'urbanPlanning') Icon = <UrbanIcon className={`${iconClass} text-purple-300`} />;
+                
+                return (
+                  <button
+                    onClick={() => setIsHubOpen(true)}
+                    className="flex items-center gap-1 sm:gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-indigo-500/80 hover:bg-indigo-400 hover:-translate-y-0.5 text-white shadow-[0_0_15px_rgba(99,102,241,0.4)] hover:shadow-[0_0_20px_rgba(99,102,241,0.6)] transition-smooth animate-pulse"
+                  >
+                    {Icon}
+                    <span>{currentLang.code === 'hi' ? 'हब खोलें ✨' : currentLang.code === 'bn' ? 'হাব খুলুন ✨' : currentLang.code === 'as' ? 'হাব খোলক ✨' : 'Open Hub ✨'}</span>
+                  </button>
+                );
+              })()}
+
+              <button
+                onClick={() => setShowA11y(!showA11y)}
               className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full transition-colors text-white/70 hover:bg-white/10 bg-white/5 border border-white/10"
               aria-label="Accessibility settings"
             >
@@ -370,6 +392,17 @@ export default function Header() {
           <span className="text-[10px] font-semibold">{t.tabAlerts}</span>
         </button>
       </nav>
+
+      {isHubOpen && state.weatherStageData && (
+        <ProfessionModal
+          profile={state.userProfile}
+          lat={state.weatherStageData.lat}
+          lng={state.weatherStageData.lng}
+          locationName={state.weatherStageData.locationName}
+          weather={state.weatherStageData.weather}
+          onClose={() => setIsHubOpen(false)}
+        />
+      )}
     </>
   );
 }

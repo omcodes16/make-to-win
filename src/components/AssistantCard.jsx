@@ -157,8 +157,8 @@ export default function AssistantCard({ message, isLatest }) {
         )}
 
         {/* Suggested Follow-up Questions (Chips) */}
-        {isLatest && suggestedQuestions?.length > 0 && (
-          <div className="flex flex-wrap gap-2 mt-3 px-1 animate-slide-up" style={{ animationDelay: '300ms' }}>
+        {suggestedQuestions?.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-3 px-1 animate-slide-up" style={{ animationFillMode: 'both' }}>
             {suggestedQuestions.map((q, i) => (
               <button
                 key={i}
