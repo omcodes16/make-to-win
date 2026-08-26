@@ -10,6 +10,9 @@ import { getTheme } from '../utils/themes';
 import Header from './Header';
 import { computeHeatIndex, getHeatRisk } from '../utils/heatIndex';
 import { getFarmerAdvisory } from '../utils/farmerAdvisory';
+import { getFishermanAdvisory } from '../utils/fishermanAdvisory';
+import { getAviationAdvisory } from '../utils/aviationAdvisory';
+import { getUrbanPlanningAdvisory } from '../utils/urbanPlanningAdvisory';
 import { getSeasonalContext } from '../utils/climateSeasonal';
 import { FEATURE_I18N } from '../utils/featureTranslations';
 import ModelConfidence from './ModelConfidence';
@@ -36,6 +39,13 @@ export default function WeatherDashboard() {
         const data = await getWeather(loc.lat, loc.lng);
         dispatch({ type: 'SET_WEATHER_STAGE_DATA', payload: { locationName: loc.name, lat: loc.lat, lng: loc.lng, weather: data } });
         setSelectedDay(0); // Reset to today on new search
+        
+        const severityCheck = checkSeverity(data, loc.name);
+        if (severityCheck && severityCheck.isSevere) {
+          dispatch({ type: 'SET_SEVERE_ALERT', payload: severityCheck });
+        } else {
+          dispatch({ type: 'DISMISS_ALERT' });
+        }
       }
       setSearchInput('');
     } catch (err) {} finally {
@@ -125,8 +135,18 @@ export default function WeatherDashboard() {
   const heatIndex = isToday ? computeHeatIndex(weather.temperature, weather.humidity) : null;
   const heatRisk = heatIndex !== null ? getHeatRisk(heatIndex, lang) : null;
 
-  // Feature 1: Farmer Field Advisory
-  const farmerAdvisory = getFarmerAdvisory(weather, selectedDay, lang);
+  // Feature 1: Role-based Action Advisory
+  let activeAdvisory = null;
+  let advisoryProfile = state.userProfile;
+  if (advisoryProfile === 'farmer') {
+    activeAdvisory = getFarmerAdvisory(weather, selectedDay, lang);
+  } else if (advisoryProfile === 'fisherman') {
+    activeAdvisory = getFishermanAdvisory(weather, selectedDay, lang);
+  } else if (advisoryProfile === 'aviation') {
+    activeAdvisory = getAviationAdvisory(weather, selectedDay, lang);
+  } else if (advisoryProfile === 'urbanPlanning') {
+    activeAdvisory = getUrbanPlanningAdvisory(weather, selectedDay, lang);
+  }
 
   // Feature 7: Seasonal Climate Context
   const currentMonthIndex = new Date().getMonth();
@@ -262,33 +282,60 @@ export default function WeatherDashboard() {
           </div>
         )}
 
-        {/* Feature 1: Farmer Action Advisory */}
-        {farmerAdvisory && (
-          <div className={`backdrop-blur-2xl border rounded-3xl p-5 sm:p-6 mb-4 sm:mb-6 shadow-xl relative overflow-hidden flex items-start sm:items-center gap-4
-            ${farmerAdvisory.type === 'danger' ? 'bg-red-950/40 border-red-500/50' : 
-              farmerAdvisory.type === 'caution' ? 'bg-amber-950/40 border-amber-500/40' : 
-              'bg-emerald-950/40 border-emerald-500/40'}`}>
-            <div className={`text-3xl sm:text-4xl p-3 rounded-2xl shrink-0
-              ${farmerAdvisory.type === 'danger' ? 'bg-red-500/20' : 
-                farmerAdvisory.type === 'caution' ? 'bg-amber-500/20' : 
-                'bg-emerald-500/20'}`}>
-              {farmerAdvisory.icon === 'storm' ? '⛈️' :
-               farmerAdvisory.icon === 'rain' ? '🌧️' :
-               farmerAdvisory.icon === 'drizzle' ? '🌦️' :
-               farmerAdvisory.icon === 'uv' ? '☀️' :
-               farmerAdvisory.icon === 'wind' ? '💨' :
-               farmerAdvisory.icon === 'fungal' ? '🍄' :
-               farmerAdvisory.icon === 'fog' ? '🌫️' :
-               farmerAdvisory.icon === 'frost' ? '❄️' :
-               farmerAdvisory.icon === 'good' ? '✅' : '🌤️'}
+        {/* Feature 1: Role-based Action Advisory & Profile Selector */}
+        <div className="mb-4 sm:mb-6">
+          <div className="flex justify-between items-center mb-2 px-1">
+            <div className="text-white/80 font-medium text-xs sm:text-sm tracking-wide">
+              {state.userProfile === 'farmer' ? '🌾' : state.userProfile === 'fisherman' ? '🎣' : state.userProfile === 'aviation' ? '✈️' : state.userProfile === 'urbanPlanning' ? '🏙️' : '🌍'} Action Advisory
             </div>
-            <div className="flex-1">
-              <div className="text-xs sm:text-sm font-semibold uppercase tracking-wider mb-1 opacity-80">{lang === 'hi' ? 'किसान सलाह' : lang === 'bn' ? 'কৃষক পরামর্শ' : lang === 'as' ? 'কৃষক পৰামৰ্শ' : 'Farmer Advisory'}</div>
-              <h3 className="text-base sm:text-lg font-bold mb-1 sm:mb-2">{farmerAdvisory.title}</h3>
-              <p className="text-sm sm:text-base opacity-90 leading-relaxed">{farmerAdvisory.advice}</p>
-            </div>
+            <select 
+              value={state.userProfile}
+              onChange={(e) => dispatch({ type: 'SET_PROFILE', payload: e.target.value })}
+              className="bg-white/10 border border-white/20 text-white text-xs rounded-lg px-2 py-1 focus:outline-none focus:border-indigo-400"
+            >
+              <option value="general" className="bg-[#1a1c29]">General</option>
+              <option value="farmer" className="bg-[#1a1c29]">Farmer (किसान)</option>
+              <option value="fisherman" className="bg-[#1a1c29]">Fisherman (मछुआरा)</option>
+              <option value="aviation" className="bg-[#1a1c29]">Aviation (उड्डयन)</option>
+              <option value="urbanPlanning" className="bg-[#1a1c29]">Urban Planner (शहरी योजनाकार)</option>
+            </select>
           </div>
-        )}
+          
+          {activeAdvisory ? (
+            <div className={`backdrop-blur-2xl border rounded-3xl p-5 sm:p-6 shadow-xl relative overflow-hidden flex items-start sm:items-center gap-4
+              ${activeAdvisory.type === 'danger' ? 'bg-red-950/40 border-red-500/50' : 
+                activeAdvisory.type === 'caution' ? 'bg-amber-950/40 border-amber-500/40' : 
+                'bg-emerald-950/40 border-emerald-500/40'}`}>
+              <div className={`text-3xl sm:text-4xl p-3 rounded-2xl shrink-0
+                ${activeAdvisory.type === 'danger' ? 'bg-red-500/20' : 
+                  activeAdvisory.type === 'caution' ? 'bg-amber-500/20' : 
+                  'bg-emerald-500/20'}`}>
+                {activeAdvisory.icon === 'storm' ? '⛈️' :
+                 activeAdvisory.icon === 'rain' ? '🌧️' :
+                 activeAdvisory.icon === 'drizzle' ? '🌦️' :
+                 activeAdvisory.icon === 'uv' ? '☀️' :
+                 activeAdvisory.icon === 'wind' ? '💨' :
+                 activeAdvisory.icon === 'fungal' ? '🍄' :
+                 activeAdvisory.icon === 'fog' ? '🌫️' :
+                 activeAdvisory.icon === 'frost' ? '❄️' :
+                 activeAdvisory.icon === 'good' ? '✅' : '🌤️'}
+              </div>
+              <div className="flex-1">
+                <div className="text-xs sm:text-sm font-semibold uppercase tracking-wider mb-1 opacity-80">
+                  {state.userProfile === 'fisherman' 
+                    ? (lang === 'hi' ? 'मछुआरों के लिए सलाह' : lang === 'bn' ? 'মৎস্যজীবীদের পরামর্শ' : lang === 'as' ? 'মাছমৰীয়া পৰামৰ্শ' : 'Marine Advisory')
+                    : (lang === 'hi' ? 'किसान सलाह' : lang === 'bn' ? 'কৃষক পরামর্শ' : lang === 'as' ? 'কৃষক পৰামৰ্শ' : 'Farmer Advisory')}
+                </div>
+                <h3 className="text-base sm:text-lg font-bold mb-1 sm:mb-2">{activeAdvisory.title}</h3>
+                <p className="text-sm sm:text-base opacity-90 leading-relaxed">{activeAdvisory.advice}</p>
+              </div>
+            </div>
+          ) : (
+            <div className="backdrop-blur-2xl border border-white/10 rounded-3xl p-5 sm:p-6 shadow-xl flex items-center justify-center min-h-[100px] bg-white/5">
+              <p className="text-white/50 text-sm text-center">No specific advisory for general profile today. Enjoy the weather!</p>
+            </div>
+          )}
+        </div>
 
         {/* 7-Day Forecast */}
         <div className="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl p-4 sm:p-6 mb-6 sm:mb-8 shadow-xl">

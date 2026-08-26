@@ -17,10 +17,15 @@ const initialState = {
   isHighContrast: localStorage.getItem('weathergpt-highcontrast') === 'true',
   lastCachedResponse: JSON.parse(localStorage.getItem('weathergpt-cache') || 'null'),
   savedLocations: JSON.parse(localStorage.getItem('weathergpt-saved-locations') || '[]'), // [{ name, lat, lng }]
+  userProfile: localStorage.getItem('weathergpt-profile') || 'general', // 'general', 'farmer', 'fisherman'
 };
 
 function appReducer(state, action) {
   switch (action.type) {
+    case 'SET_PROFILE':
+      localStorage.setItem('weathergpt-profile', action.payload);
+      return { ...state, userProfile: action.payload };
+
     case 'SET_ACTIVE_TAB':
       return { ...state, activeTab: action.payload };
 

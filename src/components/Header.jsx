@@ -63,6 +63,12 @@ export default function Header() {
         type: 'SET_WEATHER_STAGE_DATA',
         payload: { locationName: loc.name, lat: loc.lat, lng: loc.lng, weather: data }
       });
+      const severityCheck = checkSeverity(data, loc.name);
+      if (severityCheck && severityCheck.isSevere) {
+        dispatch({ type: 'SET_SEVERE_ALERT', payload: severityCheck });
+      } else {
+        dispatch({ type: 'DISMISS_ALERT' });
+      }
     } catch (err) {
       console.error('Failed to load saved location weather:', err);
     }
@@ -104,6 +110,8 @@ export default function Header() {
           const severityCheck = checkSeverity(weatherData, location.name);
           if (severityCheck && severityCheck.isSevere) {
             dispatch({ type: 'SET_SEVERE_ALERT', payload: severityCheck });
+          } else {
+            dispatch({ type: 'DISMISS_ALERT' });
           }
 
           // Let AI introduce the location
@@ -115,7 +123,7 @@ export default function Header() {
             state: location.state,
             ...weatherData,
             conditionLabel: weatherInfo.label,
-          });
+          }, [], state.userProfile);
 
           dispatch({
             type: 'ADD_ASSISTANT_MESSAGE',

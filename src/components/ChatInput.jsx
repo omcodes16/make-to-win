@@ -51,16 +51,14 @@ export default function ChatInput() {
             weatherData = await getWeather(location.lat, location.lng);
             weatherInfo = getWeatherInfo(weatherData.weatherCode);
             severityCheck = checkSeverity(weatherData, location.name);
-            if (severityCheck && severityCheck.isSevere) {
-              dispatch({ type: 'SET_SEVERE_ALERT', payload: severityCheck });
-            }
+            // Intentionally not setting global SEVERE_ALERT here so it only triggers for the user's active/live location
           }
         }
 
-        // Extract recent conversation history (last 6 turns)
+        // Extract recent conversation history (last 2 turns only to save tokens and prevent 429 rate limits)
         const recentHistory = state.messages
           .filter(m => m.role === 'user' || m.role === 'assistant')
-          .slice(-6)
+          .slice(-2)
           .map(m => ({ role: m.role, content: m.text }));
 
         // Send to AI via proxy - pass full weather context if available
@@ -69,7 +67,7 @@ export default function ChatInput() {
           state: location.state,
           ...weatherData,
           conditionLabel: weatherInfo.label,
-        } : null, recentHistory);
+        } : null, recentHistory, state.userProfile);
 
         // Cache raw weather data for offline use
         let weatherCache = undefined;

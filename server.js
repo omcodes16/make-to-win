@@ -32,14 +32,19 @@ You have access to tools to fetch real weather data. Call the appropriate tool(s
 Core Rules:
 1. ONLY answer questions about weather, agriculture, climate, human health impacts, or travel. Politely decline unrelated topics.
 2. If the user greets you ("hello", "hi", "namaste"), reply warmly and ask how you can help with weather today.
-3. ALWAYS respond in the EXACT SAME LANGUAGE the user asked in (English, Hindi, Assamese, Bengali, or any other language).
+3. ALWAYS respond in the EXACT SAME LANGUAGE the user asked in.
 4. Simple language only. "Heavy rain after 4 PM — plan travel earlier" NOT "Precipitation probability: 78%".
-5. 2–4 sentences of detailed, actionable advice. Farmer? Give field guidance. Traveler? Give road safety. Hiker? Give heat + terrain risk.
+5. USER PROFILE AWARENESS: You will be provided the user's profile. Tailor your answer's framing and terminology to the user's profile:
+   - If Farmer (किसान): Prioritize agricultural concerns (spraying, field work, crops).
+   - If Fisherman (मछुआरा): Prioritize marine/boating safety (wind, waves, storm risk). Use fishing terminology.
+   - If Aviation (उड्डयन): Prioritize flight-relevant conditions (wind, visibility, storms) using general-aviation language.
+   - If Urban Planner (शहरी योजनाकार): Prioritize city-infrastructure and public-preparedness framing (flooding, heatwaves, AQI).
+   - If General: Answer in plain everyday terms.
 6. Severe conditions (rain >50mm, wind >60km/h, thunderstorm, flooding): CLEARLY FLAG with a plain-language advisory + concrete action.
 7. For "relevantStat", pick the single most important number (e.g. "Rain chance: 85%").
 
 ACTIVITY AND HEAT RISK AWARENESS:
-8. When the user mentions an activity (hiking, farming, spraying, sports, travel), reason using HEAT INDEX (not just temperature). High humidity slows sweat evaporation making the body work harder.
+8. When the user mentions an activity (hiking, farming, fishing, travel), reason using HEAT INDEX (not just temperature). High humidity slows sweat evaporation.
 
 FOLLOW-UP SUGGESTIONS:
 9. Generate exactly 2-3 natural follow-up questions based on the user's question, your answer, and recent conversation history.
@@ -60,7 +65,7 @@ RESPOND ONLY IN THIS EXACT JSON FORMAT, no markdown fences:
 
 // POST /api/chat
 app.post('/api/chat', async (req, res) => {
-  const { message, language, weatherData, history = [] } = req.body;
+  const { message, language, weatherData, history = [], profile = 'general' } = req.body;
   const apiKey = process.env.GROQ_API_KEY;
 
   if (!apiKey) {
@@ -77,13 +82,17 @@ app.post('/api/chat', async (req, res) => {
     const initialUserPrompt = `User question (language: ${language}): "${message}"${locHint}`;
 
     let messages = [
-      { role: 'system', content: SYSTEM_PROMPT },
+      { role: 'system', content: SYSTEM_PROMPT + `\n\nActive User Profile: ${profile.toUpperCase()}` },
       ...history,
       { role: 'user', content: initialUserPrompt }
     ];
 
     let loopCount = 0;
-    const MAX_LOOPS = 3;
+    const MAX_LOOPS = 2; // Reduced from 3 to 2 to stay under the 8000 TPM Groq rate limit
+
+    if (req.body.forceLegacy) {
+      throw new Error('Forced legacy bypass for testing.');
+    }
 
     while (loopCount < MAX_LOOPS) {
       const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -93,7 +102,7 @@ app.post('/api/chat', async (req, res) => {
           'Authorization': `Bearer ${apiKey}`
         },
         body: JSON.stringify({
-          model: 'llama3-groq-70b-8192-tool-use-preview', // highly capable tool model, or fallback to llama3-70b-8192
+          model: 'openai/gpt-oss-20b',
           messages: messages,
           tools: WEATHER_TOOLS,
           tool_choice: 'auto',
@@ -123,6 +132,7 @@ app.post('/api/chat', async (req, res) => {
           let resultData;
           try {
             const args = JSON.parse(tc.function.arguments);
+            console.log(`[TOOL CALLED] ${funcName} with args:`, args);
             if (funcName === 'get_current_weather') resultData = await get_current_weather(args);
             else if (funcName === 'get_forecast') resultData = await get_forecast(args);
             else if (funcName === 'get_historical_trend') resultData = await get_historical_trend(args);
@@ -197,7 +207,7 @@ ${modelNote}`;
         body: JSON.stringify({
           model: 'openai/gpt-oss-20b',
           messages: [
-            { role: 'system', content: SYSTEM_PROMPT },
+            { role: 'system', content: SYSTEM_PROMPT + `\n\nActive User Profile: ${profile.toUpperCase()}` },
             ...history,
             { role: 'user', content: fallbackPrompt }
           ],

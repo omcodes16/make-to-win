@@ -1,4 +1,4 @@
-﻿export const FEATURE_I18N = {
+export const FEATURE_I18N = {
   en: {
     // Heat Risk
     heatExtremeDanger: 'Extreme Danger',
@@ -43,6 +43,36 @@
     healthUvHigh: (val) => `UV Index ${val} is High — wear sunscreen and protective clothing between 10 AM–4 PM.`,
     healthHumidity: (val) => `Humidity at ${val}% — sweat evaporation is slow. Physical exertion feels much more exhausting than the temperature alone suggests.`,
     healthGood: 'Air quality and UV conditions are within safe limits. Good day for outdoor activities.',
+
+    // Marine Advisory
+    marineTitleStorm: 'Do Not Sail — Storm Risk',
+    marineAdvStorm: 'Severe thunderstorm conditions. Do not go out to sea or river. Return to shore immediately if already out.',
+    marineTitleWind: 'High Wind — Rough Waters',
+    marineAdvWind: (val) => `Wind speeds at ${val} km/h make waters rough and dangerous for small boats. Avoid fishing today.`,
+    marineTitleFog: 'Low Visibility — Navigation Risk',
+    marineAdvFog: 'Dense fog reduces visibility significantly. High risk of collision. Delay departure until fog clears.',
+    marineTitleRain: 'Heavy Rain — Slippery Deck',
+    marineAdvRain: (val) => `Heavy rain (${val}). Slippery conditions and reduced visibility. Exercise caution if heading out.`,
+    marineTitleGood: 'Safe for Fishing',
+    marineAdvGood: (wind) => `Calm winds (${wind || '--'} km/h) and clear conditions. Safe time to head out for fishing.`,
+
+    // Aviation Advisory
+    aviationTitleStorm: 'Flight Risk — Thunderstorm',
+    aviationAdvStorm: 'Severe convective activity. High risk of turbulence and lightning. Delay flight operations.',
+    aviationTitleWind: 'High Wind — Crosswind Risk',
+    aviationAdvWind: (val) => `Wind speeds at ${val} km/h. Caution for crosswinds during takeoff and landing. Check gusts.`,
+    aviationTitleFog: 'Low Visibility — VFR Hazard',
+    aviationAdvFog: 'Dense fog reducing visibility below VMC minimums. IFR conditions prevail. Ground operations may be delayed.',
+    aviationTitleGood: 'VFR Conditions Acceptable',
+    aviationAdvGood: (wind) => `Clear skies and acceptable winds (${wind || '--'} km/h). Good conditions for general aviation.`,
+
+    // Urban Planning Advisory
+    urbanTitleRain: 'Flood Risk — Drainage Stress',
+    urbanAdvRain: (val) => `Heavy rainfall forecast (${val}). High risk of localized waterlogging. Municipalities should clear storm drains.`,
+    urbanTitleHeat: 'Heatwave Preparedness',
+    urbanAdvHeat: (val) => `High temperatures expected (${val}°C). Activate cooling centers and ensure public water availability.`,
+    urbanTitleGood: 'Normal Municipal Operations',
+    urbanAdvGood: 'Weather conditions are stable. No significant stress on city infrastructure expected.',
 
     // Seasonal Context
     seasonTitle: 'Historical Climate Context',
@@ -96,6 +126,36 @@
     healthHumidity: (val) => `आर्द्रता ${val}% है — पसीने का वाष्पीकरण धीमा है। शारीरिक श्रम तापमान के सुझाव से कहीं अधिक थका देने वाला लगता है।`,
     healthGood: 'वायु गुणवत्ता और यूवी स्थितियाँ सुरक्षित सीमा के भीतर हैं। बाहरी गतिविधियों के लिए अच्छा दिन है।',
 
+    // Marine Advisory
+    marineTitleStorm: 'नाव न निकालें — तूफान का खतरा',
+    marineAdvStorm: 'गंभीर आंधी तूफान की स्थिति। समुद्र या नदी में न जाएं। यदि पहले से बाहर हैं तो तुरंत किनारे लौट आएं।',
+    marineTitleWind: 'तेज हवा — उबड़-खाबड़ पानी',
+    marineAdvWind: (val) => `हवा की गति ${val} किमी/घंटा है, जिससे पानी अशांत हो जाता है जो छोटी नावों के लिए खतरनाक है। आज मछली पकड़ने से बचें।`,
+    marineTitleFog: 'कम दृश्यता — नेविगेशन जोखिम',
+    marineAdvFog: 'घना कोहरा दृश्यता को काफी कम कर देता है। टकराने का उच्च जोखिम। कोहरा छंटने तक प्रस्थान में देरी करें।',
+    marineTitleRain: 'भारी बारिश — फिसलन',
+    marineAdvRain: (val) => `भारी बारिश (${val})। फिसलन भरी स्थिति और कम दृश्यता। बाहर जाने पर सावधानी बरतें।`,
+    marineTitleGood: 'मछली पकड़ने के लिए सुरक्षित',
+    marineAdvGood: (wind) => `शांत हवा (${wind || '--'} किमी/घंटा) और साफ स्थिति। मछली पकड़ने जाने के लिए सुरक्षित समय।`,
+
+    // Aviation Advisory
+    aviationTitleStorm: 'उड़ान का जोखिम — आंधी तूफान',
+    aviationAdvStorm: 'गंभीर संवहनी गतिविधि। अशांति और बिजली गिरने का उच्च जोखिम। उड़ान संचालन में देरी करें।',
+    aviationTitleWind: 'तेज हवा — क्रॉसविंड जोखिम',
+    aviationAdvWind: (val) => `हवा की गति ${val} किमी/घंटा है। टेकऑफ़ और लैंडिंग के दौरान क्रॉसविंड के लिए सावधानी।`,
+    aviationTitleFog: 'कम दृश्यता — VFR खतरा',
+    aviationAdvFog: 'घना कोहरा दृश्यता को कम कर रहा है। IFR स्थितियाँ प्रबल हैं। उड़ान में देरी हो सकती है।',
+    aviationTitleGood: 'VFR स्थितियाँ स्वीकार्य',
+    aviationAdvGood: (wind) => `साफ आसमान और स्वीकार्य हवाएं (${wind || '--'} किमी/घंटा)। सामान्य उड्डयन के लिए अच्छी स्थिति।`,
+
+    // Urban Planning Advisory
+    urbanTitleRain: 'बाढ़ का जोखिम — जल निकासी तनाव',
+    urbanAdvRain: (val) => `भारी बारिश का पूर्वानुमान (${val})। स्थानीय जलभराव का उच्च जोखिम। नगर पालिका को नाले साफ करने चाहिए।`,
+    urbanTitleHeat: 'हीटवेव की तैयारी',
+    urbanAdvHeat: (val) => `उच्च तापमान की उम्मीद (${val}°C)। कूलिंग सेंटर सक्रिय करें और सार्वजनिक जल उपलब्धता सुनिश्चित करें।`,
+    urbanTitleGood: 'सामान्य नगरपालिका संचालन',
+    urbanAdvGood: 'मौसम की स्थिति स्थिर है। शहर के बुनियादी ढांचे पर कोई महत्वपूर्ण तनाव की उम्मीद नहीं है।',
+
     // Seasonal Context
     seasonTitle: 'ऐतिहासिक जलवायु संदर्भ',
     seasonNormalFor: (month, city) => `${city} में ${month} के लिए सामान्य`,
@@ -148,6 +208,36 @@
     healthHumidity: (val) => `আৰ্দ্ৰতা ${val}% — ঘাম শুকোৱা মন্থৰ। শাৰীৰিক পৰিশ্ৰম তাপমাত্ৰাই সূচোৱাতকৈ বহুত বেছি ভাগৰুৱা যেন লাগে।`,
     healthGood: 'বায়ুৰ মানদণ্ড আৰু ইউভি পৰিস্থিতি নিৰাপদ সীমাৰ ভিতৰত আছে। বাহিৰৰ কাম-কাজৰ বাবে ভাল দিন।',
 
+    // Marine Advisory
+    marineTitleStorm: 'নাও নেমেলিব — ধুমুহাৰ বিপদ',
+    marineAdvStorm: 'প্ৰবল ধুমুহাৰ পৰিস্থিতি। সাগৰ বা নদীলৈ নাযাব। যদি ইতিমধ্যে বাহিৰত আছে তেন্তে লগে লগে পাৰলৈ উভতি আহক।',
+    marineTitleWind: 'প্ৰবল বতাহ — অস্থিৰ পানী',
+    marineAdvWind: (val) => `বতাহৰ গতি ${val} কিমি/ঘণ্টা পানী অস্থিৰ আৰু সৰু নাওৰ বাবে বিপদজনক কৰি তোলে। আজি মাছ ধৰিবলৈ নাযাব।`,
+    marineTitleFog: 'নিম্ন দৃশ্যমানতা — নেভিগেশ্যনৰ বিপদ',
+    marineAdvFog: 'ঘন কুঁৱলীয়ে দৃশ্যমানতা যথেষ্ট হ্ৰাস কৰে। খুন্দা মৰাৰ অধিক বিপদ। কুঁৱলী আঁতৰি নোযোৱালৈকে যাত্ৰা পিছুৱাই দিয়ক।',
+    marineTitleRain: 'ধাৰাসাৰ বৰষুণ — পিছল',
+    marineAdvRain: (val) => `ধাৰাসাৰ বৰষুণ (${val})। পিছল পৰিস্থিতি আৰু দৃশ্যমানতা হ্ৰাস। বাহিৰলৈ গ'লে সাৱধানতা অৱলম্বন কৰক।`,
+    marineTitleGood: 'মাছ ধৰাৰ বাবে সুৰক্ষিত',
+    marineAdvGood: (wind) => `শান্ত বতাহ (${wind || '--'} কিমি/ঘণ্টা) আৰু পৰিষ্কাৰ পৰিস্থিতি। মাছ ধৰিবলৈ যোৱাৰ বাবে সুৰক্ষিত সময়।`,
+
+    // Aviation Advisory
+    aviationTitleStorm: 'উৰণৰ বিপদ — ধুমুহা',
+    aviationAdvStorm: 'প্ৰবল সংবহনশীল কাৰ্যকলাপ। অস্থিৰতা আৰু বিজুলীৰ অধিক বিপদ। উৰণ পলম কৰক।',
+    aviationTitleWind: 'প্ৰবল বতাহ — ক্ৰছউইণ্ডৰ বিপদ',
+    aviationAdvWind: (val) => `বতাহৰ গতি ${val} কিমি/ঘণ্টা। উৰণ আৰু অৱতৰণৰ সময়ত সাৱধানতা অৱলম্বন কৰক।`,
+    aviationTitleFog: 'নিম্ন দৃশ্যমানতা — VFR বিপদ',
+    aviationAdvFog: 'ঘন কুঁৱলীয়ে দৃশ্যমানতা হ্ৰাস কৰিছে। উৰণ পলম হব পাৰে।',
+    aviationTitleGood: 'VFR পৰিস্থিতি গ্ৰহণযোগ্য',
+    aviationAdvGood: (wind) => `ফৰকাল আকাশ আৰু গ্ৰহণযোগ্য বতাহ (${wind || '--'} কিমি/ঘণ্টা)। সাধাৰণ উৰণৰ বাবে ভাল পৰিস্থিতি।`,
+
+    // Urban Planning Advisory
+    urbanTitleRain: 'বানপানীৰ বিপদ — নলাৰ ওপৰত চাপ',
+    urbanAdvRain: (val) => `ধাৰাসাৰ বৰষুণৰ আগজাননী (${val})। পানী জমা হোৱাৰ অধিক বিপদ। পৌৰসভাই নলা পৰিষ্কাৰ কৰিব লাগে।`,
+    urbanTitleHeat: 'হিটৱেভৰ প্ৰস্তুতি',
+    urbanAdvHeat: (val) => `অধিক তাপমাত্ৰাৰ আশা (${val}°C)। কুলিং চেণ্টাৰ সক্ৰিয় কৰক আৰু পানীৰ উপলব্ধতা নিশ্চিত কৰক।`,
+    urbanTitleGood: 'সাধাৰণ পৌৰসভাৰ কাম-কাজ',
+    urbanAdvGood: 'বতৰৰ অৱস্থা স্থিৰ। চহৰৰ আন্তঃগাঁথনিৰ ওপৰত কোনো গুৰুত্বপূৰ্ণ চাপৰ আশা নাই।',
+
     // Seasonal Context
     seasonTitle: 'ঐতিহাসিক জলবায়ুৰ প্ৰসংগ',
     seasonNormalFor: (month, city) => `${city}ত ${month}ৰ বাবে স্বাভাৱিক`,
@@ -199,6 +289,36 @@
     healthUvHigh: (val) => `ইউভি সূচক ${val} বেশি — সকাল ১০ টা থেকে বিকাল ৪ টার মধ্যে সানস্ক্রিন এবং সুরক্ষামূলক পোশাক পরুন।`,
     healthHumidity: (val) => `আর্দ্রতা ${val}% — ঘাম শুকানো ধীর। শারীরিক পরিশ্রম তাপমাত্রার চেয়ে অনেক বেশি ক্লান্তিকর মনে হয়।`,
     healthGood: 'বায়ুর মান এবং ইউভি পরিস্থিতি নিরাপদ সীমার মধ্যে। বাইরের কাজের জন্য ভালো দিন।',
+
+    // Marine Advisory
+    marineTitleStorm: 'নৌকা বের করবেন না — ঝড়ের ঝুঁকি',
+    marineAdvStorm: 'প্রবল বজ্রঝড়ের পরিস্থিতি। সমুদ্র বা নদীতে যাবেন না। যদি ইতিমধ্যে বাইরে থাকেন তবে অবিলম্বে তীরে ফিরে আসুন।',
+    marineTitleWind: 'প্রবল বাতাস — উত্তাল জল',
+    marineAdvWind: (val) => `বাতাসের গতি ${val} কিমি/ঘন্টা জলকে উত্তাল এবং ছোট নৌকার জন্য বিপজ্জনক করে তোলে। আজ মাছ ধরা এড়িয়ে চলুন।`,
+    marineTitleFog: 'কম দৃশ্যমানতা — নেভিগেশনের ঝুঁকি',
+    marineAdvFog: 'ঘন কুয়াশা দৃশ্যমানতা উল্লেখযোগ্যভাবে হ্রাস করে। সংঘর্ষের উচ্চ ঝুঁকি। কুয়াশা পরিষ্কার না হওয়া পর্যন্ত যাত্রা পিছিয়ে দিন।',
+    marineTitleRain: 'ভারী বৃষ্টি — পিচ্ছিল',
+    marineAdvRain: (val) => `ভারী বৃষ্টি (${val})। পিচ্ছিল পরিস্থিতি এবং কম দৃশ্যমানতা। বাইরে গেলে সতর্কতা অবলম্বন করুন।`,
+    marineTitleGood: 'মাছ ধরার জন্য নিরাপদ',
+    marineAdvGood: (wind) => `শান্ত বাতাস (${wind || '--'} কিমি/ঘন্টা) এবং পরিষ্কার পরিস্থিতি। মাছ ধরতে যাওয়ার জন্য নিরাপদ সময়।`,
+
+    // Aviation Advisory
+    aviationTitleStorm: 'উড়ানের ঝুঁকি — বজ্রঝড়',
+    aviationAdvStorm: 'প্রবল সংবহনশীল কার্যকলাপ। অশান্তি এবং বজ্রপাতের উচ্চ ঝুঁকি। উড়ান বিলম্বিত করুন।',
+    aviationTitleWind: 'প্রবল বাতাস — ক্রসউইন্ড ঝুঁকি',
+    aviationAdvWind: (val) => `বাতাসের গতি ${val} কিমি/ঘন্টা। উড্ডয়ন এবং অবতরণের সময় সতর্কতা অবলম্বন করুন।`,
+    aviationTitleFog: 'কম দৃশ্যমানতা — VFR বিপদ',
+    aviationAdvFog: 'ঘন কুয়াশা দৃশ্যমানতা হ্রাস করছে। উড়ান বিলম্বিত হতে পারে।',
+    aviationTitleGood: 'VFR পরিস্থিতি গ্রহণযোগ্য',
+    aviationAdvGood: (wind) => `পরিষ্কার আকাশ এবং গ্রহণযোগ্য বাতাস (${wind || '--'} কিমি/ঘন্টা)। সাধারণ বিমান চলাচলের জন্য ভালো পরিস্থিতি।`,
+
+    // Urban Planning Advisory
+    urbanTitleRain: 'বন্যার ঝুঁকি — জল নিকাশি চাপ',
+    urbanAdvRain: (val) => `ভারী বৃষ্টির পূর্বাভাস (${val})। জল জমার উচ্চ ঝুঁকি। পৌরসভার নালা পরিষ্কার করা উচিত।`,
+    urbanTitleHeat: 'হিটওয়েভ প্রস্তুতি',
+    urbanAdvHeat: (val) => `উচ্চ তাপমাত্রার আশা (${val}°C)। কুলিং সেন্টার সক্রিয় করুন এবং জলের প্রাপ্যতা নিশ্চিত করুন।`,
+    urbanTitleGood: 'সাধারণ পৌরসভা কার্যক্রম',
+    urbanAdvGood: 'আবহাওয়া পরিস্থিতি স্থিতিশীল। শহরের অবকাঠামোর ওপর কোনো উল্লেখযোগ্য চাপের আশা নেই।',
 
     // Seasonal Context
     seasonTitle: 'ঐতিহাসিক জলবায়ু প্রসঙ্গ',

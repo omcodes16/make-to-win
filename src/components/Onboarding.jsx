@@ -1,11 +1,20 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { LANGUAGES } from '../utils/constants';
 import { WEATHER_THEMES } from '../utils/themes';
 
+const PROFILES = [
+  { code: 'general', label: 'General / सामान्य', icon: '🌍' },
+  { code: 'farmer', label: 'Farmer / किसान', icon: '🌾' },
+  { code: 'fisherman', label: 'Fisherman / मछुआरा', icon: '🎣' },
+  { code: 'aviation', label: 'Aviation / उड्डयन', icon: '✈️' },
+  { code: 'urbanPlanning', label: 'Urban Planner / शहरी योजनाकार', icon: '🏙️' }
+];
+
 export default function Onboarding() {
   const { state, dispatch } = useApp();
   const theme = WEATHER_THEMES.clear;
+  const [step, setStep] = useState(1);
   
   return (
     <div className="min-h-[100dvh] flex flex-col items-center justify-center p-6 bg-[#0a0c1a] relative transition-colors duration-1000">
@@ -28,27 +37,43 @@ export default function Onboarding() {
             WeatherGPT
           </h1>
           <p className="text-white/70 text-lg">
-            Choose your language
+            {step === 1 ? "Select your profile" : "Choose your language"}
           </p>
         </div>
 
-        {/* Language Selection */}
+        {/* Selection Grid */}
         <div className="w-full grid grid-cols-1 gap-4 pt-4">
-          {LANGUAGES.map((lang) => (
-            <button
-              key={lang.code}
-              onClick={() => {
-                dispatch({ type: 'SET_LANGUAGE', payload: lang.code });
-                dispatch({ type: 'SET_ONBOARDED' });
-              }}
-              className="bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 hover:border-white/40 text-white font-medium py-4 px-6 rounded-2xl transition-all shadow-[0_8px_30px_rgb(0,0,0,0.12)] flex items-center justify-between group"
-            >
-              <span className="text-lg">{lang.nativeLabel}</span>
-              <span className="text-white/50 text-sm opacity-0 group-hover:opacity-100 transition-opacity">
-                {lang.label}
-              </span>
-            </button>
-          ))}
+          {step === 1 ? (
+            PROFILES.map((profile) => (
+              <button
+                key={profile.code}
+                onClick={() => {
+                  dispatch({ type: 'SET_PROFILE', payload: profile.code });
+                  setStep(2);
+                }}
+                className="bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 hover:border-white/40 text-white font-medium py-4 px-6 rounded-2xl transition-all shadow-[0_8px_30px_rgb(0,0,0,0.12)] flex items-center gap-4 group"
+              >
+                <span className="text-2xl">{profile.icon}</span>
+                <span className="text-lg">{profile.label}</span>
+              </button>
+            ))
+          ) : (
+            LANGUAGES.map((lang) => (
+              <button
+                key={lang.code}
+                onClick={() => {
+                  dispatch({ type: 'SET_LANGUAGE', payload: lang.code });
+                  dispatch({ type: 'SET_ONBOARDED' });
+                }}
+                className="bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 hover:border-white/40 text-white font-medium py-4 px-6 rounded-2xl transition-all shadow-[0_8px_30px_rgb(0,0,0,0.12)] flex items-center justify-between group"
+              >
+                <span className="text-lg">{lang.nativeLabel}</span>
+                <span className="text-white/50 text-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                  {lang.label}
+                </span>
+              </button>
+            ))
+          )}
         </div>
 
         {/* SIH credit */}
