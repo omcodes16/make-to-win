@@ -102,7 +102,7 @@ app.post('/api/chat', async (req, res) => {
           'Authorization': `Bearer ${apiKey}`
         },
         body: JSON.stringify({
-          model: 'openai/gpt-oss-20b',
+          model: 'llama-3.1-8b-instant',
           messages: messages,
           tools: WEATHER_TOOLS,
           tool_choice: 'auto',
@@ -205,7 +205,7 @@ ${modelNote}`;
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
         body: JSON.stringify({
-          model: 'openai/gpt-oss-20b',
+          model: 'llama-3.1-8b-instant',
           messages: [
             { role: 'system', content: SYSTEM_PROMPT + `\n\nActive User Profile: ${profile.toUpperCase()}` },
             ...history,
