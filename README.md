@@ -1,131 +1,134 @@
-# WeatherGPT — Advanced Weather Intelligence & Assistant
+# 🌦️ WeatherGPT - SIH 2026
 
-![WeatherGPT](https://img.shields.io/badge/Status-Active-brightgreen) ![React](https://img.shields.io/badge/React-18.x-blue) ![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.x-38B2AC) ![Vite](https://img.shields.io/badge/Vite-5.x-646CFF)
-
-WeatherGPT is a next-generation weather dashboard and conversational assistant built for the **Smart India Hackathon (SIH) 2026**. It aims to solve real-world problems by providing hyperlocal weather data, agricultural insights, and severe weather warnings in plain, accessible language across multiple regional languages.
-
-## 🌟 Key Features
-
-### 1. Dynamic, Atmosphere-Driven UI
-*   **Contextual Wallpapers**: The entire application background dynamically transforms based on the live weather conditions (e.g., sunny, thunderstorms, fog, heatwaves).
-*   **Glassmorphism Design**: High-performance, frosted glass UI elements ensure readability while letting the atmospheric backgrounds shine through.
-*   **Time-Travel Forecasting**: The 7-Day forecast cards are fully interactive. Clicking on a future day instantly transitions the entire dashboard (background, temperatures, UV index, precipitation) to reflect that specific day's forecasted conditions.
-
-### 2. Conversational AI Assistant (Powered by Groq)
-*   **Natural Language Queries**: Instead of just reading graphs, users can ask questions like *"Is it safe to spray pesticides tomorrow?"* or *"When will the rain stop?"*
-*   **Multilingual Context**: The AI automatically detects the selected language and replies natively in **English, Hindi, Assamese, or Bengali**.
-*   **Actionable Insights**: The AI is prompted to provide short, conversational answers and explicitly flag severe weather conditions with plain-language advisories.
-
-### 3. Professional Interactive Radar
-*   **Seamless Fluid Animations**: Powered by a robust embed engine, the live radar supports smooth panning and zooming without broken map tiles.
-*   **Timeline Scrubber**: Users can hit "Play" to watch precipitation patterns and storm systems move across their region over time.
-
-### 4. Comprehensive Air Quality (AQI)
-*   **Live Open-Meteo Integration**: Fetches real-time Air Quality Index data independent of standard weather metrics.
-*   **Health Indicators**: Dynamic progress bars and conditional health advisories (Good, Moderate, Unhealthy) adapt instantly to the current AQI levels.
-
-### 5. Accessibility First (a11y)
-*   **Voice Input**: Users can ask weather queries using their voice.
-*   **High Contrast & Large Text**: Built-in toggles allow visually impaired users to comfortably read critical weather data.
+**WeatherGPT** is a next-generation, generative AI-powered meteorological dashboard built for the **Smart India Hackathon 2026**. It transforms complex weather data into hyper-personalized, multilingual, and conversational insights.
 
 ---
 
-## 🔄 System Architecture & Flowchart
+## 💻 1. Tech Stack
+
+Our technology stack is strictly divided into four highly specialized layers to ensure maximum speed, scalability, and maintainability.
 
 ```mermaid
 graph TD
-    %% Entities
-    User((User))
-    UI[Frontend: React + Vite + Tailwind]
-    Backend[Backend: Express.js Node Server]
-    
-    %% External APIs
-    Nominatim[Nominatim Geocoding API]
-    OpenMeteo[Open-Meteo APIs: Weather, AQI]
-    Windy[Windy.com Radar Embed]
-    Groq[Groq AI LLM]
-    
-    %% Flow
-    User -->|1. Searches Location| UI
-    UI -->|2. Geocodes City| Nominatim
-    Nominatim -->|3. Returns Lat/Lng| UI
-    
-    UI -->|4. Fetches Weather & AQI| OpenMeteo
-    OpenMeteo -->|5. Returns Live Data| UI
-    
-    UI -.->|Renders| Backgrounds[Dynamic Atmospheric Backgrounds]
-    UI -.->|Renders| Forecast[7-Day Time-Travel Forecast]
-    UI -.->|Renders| Windy
-    
-    User -->|6. Asks Weather Question| UI
-    UI -->|7. Sends Context + Query| Backend
-    Backend -->|8. Applies Strict Prompting| Groq
-    Groq -->|9. Returns Structured JSON| Backend
-    Backend -->|10. Proxies Response| UI
-    
-    UI -.->|Renders| Alerts[Severe Weather Banners]
+    subgraph "Frontend (Client)"
+        UI[React.js]
+        Styling[Tailwind CSS]
+        State[React Context API]
+    end
 
-    %% Styling
-    classDef frontend fill:#38B2AC,stroke:#fff,stroke-width:2px,color:#fff;
-    classDef backend fill:#646CFF,stroke:#fff,stroke-width:2px,color:#fff;
-    classDef api fill:#E8A33D,stroke:#fff,stroke-width:2px,color:#fff;
-    
-    class UI frontend;
-    class Backend backend;
-    class Nominatim,OpenMeteo,Windy,Groq api;
+    subgraph "Backend (Server)"
+        Node[Node.js]
+        Express[Express.js]
+    end
+
+    subgraph "AI & Inference"
+        Groq[Groq LPU Engine]
+        Model[Mixtral 8x7b LLM]
+    end
+
+    subgraph "External Data APIs"
+        Meteo[Open-Meteo API]
+        TTS[Google TTS]
+        Geo[Nominatim Geocoding]
+    end
+
+    UI --> Node
+    Node --> Groq
+    Node --> Meteo
+    Node --> Geo
+    Node --> TTS
 ```
 
-## 🔄 Core Workflows
-
-### 1. Search & Data Ingestion
-1.  **User Input**: User searches for a location (e.g., "Ladakh").
-2.  **Geocoding**: The input is passed to Open-Meteo or Nominatim (OpenStreetMap) to retrieve precise Latitude and Longitude coordinates.
-3.  **Parallel Fetching**: The app concurrently fetches:
-    *   Standard Weather Data (Temp, Wind, Humidity, Hourly/Daily arrays).
-    *   Air Quality Data (Live US AQI).
-4.  **State Update**: The global React Context (`AppContext`) updates, instantly triggering the UI to transition backgrounds and update metrics.
-
-### 2. AI Chat Workflow
-1.  **Query Submission**: User types a question in the Chat UI.
-2.  **Context Injection**: The frontend bundles the user's query with the *current live weather data* (Temp, Wind, Conditions) and sends it to the Express backend (`server.js`).
-3.  **Prompt Engineering**: The Express server injects a strict System Prompt, forcing the Groq LLM to respond in a specific JSON format (`{ answer, followUp, advisory, severity }`).
-4.  **UI Rendering**: The structured JSON is parsed by the frontend, rendering a beautiful conversational bubble, and optional severe alert banners.
-
-### 3. Time-Travel Forecast Workflow
-1.  **Selection**: User clicks a future day (e.g., "Thursday") on the 7-Day forecast grid.
-2.  **Local State Override**: `WeatherDashboard` sets `selectedDay = 3`.
-3.  **Dynamic Derivation**: The dashboard recalculates `displayTemp`, `displayFeelsLike`, and `displayCode` by mapping to `weather.daily.maxTemp[3]`, etc.
-4.  **Theme Re-evaluation**: The background image engine evaluates the future `weatherCode` and instantly swaps the CSS gradients and background images to match Thursday's forecast.
+- **Frontend**: React.js (Vite), Tailwind CSS (for glassmorphism and animations).
+- **Backend**: Node.js, Express.js.
+- **AI Processing**: Groq API (Lightning-fast inference), Mixtral 8x7b LLM.
+- **Data Providers**: Open-Meteo (Marine, Agriculture, Aviation, Air Quality models), Google Translate/TTS APIs.
 
 ---
 
-## 🛠️ Tech Stack
+## 🔄 2. System Flowcharts
 
-*   **Frontend Framework**: React 18 (Vite)
-*   **Styling**: Tailwind CSS
-*   **State Management**: React Context API + `useReducer`
-*   **Weather APIs**: Open-Meteo (Weather, Air Quality)
-*   **Geocoding**: Nominatim (OpenStreetMap) + Open-Meteo
-*   **AI Engine**: Groq (via Express.js Proxy)
-*   **Radar**: Windy.com Interactive Embed
+*This section visualizes exactly how data moves through the application from the moment a user interacts with it.*
 
-## 🚀 Running Locally
+### Core Chat & Function Calling Flow
+How the AI decides to answer a user's question without hallucinating.
 
-1. **Install Dependencies**
+```mermaid
+sequenceDiagram
+    actor User
+    participant Frontend
+    participant Backend
+    participant AI as Groq LLM
+    participant API as Weather APIs
+
+    User->>Frontend: "Is it safe to fly in Shillong?"
+    Frontend->>Backend: POST /api/chat
+    Backend->>AI: Send prompt + Available Tools
+    AI-->>Backend: Tool Request (get_current_weather: Shillong)
+    Backend->>API: Fetch Aviation Data for Shillong
+    API-->>Backend: Return Wind, Visibility, Precipitation
+    Backend->>AI: Inject real data into context
+    AI-->>Backend: Generate final human-readable answer
+    Backend-->>Frontend: Return JSON Answer
+    Frontend-->>User: Display UI Card + TTS Audio
+```
+
+### Automated Alert Notification Flow
+How the system automatically triggers severe weather warnings.
+
+```mermaid
+graph LR
+    A[User Opens Dashboard] --> B[Fetch Local Weather Data]
+    B --> C[Pass Data to Severity Engine]
+    C --> D{Check Thresholds}
+    
+    D -->|Wind > 60km/h OR Rain > 50mm| E[Trigger SEVERE Alert]
+    D -->|High UV OR Heavy Heat Index| F[Trigger CAUTION Alert]
+    D -->|Normal Conditions| G[Dismiss Alerts]
+    
+    E --> H[Render Red UI Banner & Push Sound]
+    F --> I[Render Yellow Advisory UI]
+    G --> J[Standard UI Render]
+```
+
+---
+
+## 🛠️ 3. Technical Approach
+
+*This section details the specific engineering methodologies and technical decisions we made to build the application.*
+
+### A. Agentic RAG & Deterministic Function Calling
+Instead of using a standard LLM that hallucinates data, we implemented an **Agentic Function Calling** approach. The AI is completely restricted from guessing the weather. When it receives a prompt, it must explicitly output a JSON command requesting tools (e.g., `get_current_weather`). The Node.js backend acts as the middleman, intercepting these commands, fetching raw data from Open-Meteo's specialized models (GFS, ECMWF, ICON), and feeding it back to the AI. This guarantees 100% data accuracy.
+
+### B. The Severity Threshold Engine
+To handle notifications, we built a custom `checkSeverity()` rules engine on the frontend. Rather than relying on external Push Notification servers (which can be slow or cost money), the React Context API passively processes the incoming Open-Meteo data matrix. It mathematically calculates the Heat Index and Wind Shear, and if variables cross predefined agricultural or aviation limits, it instantly triggers a global state override. This forces the UI to render the Alert Banners instantly with zero network latency.
+
+### C. Multilingual Audio Proxy Pipeline
+Browsers strictly enforce CORS policies, making it difficult to directly fetch audio streams from external TTS APIs using standard HTTP requests on the client side. 
+To solve this, we built a **Base64 Audio Proxy** in the backend:
+1. The frontend asks the Express server to translate and speak a sentence.
+2. The Node.js server securely communicates with the Google TTS API using hidden environment variables.
+3. The server downloads the `.mp3` buffer, converts it into a `Base64 Data URI`, and sends it to the frontend.
+4. The React app feeds this string directly into the HTML5 Web Audio API, enabling high-quality localized voice playback (Hindi, Bengali, Assamese) without ever exposing API keys or triggering CORS blocks.
+
+### D. Multi-Model Divergence Checking
+Because weather forecasts can be unreliable, we query multiple meteorological models simultaneously (GFS, ICON, and ECMWF). The application calculates the mathematical divergence (standard deviation) between these models. If the models heavily disagree on rainfall or temperature, the UI flags the forecast with an "NWP Divergence" warning, alerting farmers or pilots that the forecast has low confidence.
+
+---
+
+## 🚀 4. Installation & Setup
+
+1. **Clone the repository.**
+2. **Install dependencies:**
    ```bash
    npm install
    ```
-
-2. **Environment Setup**
-   Create a `.env` file in the root directory and add your Groq API Key:
+3. **Configure Environment:** Create a `.env` file in the root folder.
    ```env
    GROQ_API_KEY=your_api_key_here
    ```
-
-3. **Start the Development Servers**
-   This project uses `concurrently` to run both the Vite frontend and the Express backend simultaneously.
+4. **Run the Application:** This command concurrently starts the Vite frontend and the Express backend.
    ```bash
-   npm start
+   npm run dev:all
    ```
-   * Frontend: `http://localhost:5173`
-   * Backend: `http://localhost:3001`
+5. **Access the App:** Open `http://localhost:5173` in your browser.

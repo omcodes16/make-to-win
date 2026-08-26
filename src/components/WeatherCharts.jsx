@@ -185,7 +185,7 @@ export default function WeatherCharts({ weather, lat, lng }) {
           {/* Feels Like & Humidity */}
           <div className="bg-white/5 hover:bg-white/10 transition-all duration-300 rounded-2xl p-4 border border-white/10 flex flex-col justify-between shadow-sm hover:shadow-md cursor-default">
             <div className="text-white/50 text-xs font-medium uppercase tracking-wider mb-1 flex items-center gap-1.5">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg>
               {t.feelsLike}
             </div>
             <div className="text-2xl font-semibold text-white drop-shadow-sm">{weather.feelsLike}°</div>

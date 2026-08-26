@@ -216,8 +216,8 @@ export default function AlertsScreen() {
                   </div>
                   <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-1.5 text-white/50 text-xs uppercase tracking-wide">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-                      Expected
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                        Expected
                     </div>
                     <div className="text-lg font-bold">{alert.rain} <span className="text-xs font-normal text-white/50">{alert.rain !== 'Unknown' ? 'mm' : ''}</span></div>
                   </div>
@@ -230,8 +230,8 @@ export default function AlertsScreen() {
                   </div>
                   <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-1.5 text-white/50 text-xs uppercase tracking-wide">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-                      Impact Level
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                        Impact Level
                     </div>
                     <div className={`text-lg font-bold ${alert.impact === 'Severe' ? 'text-red-500' : alert.impact === 'High' ? 'text-red-400' : alert.impact === 'Moderate' ? 'text-amber-400' : 'text-green-400'}`}>{alert.impact}</div>
                   </div>
@@ -539,7 +539,7 @@ export default function AlertsScreen() {
                     </ul>
                   </div>
                   <div className="bg-orange-500/10 border border-orange-500/20 p-5 rounded-xl">
-                    <h4 className="font-bold text-orange-400 mb-4 flex items-center gap-2"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> Cyclone Safety</h4>
+                    <h4 className="font-bold text-orange-400 mb-4 flex items-center gap-2"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"/></svg> Cyclone Safety</h4>
                     <ul className="space-y-2 text-sm text-white/70 list-disc list-inside">
                       <li>Stay indoors and away from windows.</li>
                       <li>Keep an emergency kit ready (radio, torch).</li>
@@ -557,7 +557,7 @@ export default function AlertsScreen() {
                     </ul>
                   </div>
                   <div className="bg-red-500/10 border border-red-500/20 p-5 rounded-xl">
-                    <h4 className="font-bold text-red-400 mb-4 flex items-center gap-2"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> Heatwave Safety</h4>
+                    <h4 className="font-bold text-red-400 mb-4 flex items-center gap-2"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg> Heatwave Safety</h4>
                     <ul className="space-y-2 text-sm text-white/70 list-disc list-inside">
                       <li>Drink plenty of water even if not thirsty.</li>
                       <li>Wear lightweight, light-colored clothing.</li>
