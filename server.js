@@ -63,6 +63,20 @@ RESPOND ONLY IN THIS EXACT JSON FORMAT, no markdown fences:
   "suggestedQuestions": ["Question 1?", "Question 2?"]
 }`;
 
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+async function fetchWithRetry(url, options, maxRetries = 2) {
+  for (let i = 0; i < maxRetries; i++) {
+    const response = await fetch(url, options);
+    if (response.status === 429) {
+      console.warn(`[429 Rate Limit] TPM limit hit. Waiting 2.5 seconds before retry (Attempt ${i + 1}/${maxRetries})...`);
+      await sleep(2500);
+      continue;
+    }
+    return response;
+  }
+  return fetch(url, options);
+}
+
 // POST /api/chat
 app.post('/api/chat', async (req, res) => {
   const { message, language, weatherData, history = [], profile = 'general' } = req.body;
@@ -95,7 +109,7 @@ app.post('/api/chat', async (req, res) => {
     }
 
     while (loopCount < MAX_LOOPS) {
-      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      const response = await fetchWithRetry('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -201,7 +215,7 @@ Current weather data (Fallback):
 ${heatIndexNote ? '- ' + heatIndexNote : ''}
 ${modelNote}`;
 
-      const fallbackRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      const fallbackRes = await fetchWithRetry('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
         body: JSON.stringify({
