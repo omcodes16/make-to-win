@@ -3,7 +3,8 @@
  * which forwards to Groq. Returns structured AI response.
  */
 export async function sendMessage(message, language, weatherData, history = [], profile = 'general') {
-  const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/chat`, {
+  const baseUrl = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
+  const res = await fetch(`${baseUrl}/api/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ message, language, weatherData, history, profile }),

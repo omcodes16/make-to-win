@@ -32,7 +32,8 @@ export default function AlertsScreen() {
 
   // Fetch real-time news
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL || ''}/api/news`)
+    const baseUrl = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
+    fetch(`${baseUrl}/api/news`)
       .then(res => res.json())
       .then(data => {
         if (data && data.news) {
