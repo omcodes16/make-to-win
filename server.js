@@ -14,9 +14,20 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
+import { 
+  WEATHER_TOOLS, 
+  get_current_weather, 
+  get_forecast, 
+  get_historical_trend, 
+  get_seasonal_comparison, 
+  get_active_alerts 
+} from './server/tools.js';
+
 // System prompt for Groq — PS 26068 enhanced
 const SYSTEM_PROMPT = `You are WeatherGPT, a friendly and highly knowledgeable weather assistant built for India.
 Your goal is to answer ANY weather-related query in a way that is incredibly EASY and UNDERSTANDABLE — especially for farmers, rural workers, and common people.
+
+You have access to tools to fetch real weather data. Call the appropriate tool(s) based on what the user is asking. You may call multiple tools if the question needs multiple types of data (e.g. both current weather AND alerts). Only call tools you actually need — don't call all 5 for a simple question.
 
 Core Rules:
 1. ONLY answer questions about weather, agriculture, climate, human health impacts, or travel. Politely decline unrelated topics.
@@ -27,24 +38,11 @@ Core Rules:
 6. Severe conditions (rain >50mm, wind >60km/h, thunderstorm, flooding): CLEARLY FLAG with a plain-language advisory + concrete action.
 7. For "relevantStat", pick the single most important number (e.g. "Rain chance: 85%").
 
-SEASONAL AWARENESS (Critical for PS 26068):
-8. You will receive the current month and typical seasonal norms for the location. ALWAYS compare current conditions against these norms.
-   - If rain is unusually heavy for this month: mention it ("This is above the August average for this region").
-   - If it is unusually dry during monsoon: flag it ("This is much drier than the typical July rainfall").
-   - If temperature is anomalous: note it.
-   Tie this to the PS 26068 requirement: "Climate Trend and Historical Weather Analysis."
-
 ACTIVITY AND HEAT RISK AWARENESS:
-9. When the user mentions an activity (hiking, farming, spraying, sports, travel), reason using HEAT INDEX (not just temperature).
-   High humidity slows sweat evaporation making the body work harder. 30C at 85% humidity is MORE dangerous than 35C at 20% humidity.
-   Example: "24C sounds mild, but at 85% humidity the heat index is 28C — more exhausting than it sounds. Pace yourself and hydrate."
-   Use the heat index context provided to you.
-
-MODEL DIVERGENCE:
-10. If multi-model forecast data is provided and explicitly flags that the models "significantly disagree", you MUST briefly mention this uncertainty in your 'answer' or 'followUp' (e.g., "Weather models slightly disagree on this — showing the most likely outcome, but check back closer to the date"). Do NOT mention model data or uncertainty if the models agree or if the data is not provided. Do not clutter the chat with technical caveats on every normal query.
+8. When the user mentions an activity (hiking, farming, spraying, sports, travel), reason using HEAT INDEX (not just temperature). High humidity slows sweat evaporation making the body work harder.
 
 FOLLOW-UP SUGGESTIONS:
-11. Generate exactly 2-3 natural follow-up questions based on the user's question, your answer, and recent conversation history.
+9. Generate exactly 2-3 natural follow-up questions based on the user's question, your answer, and recent conversation history.
    - Follow-ups must represent genuinely different next steps a real user would take — not just rephrasing the same question.
    - If the current answer fully resolves the query (or user said thanks), return an empty array.
    - Never repeat a question from the conversation history.
@@ -62,155 +60,195 @@ RESPOND ONLY IN THIS EXACT JSON FORMAT, no markdown fences:
 
 // POST /api/chat
 app.post('/api/chat', async (req, res) => {
+  const { message, language, weatherData, history = [] } = req.body;
+  const apiKey = process.env.GROQ_API_KEY;
+
+  if (!apiKey) {
+    return res.status(500).json({ error: 'Groq API key not configured. Add GROQ_API_KEY to .env file.' });
+  }
+
+  let finalContent = null;
+
   try {
-    const { message, language, weatherData, history = [] } = req.body;
-    const apiKey = process.env.GROQ_API_KEY;
+    // ---------------------------------------------------------
+    // PRIMARY STRATEGY: FUNCTION CALLING LOOP
+    // ---------------------------------------------------------
+    const locHint = weatherData?.location ? `\n(Hint: The user's location is generally ${weatherData.location}${weatherData.state ? ', ' + weatherData.state : ''}. Use tools to fetch precise data if needed.)` : '';
+    const initialUserPrompt = `User question (language: ${language}): "${message}"${locHint}`;
 
-    if (!apiKey) {
-      return res.status(500).json({ error: 'Groq API key not configured. Add GROQ_API_KEY to .env file.' });
-    }
+    let messages = [
+      { role: 'system', content: SYSTEM_PROMPT },
+      ...history,
+      { role: 'user', content: initialUserPrompt }
+    ];
 
-    // Build enriched context for the AI
-    const now = new Date();
-    const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-    const currentMonth = monthNames[now.getMonth()];
-    const monthIndex = now.getMonth();
+    let loopCount = 0;
+    const MAX_LOOPS = 3;
 
-    // Seasonal context lookup (mirrors climateSeasonal.js logic — server-side static table)
-    const SEASONAL_SERVER = {
-      guwahati: { rainfall: [10,18,57,134,253,330,324,274,175,83,15,5], maxTemp: [21,24,29,32,32,32,32,32,31,29,25,21] },
-      shillong: { rainfall: [17,31,93,268,425,600,620,480,290,160,30,12], maxTemp: [14,15,19,22,22,23,23,23,22,20,16,14] },
-      mumbai:   { rainfall: [1,1,1,1,9,500,704,531,296,66,12,2], maxTemp: [31,32,33,34,34,32,30,30,31,33,33,31] },
-      delhi:    { rainfall: [21,19,17,7,8,65,211,233,150,14,4,10], maxTemp: [20,23,29,36,40,40,36,35,34,33,28,22] },
-      kolkata:  { rainfall: [10,25,36,57,140,279,330,321,255,128,27,7], maxTemp: [26,29,34,36,36,34,32,32,32,32,29,26] },
-      chennai:  { rainfall: [25,10,6,15,40,53,93,122,119,307,309,139], maxTemp: [29,31,33,35,38,38,36,35,34,31,29,28] },
-    };
-
-    let seasonalNote = '';
-    if (weatherData?.location) {
-      const locKey = Object.keys(SEASONAL_SERVER).find(k => weatherData.location.toLowerCase().includes(k));
-      if (locKey) {
-        const norm = SEASONAL_SERVER[locKey];
-        seasonalNote = `Seasonal norm for ${weatherData.location} in ${currentMonth}: avg rainfall ~${norm.rainfall[monthIndex]}mm/month, avg max temp ~${norm.maxTemp[monthIndex]}°C.`;
-      }
-    }
-
-    // Compute heat index (Rothfusz simplified for server)
-    let heatIndexNote = '';
-    if (weatherData?.temperature >= 27 && weatherData?.humidity) {
-      const T = (weatherData.temperature * 9/5) + 32;
-      const R = weatherData.humidity;
-      let HI = -42.379 + 2.04901523*T + 10.14333127*R - 0.22475541*T*R - 0.00683783*T*T - 0.05481717*R*R + 0.00122874*T*T*R + 0.00085282*T*R*R - 0.00000199*T*T*R*R;
-      const hiC = Math.round(((HI - 32) * 5) / 9);
-      heatIndexNote = `Heat Index: ${hiC}°C (actual temperature ${weatherData.temperature}°C + humidity ${weatherData.humidity}% effect).`;
-    }
-
-    let modelNote = '';
-    if (weatherData?.modelData?.daily) {
-      const { gfs, icon, ecmwf } = weatherData.modelData.daily;
-      if (gfs && icon && ecmwf) {
-        const temps = [gfs.maxTemp?.[0], icon.maxTemp?.[0], ecmwf.maxTemp?.[0]].filter(t => t != null);
-        const precips = [gfs.precipProbMax?.[0], icon.precipProbMax?.[0], ecmwf.precipProbMax?.[0]].filter(p => p != null);
-        
-        if (temps.length > 1) {
-          const tempDiff = Math.max(...temps) - Math.min(...temps);
-          const precipDiff = precips.length > 1 ? Math.max(...precips) - Math.min(...precips) : 0;
-          
-          if (tempDiff > 2 || precipDiff > 20) {
-            modelNote = `\nMulti-model forecast comparison: Models significantly disagree!\n- GFS: ${gfs.maxTemp?.[0]}°C, ${gfs.precipProbMax?.[0]}% precip\n- ICON: ${icon.maxTemp?.[0]}°C, ${icon.precipProbMax?.[0]}% precip\n- ECMWF: ${ecmwf.maxTemp?.[0]}°C, ${ecmwf.precipProbMax?.[0]}% precip`;
-          } else {
-            modelNote = `\nMulti-model forecast comparison: Models agree (High confidence).`;
-          }
-        }
-      }
-    }
-
-    const userPrompt = `User question (language: ${language}): "${message}"
-
-Current weather data:
-- Location: ${weatherData?.location || 'Unknown'}, ${weatherData?.state || ''}
-- Temperature: ${weatherData?.temperature}°C, Feels Like: ${weatherData?.feelsLike}°C
-- Humidity: ${weatherData?.humidity}%, Wind: ${weatherData?.windSpeed} km/h
-- Precipitation: ${weatherData?.precipitation}mm, Rain: ${weatherData?.rain}mm
-- Weather Code: ${weatherData?.weatherCode}, UV Index: ${weatherData?.uvIndex}
-- AQI: ${weatherData?.aqi}
-${heatIndexNote ? '- ' + heatIndexNote : ''}
-
-Seasonal context (${currentMonth}):
-${seasonalNote || 'No seasonal data available for this location.'}
-${modelNote}
-
-Current month: ${currentMonth} (month ${monthIndex + 1} of 12)`;
-
-    const response = await fetch(
-      'https://api.groq.com/openai/v1/chat/completions',
-      {
+    while (loopCount < MAX_LOOPS) {
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${apiKey}`
         },
         body: JSON.stringify({
+          model: 'llama3-groq-70b-8192-tool-use-preview', // highly capable tool model, or fallback to llama3-70b-8192
+          messages: messages,
+          tools: WEATHER_TOOLS,
+          tool_choice: 'auto',
+          temperature: 0.7,
+          max_tokens: 1024
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Groq API error during tool loop: ${response.status} ${await response.text()}`);
+      }
+
+      const data = await response.json();
+      const responseMessage = data?.choices?.[0]?.message;
+
+      if (!responseMessage) {
+        throw new Error('Empty response from Groq');
+      }
+
+      // Check if Groq wants to call tools
+      if (responseMessage.tool_calls && responseMessage.tool_calls.length > 0) {
+        messages.push(responseMessage); // Add assistant's tool request to history
+
+        // Execute each tool concurrently
+        const toolPromises = responseMessage.tool_calls.map(async (tc) => {
+          const funcName = tc.function.name;
+          let resultData;
+          try {
+            const args = JSON.parse(tc.function.arguments);
+            if (funcName === 'get_current_weather') resultData = await get_current_weather(args);
+            else if (funcName === 'get_forecast') resultData = await get_forecast(args);
+            else if (funcName === 'get_historical_trend') resultData = await get_historical_trend(args);
+            else if (funcName === 'get_seasonal_comparison') resultData = await get_seasonal_comparison(args);
+            else if (funcName === 'get_active_alerts') resultData = await get_active_alerts(args);
+            else resultData = { error: 'Unknown function' };
+          } catch (err) {
+            resultData = { error: err.message };
+          }
+          return {
+            role: 'tool',
+            tool_call_id: tc.id,
+            name: funcName,
+            content: JSON.stringify(resultData)
+          };
+        });
+
+        const toolResults = await Promise.all(toolPromises);
+        messages.push(...toolResults); // Add tool results to history
+        loopCount++;
+      } else {
+        // No tool calls -> final answer!
+        finalContent = responseMessage.content;
+        break;
+      }
+    }
+
+    if (!finalContent) {
+      throw new Error('Exceeded max tool loops without generating a final answer.');
+    }
+
+  } catch (err) {
+    console.warn('Tool loop failed, falling back to legacy single-shot strategy:', err.message);
+    
+    // ---------------------------------------------------------
+    // FALLBACK STRATEGY (Legacy Single-Shot)
+    // ---------------------------------------------------------
+    try {
+      const now = new Date();
+      const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+      const currentMonth = monthNames[now.getMonth()];
+      const monthIndex = now.getMonth();
+
+      let seasonalNote = '';
+      if (weatherData?.location) {
+        // Extremely simplified fallback seasonal check
+        seasonalNote = `Seasonal context: It's ${currentMonth}.`; 
+      }
+
+      let heatIndexNote = '';
+      if (weatherData?.temperature >= 27 && weatherData?.humidity) {
+        heatIndexNote = `High heat index likely due to ${weatherData.humidity}% humidity.`;
+      }
+
+      let modelNote = '';
+      if (weatherData?.modelData?.daily?.gfs && weatherData?.modelData?.daily?.ecmwf) {
+        modelNote = `\nMulti-model forecast: Data provided by GFS and ECMWF.`;
+      }
+
+      const fallbackPrompt = `User question (language: ${language}): "${message}"\n
+Current weather data (Fallback):
+- Location: ${weatherData?.location || 'Unknown'}
+- Temp: ${weatherData?.temperature}°C, Feels Like: ${weatherData?.feelsLike}°C
+- Humidity: ${weatherData?.humidity}%, Wind: ${weatherData?.windSpeed} km/h
+- Rain: ${weatherData?.rain}mm
+${heatIndexNote ? '- ' + heatIndexNote : ''}
+${modelNote}`;
+
+      const fallbackRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+        body: JSON.stringify({
           model: 'openai/gpt-oss-20b',
           messages: [
             { role: 'system', content: SYSTEM_PROMPT },
             ...history,
-            { role: 'user', content: userPrompt }
+            { role: 'user', content: fallbackPrompt }
           ],
           temperature: 0.7,
           max_tokens: 1024
         }),
-      }
-    );
-
-    if (!response.ok) {
-      const errText = await response.text();
-      console.error('Groq API error:', response.status, errText);
-      return res.status(502).json({ error: 'Weather AI is temporarily unavailable. Try again in a moment.' });
-    }
-
-    const data = await response.json();
-    const text = data?.choices?.[0]?.message?.content;
-
-    if (!text) {
-      return res.status(502).json({ error: 'Received an empty response. Try again.' });
-    }
-
-    // Parse the JSON response from Groq
-    try {
-      // Strip any markdown code fences if present
-      const cleanText = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-      const parsed = JSON.parse(cleanText);
-      return res.json({
-        answer: parsed.answer || 'I couldn\'t process that. Try asking again.',
-        followUp: parsed.followUp || '',
-        relevantStat: parsed.relevantStat || '',
-        advisory: parsed.advisory || '',
-        severity: parsed.severity || 'none',
-        suggestedQuestions: Array.isArray(parsed.suggestedQuestions) ? parsed.suggestedQuestions.slice(0, 3) : [],
       });
-    } catch (parseErr) {
-      // If Groq didn't return valid JSON (e.g. truncated), try to extract the "answer" string manually
-      let partialAnswer = text;
-      const answerMatch = text.match(/"answer"\s*:\s*"([^"]*)/);
-      if (answerMatch && answerMatch[1]) {
-        partialAnswer = answerMatch[1];
-      } else {
-        // Just clean up the raw string so it doesn't look like code
-        partialAnswer = text.replace(/[{}"\\]/g, '').replace(/answer\s*:/, '').trim();
+
+      if (!fallbackRes.ok) {
+        return res.status(502).json({ error: 'Weather AI is temporarily unavailable. Try again in a moment.' });
       }
-      
-      return res.json({
-        answer: partialAnswer || 'The response was cut off. Please try again.',
-        followUp: '',
-        advisory: '',
-        severity: 'none',
-        suggestedQuestions: [],
-      });
+
+      const fallbackData = await fallbackRes.json();
+      finalContent = fallbackData?.choices?.[0]?.message?.content;
+
+      if (!finalContent) {
+        return res.status(502).json({ error: 'Received an empty response. Try again.' });
+      }
+    } catch (fallbackErr) {
+      console.error('Fallback error:', fallbackErr);
+      return res.status(500).json({ error: 'Something went wrong. Try again.' });
     }
-  } catch (err) {
-    console.error('Server error:', err);
-    return res.status(500).json({ error: 'Something went wrong. Try again.' });
+  }
+
+  // ---------------------------------------------------------
+  // FINAL RESPONSE PARSING
+  // ---------------------------------------------------------
+  try {
+    const cleanText = finalContent.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    const parsed = JSON.parse(cleanText);
+    return res.json({
+      answer: parsed.answer || 'I couldn\'t process that. Try asking again.',
+      followUp: parsed.followUp || '',
+      relevantStat: parsed.relevantStat || '',
+      advisory: parsed.advisory || '',
+      severity: parsed.severity || 'none',
+      suggestedQuestions: Array.isArray(parsed.suggestedQuestions) ? parsed.suggestedQuestions.slice(0, 3) : [],
+    });
+  } catch (parseErr) {
+    let partialAnswer = finalContent;
+    const answerMatch = finalContent.match(/"answer"\s*:\s*"([^"]*)/);
+    if (answerMatch && answerMatch[1]) partialAnswer = answerMatch[1];
+    else partialAnswer = finalContent.replace(/[{}"\\]/g, '').replace(/answer\s*:/, '').trim();
+    
+    return res.json({
+      answer: partialAnswer || 'The response was cut off. Please try again.',
+      followUp: '',
+      advisory: '',
+      severity: 'none',
+      suggestedQuestions: [],
+    });
   }
 });
 
