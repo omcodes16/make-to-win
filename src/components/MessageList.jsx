@@ -22,12 +22,12 @@ export default function MessageList() {
 
   return (
     <div className="max-w-lg mx-auto px-4 py-4 chat-scroll scrollbar-hide overflow-y-auto">
-      {messages.map(msg => {
+      {messages.map((msg, index) => {
         switch (msg.role) {
           case 'user':
             return <UserBubble key={msg.id} message={msg} />;
           case 'assistant':
-            return <AssistantCard key={msg.id} message={msg} />;
+            return <AssistantCard key={msg.id} message={msg} isLatest={index === messages.length - 1} />;
           case 'error':
             return <ErrorMessage key={msg.id} message={msg} />;
           default:

@@ -2,11 +2,11 @@
  * Chat API service — sends user message + weather context to the Express proxy,
  * which forwards to Groq. Returns structured AI response.
  */
-export async function sendMessage(message, language, weatherData) {
+export async function sendMessage(message, language, weatherData, history = []) {
   const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message, language, weatherData }),
+    body: JSON.stringify({ message, language, weatherData, history }),
   });
 
   if (!res.ok) {

@@ -57,13 +57,19 @@ export default function ChatInput() {
           }
         }
 
+        // Extract recent conversation history (last 6 turns)
+        const recentHistory = state.messages
+          .filter(m => m.role === 'user' || m.role === 'assistant')
+          .slice(-6)
+          .map(m => ({ role: m.role, content: m.text }));
+
         // Send to AI via proxy - pass full weather context if available
         const aiResponse = await sendChatMessage(text, state.language, weatherData ? {
           location: location.name,
           state: location.state,
           ...weatherData,
           conditionLabel: weatherInfo.label,
-        } : null);
+        } : null, recentHistory);
 
         // Cache raw weather data for offline use
         let weatherCache = undefined;
@@ -85,6 +91,7 @@ export default function ChatInput() {
           advisory: aiResponse.advisory || (severityCheck ? severityCheck.summary : ''),
           severity: aiResponse.severity || (severityCheck?.isSevere ? 'severe' : 'none'),
           weatherData: weatherCache,
+          suggestedQuestions: aiResponse.suggestedQuestions,
         },
       });
     } catch (err) {

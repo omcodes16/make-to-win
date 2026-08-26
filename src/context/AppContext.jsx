@@ -48,7 +48,7 @@ function appReducer(state, action) {
       };
 
     case 'ADD_ASSISTANT_MESSAGE': {
-      const { answer, followUp, relevantStat, advisory, severity, weatherData } = action.payload;
+      const { answer, followUp, relevantStat, advisory, severity, weatherData, suggestedQuestions } = action.payload;
       const newMsg = {
         id: Date.now(),
         role: 'assistant',
@@ -58,6 +58,7 @@ function appReducer(state, action) {
         advisory: advisory || '',
         severity: severity || 'none',
         data: weatherData || null,
+        suggestedQuestions: Array.isArray(suggestedQuestions) ? suggestedQuestions : [],
         timestamp: new Date().toISOString(),
       };
       // Cache last successful response

@@ -40,19 +40,30 @@ ACTIVITY AND HEAT RISK AWARENESS:
    Example: "24C sounds mild, but at 85% humidity the heat index is 28C — more exhausting than it sounds. Pace yourself and hydrate."
    Use the heat index context provided to you.
 
+MODEL DIVERGENCE:
+10. If multi-model forecast data is provided and explicitly flags that the models "significantly disagree", you MUST briefly mention this uncertainty in your 'answer' or 'followUp' (e.g., "Weather models slightly disagree on this — showing the most likely outcome, but check back closer to the date"). Do NOT mention model data or uncertainty if the models agree or if the data is not provided. Do not clutter the chat with technical caveats on every normal query.
+
+FOLLOW-UP SUGGESTIONS:
+11. Generate exactly 2-3 natural follow-up questions based on the user's question, your answer, and recent conversation history.
+   - Follow-ups must represent genuinely different next steps a real user would take — not just rephrasing the same question.
+   - If the current answer fully resolves the query (or user said thanks), return an empty array.
+   - Never repeat a question from the conversation history.
+   - Each suggestion must be under 8 words, in the EXACT same language as the user, phrased as the user (first person).
+
 RESPOND ONLY IN THIS EXACT JSON FORMAT, no markdown fences:
 {
   "answer": "Detailed, easy-to-understand, conversational answer with actionable advice.",
   "followUp": "Optional seasonal comparison or anomaly note, or empty string.",
   "relevantStat": "Single most relevant data point as a short label.",
   "advisory": "Plain-language advisory with concrete action if conditions warrant caution, or empty string.",
-  "severity": "none or caution or severe"
+  "severity": "none or caution or severe",
+  "suggestedQuestions": ["Question 1?", "Question 2?"]
 }`;
 
 // POST /api/chat
 app.post('/api/chat', async (req, res) => {
   try {
-    const { message, language, weatherData } = req.body;
+    const { message, language, weatherData, history = [] } = req.body;
     const apiKey = process.env.GROQ_API_KEY;
 
     if (!apiKey) {
@@ -94,6 +105,26 @@ app.post('/api/chat', async (req, res) => {
       heatIndexNote = `Heat Index: ${hiC}°C (actual temperature ${weatherData.temperature}°C + humidity ${weatherData.humidity}% effect).`;
     }
 
+    let modelNote = '';
+    if (weatherData?.modelData?.daily) {
+      const { gfs, icon, ecmwf } = weatherData.modelData.daily;
+      if (gfs && icon && ecmwf) {
+        const temps = [gfs.maxTemp?.[0], icon.maxTemp?.[0], ecmwf.maxTemp?.[0]].filter(t => t != null);
+        const precips = [gfs.precipProbMax?.[0], icon.precipProbMax?.[0], ecmwf.precipProbMax?.[0]].filter(p => p != null);
+        
+        if (temps.length > 1) {
+          const tempDiff = Math.max(...temps) - Math.min(...temps);
+          const precipDiff = precips.length > 1 ? Math.max(...precips) - Math.min(...precips) : 0;
+          
+          if (tempDiff > 2 || precipDiff > 20) {
+            modelNote = `\nMulti-model forecast comparison: Models significantly disagree!\n- GFS: ${gfs.maxTemp?.[0]}°C, ${gfs.precipProbMax?.[0]}% precip\n- ICON: ${icon.maxTemp?.[0]}°C, ${icon.precipProbMax?.[0]}% precip\n- ECMWF: ${ecmwf.maxTemp?.[0]}°C, ${ecmwf.precipProbMax?.[0]}% precip`;
+          } else {
+            modelNote = `\nMulti-model forecast comparison: Models agree (High confidence).`;
+          }
+        }
+      }
+    }
+
     const userPrompt = `User question (language: ${language}): "${message}"
 
 Current weather data:
@@ -107,6 +138,7 @@ ${heatIndexNote ? '- ' + heatIndexNote : ''}
 
 Seasonal context (${currentMonth}):
 ${seasonalNote || 'No seasonal data available for this location.'}
+${modelNote}
 
 Current month: ${currentMonth} (month ${monthIndex + 1} of 12)`;
 
@@ -122,6 +154,7 @@ Current month: ${currentMonth} (month ${monthIndex + 1} of 12)`;
           model: 'openai/gpt-oss-20b',
           messages: [
             { role: 'system', content: SYSTEM_PROMPT },
+            ...history,
             { role: 'user', content: userPrompt }
           ],
           temperature: 0.7,
@@ -154,6 +187,7 @@ Current month: ${currentMonth} (month ${monthIndex + 1} of 12)`;
         relevantStat: parsed.relevantStat || '',
         advisory: parsed.advisory || '',
         severity: parsed.severity || 'none',
+        suggestedQuestions: Array.isArray(parsed.suggestedQuestions) ? parsed.suggestedQuestions.slice(0, 3) : [],
       });
     } catch (parseErr) {
       // If Groq didn't return valid JSON (e.g. truncated), try to extract the "answer" string manually
@@ -171,6 +205,7 @@ Current month: ${currentMonth} (month ${monthIndex + 1} of 12)`;
         followUp: '',
         advisory: '',
         severity: 'none',
+        suggestedQuestions: [],
       });
     }
   } catch (err) {
