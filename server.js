@@ -103,6 +103,7 @@ app.post('/api/chat', async (req, res) => {
 
     let loopCount = 0;
     const MAX_LOOPS = 5; 
+    let lastWeatherData = null;
 
     if (req.body.forceLegacy) {
       throw new Error('Forced legacy bypass for testing.');
@@ -149,7 +150,10 @@ app.post('/api/chat', async (req, res) => {
           try {
             const args = JSON.parse(tc.function.arguments);
             console.log(`[TOOL CALLED] ${funcName} with args:`, args);
-            if (funcName === 'get_current_weather') resultData = await get_current_weather(args);
+            if (funcName === 'get_current_weather') {
+               resultData = await get_current_weather(args);
+               lastWeatherData = { locationName: args.location, ...resultData };
+            }
             else if (funcName === 'get_forecast') resultData = await get_forecast(args);
             else if (funcName === 'get_historical_trend') resultData = await get_historical_trend(args);
             else if (funcName === 'get_seasonal_comparison') resultData = await get_seasonal_comparison(args);
@@ -257,16 +261,12 @@ ${modelNote}`;
   // FINAL RESPONSE PARSING
   // ---------------------------------------------------------
   try {
-    const cleanText = finalContent.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-    const parsed = JSON.parse(cleanText);
-    return res.json({
-      answer: parsed.answer || 'I couldn\'t process that. Try asking again.',
-      followUp: parsed.followUp || '',
-      relevantStat: parsed.relevantStat || '',
-      advisory: parsed.advisory || '',
-      severity: parsed.severity || 'none',
-      suggestedQuestions: Array.isArray(parsed.suggestedQuestions) ? parsed.suggestedQuestions.slice(0, 3) : [],
-    });
+    const jsonStr = finalContent.replace(/```json\n?|\n?```/g, '').trim();
+    const finalJson = JSON.parse(jsonStr);
+    if (lastWeatherData) {
+       finalJson.weatherData = lastWeatherData;
+    }
+    return res.json(finalJson);
   } catch (parseErr) {
     let partialAnswer = finalContent;
     const answerMatch = finalContent.match(/"answer"\s*:\s*"([^"]*)/);

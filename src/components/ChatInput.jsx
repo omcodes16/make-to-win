@@ -88,7 +88,7 @@ export default function ChatInput() {
           relevantStat: aiResponse.relevantStat || '',
           advisory: aiResponse.advisory || (severityCheck ? severityCheck.summary : ''),
           severity: aiResponse.severity || (severityCheck?.isSevere ? 'severe' : 'none'),
-          weatherData: weatherCache,
+          weatherData: aiResponse.weatherData || weatherCache,
           suggestedQuestions: aiResponse.suggestedQuestions,
         },
       });
