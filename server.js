@@ -64,12 +64,12 @@ RESPOND ONLY IN THIS EXACT JSON FORMAT, no markdown fences:
 }`;
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-async function fetchWithRetry(url, options, maxRetries = 2) {
+async function fetchWithRetry(url, options, maxRetries = 4) {
   for (let i = 0; i < maxRetries; i++) {
     const response = await fetch(url, options);
     if (response.status === 429) {
-      console.warn(`[429 Rate Limit] TPM limit hit. Waiting 2.5 seconds before retry (Attempt ${i + 1}/${maxRetries})...`);
-      await sleep(2500);
+      console.warn(`[429 Rate Limit] TPM limit hit. Waiting 4 seconds before retry (Attempt ${i + 1}/${maxRetries})...`);
+      await sleep(4000);
       continue;
     }
     return response;
@@ -263,6 +263,15 @@ ${modelNote}`;
   try {
     const jsonStr = finalContent.replace(/```json\n?|\n?```/g, '').trim();
     const finalJson = JSON.parse(jsonStr);
+    
+    // Forcefully remove temperature from relevantStat to prevent UI duplication
+    if (finalJson.relevantStat) {
+      const statLower = finalJson.relevantStat.toLowerCase();
+      if (statLower.includes('temp') || statLower.includes('तापमान') || statLower.includes('°c') || statLower.includes('° c')) {
+        finalJson.relevantStat = '';
+      }
+    }
+
     if (lastWeatherData) {
        finalJson.weatherData = lastWeatherData;
     }
