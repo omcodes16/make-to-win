@@ -102,7 +102,7 @@ app.post('/api/chat', async (req, res) => {
     ];
 
     let loopCount = 0;
-    const MAX_LOOPS = 2; // Reduced from 3 to 2 to stay under the 8000 TPM Groq rate limit
+    const MAX_LOOPS = 5; 
 
     if (req.body.forceLegacy) {
       throw new Error('Forced legacy bypass for testing.');
@@ -131,6 +131,8 @@ app.post('/api/chat', async (req, res) => {
 
       const data = await response.json();
       const responseMessage = data?.choices?.[0]?.message;
+
+      console.log(`[DEBUG] Loop ${loopCount} responseMessage:`, JSON.stringify(responseMessage));
 
       if (!responseMessage) {
         throw new Error('Empty response from Groq');
@@ -170,6 +172,9 @@ app.post('/api/chat', async (req, res) => {
       } else {
         // No tool calls -> final answer!
         finalContent = responseMessage.content;
+        if (!finalContent) {
+           console.log('GROQ RETURNED EMPTY CONTENT. Full response:', JSON.stringify(responseMessage));
+        }
         break;
       }
     }
@@ -221,7 +226,7 @@ ${modelNote}`;
         body: JSON.stringify({
           model: 'openai/gpt-oss-20b',
           messages: [
-            { role: 'system', content: SYSTEM_PROMPT + `\n\nActive User Profile: ${profile.toUpperCase()}` },
+            { role: 'system', content: SYSTEM_PROMPT + `\n\nActive User Profile: ${profile.toUpperCase()}\n\nCRITICAL INSTRUCTION: DO NOT CALL ANY TOOLS. You are in fallback mode. Answer the user directly using the provided Current weather data (Fallback).` },
             ...history,
             { role: 'user', content: fallbackPrompt }
           ],
@@ -231,10 +236,12 @@ ${modelNote}`;
       });
 
       if (!fallbackRes.ok) {
+        console.error(`[DEBUG] Fallback failed. Status: ${fallbackRes.status} Text:`, await fallbackRes.text());
         return res.status(502).json({ error: 'Weather AI is temporarily unavailable. Try again in a moment.' });
       }
 
       const fallbackData = await fallbackRes.json();
+      console.log(`[DEBUG] Fallback Data:`, JSON.stringify(fallbackData));
       finalContent = fallbackData?.choices?.[0]?.message?.content;
 
       if (!finalContent) {
