@@ -45,17 +45,18 @@ function appReducer(state, action) {
       return {
         ...state,
         messages: [...state.messages, {
-          id: Date.now(),
+          id: action.payload.id || Date.now(),
           role: 'user',
-          text: action.payload,
+          text: action.payload.text || action.payload,
+          wasVoice: action.payload.wasVoice || false,
           timestamp: new Date().toISOString(),
         }],
       };
 
     case 'ADD_ASSISTANT_MESSAGE': {
-      const { answer, followUp, relevantStat, advisory, severity, weatherData, suggestedQuestions } = action.payload;
+      const { id, answer, followUp, relevantStat, advisory, severity, weatherData, suggestedQuestions, autoSpeak } = action.payload;
       const newMsg = {
-        id: Date.now(),
+        id: id || Date.now(),
         role: 'assistant',
         text: answer,
         followUp: followUp || '',
@@ -63,6 +64,7 @@ function appReducer(state, action) {
         advisory: advisory || '',
         severity: severity || 'none',
         data: weatherData || null,
+        autoSpeak: autoSpeak || false,
         suggestedQuestions: Array.isArray(suggestedQuestions) ? suggestedQuestions : [],
         timestamp: new Date().toISOString(),
       };

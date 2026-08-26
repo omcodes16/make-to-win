@@ -1,4 +1,6 @@
 import express from 'express';
+import * as googleTTS from 'google-tts-api';
+
 import cors from 'cors';
 import { config } from 'dotenv';
 import { fileURLToPath } from 'url';
@@ -294,6 +296,28 @@ ${modelNote}`;
 
 // GET /api/news
 // Fetches real-time weather & disaster news for India via Google News RSS
+
+// POST /api/tts
+// Uses Google TTS to generate high-quality audio buffers for any language
+app.post('/api/tts', async (req, res) => {
+  const { text, lang } = req.body;
+  if (!text) return res.status(400).json({ error: 'No text provided' });
+  
+  try {
+    const results = await googleTTS.getAllAudioBase64(text, {
+      lang: lang || 'en',
+      slow: false,
+      host: 'https://translate.google.com',
+      splitPunct: ',.?!'
+    });
+    // results is an array of { shortText, base64 }
+    res.json({ chunks: results.map(r => r.base64) });
+  } catch (err) {
+    console.error('TTS Error:', err);
+    res.status(500).json({ error: 'Failed to generate TTS' });
+  }
+});
+
 app.get('/api/news', async (req, res) => {
   try {
     const q = encodeURIComponent('weather OR flood OR cyclone OR disaster India');
