@@ -1,4 +1,3 @@
-
 <div align="center">
   <h1>🌦️ WeatherGPT</h1>
   <p><strong>Next-Generation Multilingual Meteorological AI | Smart India Hackathon 2026</strong></p>
@@ -100,46 +99,3 @@ graph LR
 4. **Data Layer:** `Open-Meteo API` — Completely open-source, highly granular, and provides specialized endpoints (Marine, Agriculture, Ensemble models) without rate-limiting our demo.
 
 ---
-
-## 🚀 Production Deployment Guide (For SIH Judges)
-
-Because WeatherGPT relies on both a modern React frontend and an Express Node.js backend to securely proxy API keys, it must be deployed as two separate services.
-
-### 1. Local Development Setup
-```bash
-# 1. Clone the repository
-git clone https://github.com/omcodes16/sih-2026.git
-cd sih-2026
-
-# 2. Install dependencies
-npm install
-
-# 3. Configure Environment Variables
-# Create a .env file in the root directory
-echo "GROQ_API_KEY=your_api_key_here" > .env
-
-# 4. Run both Frontend and Backend concurrently
-npm run dev:all
-
-# 5. Access the application
-# Open http://localhost:5173 in your browser
-```
-
-### 2. Live Production Deployment
-
-#### Step A: Deploying the Backend (Render / Railway)
-1. Create a free account on [Render.com](https://render.com).
-2. Create a new **Web Service** and connect this GitHub repository.
-3. Set the **Build Command** to: `npm install`
-4. Set the **Start Command** to: `npm run server`
-5. In the **Environment Variables** tab, add your `GROQ_API_KEY`.
-6. Once deployed, copy your backend URL (e.g., `https://weathergpt-backend.onrender.com`).
-
-#### Step B: Deploying the Frontend (Vercel)
-1. Create a free account on [Vercel.com](https://vercel.com).
-2. Import this repository.
-3. **Crucial Step:** Open your project code and navigate to where the frontend calls the backend (e.g., `src/services/chatApi.js`). Update the base URL from `http://localhost:3001` to the Render URL you copied in Step A.
-4. Set the **Framework Preset** to Vite.
-5. Set the **Build Command** to: `npm run build`
-6. Set the **Output Directory** to: `dist`
-7. Click **Deploy**. Your frontend will now be live on a fast, global CDN!
