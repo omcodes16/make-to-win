@@ -221,10 +221,10 @@ export default function UserGuideModal({ isOpen, onClose }) {
   return (
     <div className="fixed inset-0 z-[100] flex items-start justify-center p-2 sm:p-6 overflow-y-auto custom-scrollbar bg-black/80 backdrop-blur-md">
       
-      <div className="relative bg-[#0a0c1a] border border-white/20 rounded-[2rem] w-full max-w-5xl shadow-[0_0_50px_rgba(0,0,0,0.8)] animate-scale-up my-auto overflow-hidden flex flex-col">
+      <div className="relative bg-surface-0 border border-white/20 rounded-[2rem] w-full max-w-5xl shadow-[0_0_50px_rgba(0,0,0,0.8)] animate-scale-up my-auto overflow-hidden flex flex-col">
         
         {/* Sticky Header */}
-        <div className="sticky top-0 bg-[#0a0c1a]/95 backdrop-blur-xl border-b border-white/10 px-6 py-5 flex justify-between items-center z-10">
+        <div className="sticky top-0 bg-surface-0/95 backdrop-blur-xl border-b border-white/10 px-6 py-5 flex justify-between items-center z-10">
           <div>
             <h2 className="text-2xl sm:text-3xl font-bold text-white flex items-center gap-3">
               <span className="text-blue-500">📖</span>
@@ -268,7 +268,7 @@ export default function UserGuideModal({ isOpen, onClose }) {
         </div>
 
         {/* Sticky Footer */}
-        <div className="sticky bottom-0 bg-gradient-to-t from-[#0a0c1a] via-[#0a0c1a]/95 to-transparent px-6 py-6 border-t border-white/10 mt-auto">
+        <div className="sticky bottom-0 bg-gradient-to-t from-surface-0 via-surface-0/95 to-transparent px-6 py-6 border-t border-white/10 mt-auto">
           <button 
             onClick={onClose}
             className="w-full sm:w-auto sm:ml-auto block px-12 py-3 sm:py-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-lg shadow-[0_0_20px_rgba(37,99,235,0.4)] transition-all active:scale-[0.98]"

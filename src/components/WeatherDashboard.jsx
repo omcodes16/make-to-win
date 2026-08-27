@@ -57,7 +57,7 @@ export default function WeatherDashboard() {
   if (!stageData) {
     const defaultTheme = getTheme(null, null);
     return (
-      <div className="min-h-[100dvh] bg-[#0a0c1a] flex flex-col transition-colors duration-1000">
+      <div className="min-h-[100dvh] bg-surface-0 flex flex-col transition-colors duration-1000">
         {/* Fixed Background Image (Hardware Accelerated, Smooth) */}
         <div className="fixed inset-0 z-0 bg-cover bg-center transition-opacity duration-1000" style={{ backgroundImage: `url(${defaultTheme.bgImage})` }}></div>
         <div className={`fixed inset-0 z-0 bg-gradient-to-b ${defaultTheme.overlay} pointer-events-none transition-colors duration-1000`}></div>
@@ -173,7 +173,7 @@ export default function WeatherDashboard() {
   // ──────────────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-[100dvh] bg-[#0a0c1a] text-white overflow-y-auto pb-24 md:pb-20 relative font-body transition-colors duration-1000">
+    <div className="min-h-[100dvh] bg-surface-0 text-white overflow-y-auto pb-24 md:pb-20 relative font-body transition-colors duration-1000">
       {/* Fixed Background Image (Hardware Accelerated, Smooth) */}
       <div className="fixed inset-0 z-0 bg-cover bg-center transition-opacity duration-1000" style={{ backgroundImage: `url(${theme.bgImage})` }}></div>
       
@@ -297,11 +297,11 @@ export default function WeatherDashboard() {
                 onChange={(e) => dispatch({ type: 'SET_PROFILE', payload: e.target.value })}
                 className="bg-white/10 border border-white/20 text-white text-xs rounded-lg px-2 py-1 focus:outline-none focus:border-indigo-400"
               >
-                <option value="general" className="bg-[#1a1c29]">General</option>
-                <option value="farmer" className="bg-[#1a1c29]">Farmer (किसान)</option>
-                <option value="fisherman" className="bg-[#1a1c29]">Fisherman (मछुआरा)</option>
-                <option value="aviation" className="bg-[#1a1c29]">Aviation (उड़ान)</option>
-                <option value="urbanPlanning" className="bg-[#1a1c29]">Urban Planner (शहर योजना)</option>
+                <option value="general" className="bg-surface-2">General</option>
+                <option value="farmer" className="bg-surface-2">Farmer (किसान)</option>
+                <option value="fisherman" className="bg-surface-2">Fisherman (मछुआरा)</option>
+                <option value="aviation" className="bg-surface-2">Aviation (उड़ान)</option>
+                <option value="urbanPlanning" className="bg-surface-2">Urban Planner (शहर योजना)</option>
               </select>
                 
               </div>

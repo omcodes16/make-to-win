@@ -176,7 +176,7 @@ export default function Header() {
   };
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-50 bg-[#0a0c1a]/80 backdrop-blur-md border-b border-white/10 pt-3 pb-3">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-surface-0/80 backdrop-blur-md border-b border-white/10 pt-3 pb-3">
         <div className="mx-auto px-3 sm:px-6 flex items-center justify-between max-w-[1400px]">
           
           {/* Left: App name & Logo */}
@@ -280,7 +280,7 @@ export default function Header() {
               </button>
 
               {showSaved && (
-                <div className="absolute right-0 top-full mt-2 rounded-2xl shadow-[0_0_25px_rgba(0,0,0,0.6)] py-3 w-[260px] sm:w-[280px] z-50 border bg-[#1a1c29] border-white/10 text-white">
+                <div className="absolute right-0 top-full mt-2 rounded-2xl shadow-[0_0_25px_rgba(0,0,0,0.6)] py-3 w-[260px] sm:w-[280px] z-50 border bg-surface-2 border-white/10 text-white">
                   <div className="px-4 pb-2 mb-2 border-b border-white/10 flex items-center gap-2">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1" className="text-amber-400"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
                     <span className="text-sm font-semibold text-white/90">Saved Locations</span>
@@ -398,7 +398,7 @@ export default function Header() {
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg>
               </button>
               {showLangPicker && (
-                <div className="absolute right-0 top-full mt-2 rounded-xl shadow-[0_0_15px_rgba(0,0,0,0.5)] py-1 min-w-[140px] z-50 border bg-[#1a1c29] border-white/10 text-white">
+                <div className="absolute right-0 top-full mt-2 rounded-xl shadow-[0_0_15px_rgba(0,0,0,0.5)] py-1 min-w-[140px] z-50 border bg-surface-2 border-white/10 text-white">
                   {LANGUAGES.map(lang => (
                     <button
                       key={lang.code}
@@ -425,7 +425,7 @@ export default function Header() {
       <UserGuideModal isOpen={showGuide} onClose={() => setShowGuide(false)} />
 
       {/* Mobile Bottom Tab Bar */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0a0c1a]/90 backdrop-blur-md border-t border-white/10 flex safe-pb">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-surface-0/90 backdrop-blur-md border-t border-white/10 flex safe-pb">
         <button
           onClick={() => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'chat' })}
           className={`flex-1 flex flex-col items-center justify-center py-3 gap-1 transition-colors ${state.activeTab === 'chat' ? 'text-blue-400' : 'text-white/40'}`}

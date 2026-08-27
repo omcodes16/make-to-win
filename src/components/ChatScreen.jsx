@@ -20,7 +20,7 @@ export default function ChatScreen() {
   const theme = weather && weatherInfo ? getTheme(weather, weatherInfo) : getTheme({ temperature: 20 }, { key: 'partlyCloudy' });
 
   return (
-    <div className="flex flex-col h-[100dvh] bg-[#0a0c1a] transition-colors duration-1000 overflow-hidden">
+    <div className="flex flex-col h-[100dvh] bg-surface-0 transition-colors duration-1000 overflow-hidden">
       {/* Fixed Background Image (Hardware Accelerated) */}
       <div className="fixed inset-0 z-0 bg-cover bg-center transition-opacity duration-1000" style={{ backgroundImage: `url(${theme.bgImage})` }}></div>
       
@@ -39,7 +39,7 @@ export default function ChatScreen() {
       </main>
 
       {/* Input pinned at bottom — above mobile nav bar */}
-      <div className="fixed bottom-[56px] md:bottom-0 left-0 right-0 z-30 pb-3 md:pb-4 pt-8 bg-gradient-to-t from-[#0a0c1a] via-[#0a0c1a]/80 to-transparent">
+      <div className="fixed bottom-[56px] md:bottom-0 left-0 right-0 z-30 pb-3 md:pb-4 pt-8 bg-gradient-to-t from-surface-0 via-surface-0/80 to-transparent">
         <div className="max-w-3xl mx-auto px-3 sm:px-4">
           <SevereAlertBanner />
           <ChatInput />

@@ -155,7 +155,7 @@ export default function AlertsScreen() {
   });
 
   return (
-    <div className="min-h-[100dvh] bg-[#0a0c1a] text-white overflow-y-auto pb-24 md:pb-20 relative font-body transition-colors duration-1000">
+    <div className="min-h-[100dvh] bg-surface-0 text-white overflow-y-auto pb-24 md:pb-20 relative font-body transition-colors duration-1000">
       {/* Fixed Background Image (Hardware Accelerated) */}
       <div className="fixed inset-0 z-0 bg-cover bg-center transition-opacity duration-1000" style={{ backgroundImage: `url(${theme.bgImage})` }}></div>
 
@@ -207,7 +207,7 @@ export default function AlertsScreen() {
             ))}
             
             {liveAlerts.map(alert => (
-              <div key={alert.id} className={`relative bg-[#0f111a] border rounded-xl p-5 shadow-2xl overflow-hidden
+              <div key={alert.id} className={`relative bg-surface-1 border rounded-xl p-5 shadow-2xl overflow-hidden
                 ${alert.level === 'Severe' ? 'border-red-500/40 shadow-[0_0_30px_rgba(239,68,68,0.1)]' : 
                   alert.level === 'Caution' ? 'border-amber-500/40' : 
                   alert.level === 'Info' ? 'border-blue-500/30' : 'border-green-500/30'}`}>
@@ -284,7 +284,7 @@ export default function AlertsScreen() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-[#11131c] border border-white/5 rounded-xl p-5 shadow-lg flex flex-col">
+            <div className="bg-surface-1 border border-white/5 rounded-xl p-5 shadow-lg flex flex-col">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-bold text-white/90 tracking-wide">India Weather Risk Map</h3>
                 <div className="flex gap-2 text-[10px] uppercase font-bold tracking-widest">
@@ -320,7 +320,7 @@ export default function AlertsScreen() {
               </div>
             </div>
 
-            <div className="bg-[#11131c] border border-white/5 rounded-xl p-5 shadow-lg flex flex-col">
+            <div className="bg-surface-1 border border-white/5 rounded-xl p-5 shadow-lg flex flex-col">
               <h3 className="text-sm font-bold text-white/90 tracking-wide mb-5">Alert Impact Areas</h3>
               <div className="flex flex-col gap-3 flex-1">
                 <div className="flex items-center justify-between p-2.5 rounded bg-white/5 border border-white/5">
@@ -355,7 +355,7 @@ export default function AlertsScreen() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-2 md:gap-0 bg-[#0f111a] border border-white/5 rounded-xl md:divide-x divide-white/5">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-2 md:gap-0 bg-surface-1 border border-white/5 rounded-xl md:divide-x divide-white/5">
             <button onClick={() => setActiveModal('radar')} className="flex flex-col items-center justify-center gap-2 p-4 hover:bg-white/5 transition-colors rounded-l-xl">
               <svg className="w-6 h-6 text-purple-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
               <div className="text-center">
@@ -438,7 +438,7 @@ export default function AlertsScreen() {
             <span className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-red-500/20 text-red-400 text-[9px] font-bold tracking-widest uppercase border border-red-500/20"><span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></span> Live</span>
           </div>
 
-          <div className="bg-[#11131c] border border-white/5 rounded-2xl p-4 sm:p-5 shadow-xl flex flex-col h-full">
+          <div className="bg-surface-1 border border-white/5 rounded-2xl p-4 sm:p-5 shadow-xl flex flex-col h-full">
             
             <div className="flex gap-2 mb-4 overflow-x-auto hide-scrollbar pb-1">
               {['all', 'alerts', 'news', 'updates', 'research'].map(filter => (
@@ -492,7 +492,7 @@ export default function AlertsScreen() {
       {/* Quick Links Modal Overlay */}
       {activeModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={() => setActiveModal(null)}>
-          <div className="bg-[#11131c] border border-white/10 rounded-2xl w-full max-w-4xl max-h-[85vh] overflow-hidden flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
+          <div className="bg-surface-1 border border-white/10 rounded-2xl w-full max-w-4xl max-h-[85vh] overflow-hidden flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between p-4 border-b border-white/10 bg-white/5">
               <h3 className="text-lg font-bold text-white flex items-center gap-2">
                 {activeModal === 'radar' && <><span className="text-purple-400">●</span> {ex.liveRadar}</>}

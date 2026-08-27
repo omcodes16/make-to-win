@@ -135,7 +135,7 @@ export default function HistoricalAnalytics({ lat, lon }) {
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mt-6">
       
       {/* LEFT PART: Graph */}
-      <div className="bg-[#11131c] border border-white/5 rounded-2xl p-5 shadow-xl relative overflow-hidden">
+      <div className="bg-surface-1 border border-white/5 rounded-2xl p-5 shadow-xl relative overflow-hidden">
         <div className="absolute top-0 right-0 p-4 opacity-10 text-6xl">📈</div>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 relative z-10">
           <div>
@@ -217,7 +217,7 @@ export default function HistoricalAnalytics({ lat, lon }) {
       </div>
 
       {/* RIGHT PART: Dynamic AI Insight & Summary */}
-      <div className="bg-gradient-to-br from-[#11131c] to-[#0a0c16] border border-indigo-500/20 rounded-2xl p-5 shadow-xl relative overflow-hidden flex flex-col justify-between">
+      <div className="bg-gradient-to-br from-surface-1 to-surface-0 border border-indigo-500/20 rounded-2xl p-5 shadow-xl relative overflow-hidden flex flex-col justify-between">
         <div className="absolute top-0 right-0 p-4 opacity-5 text-8xl pointer-events-none">🤖</div>
         
         <div>
