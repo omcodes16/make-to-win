@@ -329,7 +329,11 @@ export default function WeatherDashboard() {
               <div className="flex-1">
                 <div className="text-xs sm:text-sm font-semibold uppercase tracking-wider mb-1 opacity-80">
                   {state.userProfile === 'fisherman' 
-                    ? (lang === 'hi' ? 'मछुआरों के लिए सलाह' : lang === 'bn' ? 'মৎস্যজীবীদের পরামর্শ' : lang === 'as' ? 'মাছমৰীয়া পৰামৰ্শ' : 'Marine Advisory')
+                    ? (lang === 'hi' ? 'मछुआरों के लिए सलाह' : lang === 'bn' ? 'মৎস্যজীবী পরামর্শ' : lang === 'as' ? 'মৎস্যজীৱীৰ পৰামৰ্শ' : 'Marine Advisory')
+                    : state.userProfile === 'aviation'
+                    ? (lang === 'hi' ? 'उड़ान सलाह' : lang === 'bn' ? 'বিমান পরামর্শ' : lang === 'as' ? 'বিমান পৰামৰ্শ' : 'Aviation Advisory')
+                    : state.userProfile === 'urbanPlanning'
+                    ? (lang === 'hi' ? 'नगर योजना सलाह' : lang === 'bn' ? 'নগর পরিকল্পনা পরামর্শ' : lang === 'as' ? 'নগৰ পৰিকল্পনা পৰামৰ্শ' : 'Urban Planning Advisory')
                     : (lang === 'hi' ? 'किसान सलाह' : lang === 'bn' ? 'কৃষক পরামর্শ' : lang === 'as' ? 'কৃষক পৰামৰ্শ' : 'Farmer Advisory')}
                 </div>
                 <h3 className="text-base sm:text-lg font-bold mb-1 sm:mb-2">{activeAdvisory.title}</h3>
