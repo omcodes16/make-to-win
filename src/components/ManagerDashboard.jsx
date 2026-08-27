@@ -54,10 +54,10 @@ export default function ManagerDashboard() {
         setToken(data.token);
         setMsg("");
       } else {
-        setMsg("Invalid passcode");
+        setMsg(`Error ${res.status}: ${res.status === 404 ? 'Backend Not Connected' : 'Invalid Passcode'}`);
       }
     } catch (e) {
-      setMsg("Network error");
+      setMsg(`Network error: ${e.message}`);
     }
   };
 
