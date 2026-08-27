@@ -74,7 +74,8 @@ export const speakText = async (id, text, currentLang, onFallbackMessage) => {
   else if (currentLang === 'as') targetLangCode = 'bn'; // Assamese fallback to Bengali which is closely related
   
   try {
-    const response = await fetch('/api/tts', {
+    const baseUrl = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
+    const response = await fetch(`${baseUrl}/api/tts`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
