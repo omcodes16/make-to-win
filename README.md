@@ -37,16 +37,15 @@ graph TD
     Node --> Meteo
     Node --> Geo
     Node --> TTS
-```
-
+``n
 - **Frontend**: React.js (Vite), Tailwind CSS (for glassmorphism and animations).
 - **Backend**: Node.js, Express.js.
-- **AI Processing**: Groq API (Lightning-fast inference), Mixtral 8x7b LLM.
+- **AI Processing**: Groq API (Lightning-fast inference), `openai/gpt-oss-120b` LLM.
 - **Data Providers**: Open-Meteo (Marine, Agriculture, Aviation, Air Quality models), Google Translate/TTS APIs.
 
 ---
 
-## 🔄 2. System Flowcharts
+## 🛠️ 2. System Flowcharts
 
 *This section visualizes exactly how data moves through the application from the moment a user interacts with it.*
 
@@ -93,7 +92,7 @@ graph LR
 
 ---
 
-## 🛠️ 3. Technical Approach
+## 🧠 3. Technical Approach
 
 *This section details the specific engineering methodologies and technical decisions we made to build the application.*
 
@@ -116,19 +115,37 @@ Because weather forecasts can be unreliable, we query multiple meteorological mo
 
 ---
 
-## 🚀 4. Installation & Setup
+## 🚀 4. Deployment Guide (SIH Live Demo)
 
-1. **Clone the repository.**
-2. **Install dependencies:**
-   ```bash
-   npm install
-   ```
+Because WeatherGPT relies on both a modern React frontend and an Express Node.js backend to securely proxy API keys, it must be deployed as two separate services.
+
+### Local Development Setup
+1. **Clone the repository:** `git clone <repo-url>`
+2. **Install dependencies:** `npm install`
 3. **Configure Environment:** Create a `.env` file in the root folder.
    ```env
    GROQ_API_KEY=your_api_key_here
    ```
-4. **Run the Application:** This command concurrently starts the Vite frontend and the Express backend.
+4. **Run the Application:** 
    ```bash
    npm run dev:all
    ```
 5. **Access the App:** Open `http://localhost:5173` in your browser.
+
+### Production Deployment (For the Judges)
+
+**Step 1: Deploying the Backend (Render or Railway)**
+1. Create a free account on [Render.com](https://render.com).
+2. Create a new **Web Service** and connect this repository.
+3. Set the Build Command to: `npm install`
+4. Set the Start Command to: `npm run server`
+5. In the Environment Variables tab, add your `GROQ_API_KEY`.
+6. Once deployed, copy your backend URL (e.g., `https://weathergpt-backend.onrender.com`).
+
+**Step 2: Deploying the Frontend (Vercel)**
+1. Create an account on [Vercel.com](https://vercel.com).
+2. Import this repository.
+3. *Crucial Step*: Open your project code and navigate to where the frontend calls the backend (usually in `chatApi.js`). Update the base URL from `http://localhost:3001` to the Render URL you copied in Step 1.
+4. Set the Build Command to: `npm run build`
+5. Set the Output Directory to: `dist`
+6. Click **Deploy**. Your frontend will now be live on a fast CDN!

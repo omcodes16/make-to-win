@@ -8,10 +8,12 @@ import { UI_TRANSLATIONS } from '../utils/translations';
 import { reverseGeocode, getWeather } from '../services/weatherApi';
 import { getWeatherInfo, checkSeverity } from '../utils/weatherConditions';
 import { sendMessage as sendChatMessage } from '../services/chatApi';
+import UserGuideModal from './UserGuideModal';
 
 export default function Header() {
   const { state, dispatch } = useApp();
   const [showLangPicker, setShowLangPicker] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
   const [isHubOpen, setIsHubOpen] = useState(false);
   const [showA11y, setShowA11y] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
@@ -336,6 +338,17 @@ export default function Header() {
               )}
             </div>
 
+            {/* User Guide Button */}
+            <button
+              onClick={() => setShowGuide(true)}
+              className="px-2.5 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-colors flex items-center gap-1.5 bg-blue-500/20 hover:bg-blue-500/40 text-blue-100 border border-blue-400/30 whitespace-nowrap"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+              <span className="hidden sm:inline">
+                {currentLang.code === 'hi' ? 'गाइड' : currentLang.code === 'bn' ? 'গাইড' : currentLang.code === 'as' ? 'গাইড' : 'Guide'}
+              </span>
+            </button>
+
             {/* Language pill */}
             <div className="relative">
               <button
@@ -366,6 +379,12 @@ export default function Header() {
         {/* Accessibility panel */}
         {showA11y && <AccessibilityPanel onClose={() => setShowA11y(false)} />}
       </header>
+
+      {/* Profession selection modal */}
+      <ProfessionModal isOpen={isHubOpen} onClose={() => setIsHubOpen(false)} />
+
+      {/* User Guide Modal */}
+      <UserGuideModal isOpen={showGuide} onClose={() => setShowGuide(false)} />
 
       {/* Mobile Bottom Tab Bar */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0a0c1a]/90 backdrop-blur-md border-t border-white/10 flex safe-pb">

@@ -119,7 +119,7 @@ app.post('/api/chat', async (req, res) => {
           'Authorization': `Bearer ${apiKey}`
         },
         body: JSON.stringify({
-          model: 'mixtral-8x7b-32768',
+          model: 'openai/gpt-oss-120b',
           messages: messages,
           tools: WEATHER_TOOLS,
           tool_choice: 'auto',
@@ -230,7 +230,7 @@ ${modelNote}`;
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
         body: JSON.stringify({
-          model: 'mixtral-8x7b-32768',
+          model: 'openai/gpt-oss-120b',
           messages: [
             { role: 'system', content: SYSTEM_PROMPT + `\n\nActive User Profile: ${profile.toUpperCase()}\n\nCRITICAL INSTRUCTION: DO NOT CALL ANY TOOLS. You are in fallback mode. Answer the user directly using the provided Current weather data (Fallback).` },
             ...history,
