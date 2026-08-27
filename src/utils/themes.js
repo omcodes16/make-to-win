@@ -1,19 +1,19 @@
 export const WEATHER_THEMES = {
-  clear: { bgImage: '/backgrounds/amoled_clear.jpg', overlay: 'from-transparent via-[#070b19]/60 to-[#070b19]/95', accent: 'from-[#ff7b00]/20' },
-  partlyCloudy: { bgImage: '/backgrounds/amoled_partly_cloudy.jpg', overlay: 'from-transparent via-[#0f172a]/60 to-[#0f172a]/95', accent: 'from-blue-400/20' },
-  cloudy: { bgImage: '/backgrounds/amoled_cloudy.jpg', overlay: 'from-transparent via-[#0f172a]/70 to-[#0f172a]/95', accent: 'from-blue-500/20' },
-  drizzle: { bgImage: '/backgrounds/amoled_rain.jpg', overlay: 'from-transparent via-[#0f172a]/80 to-[#0f172a]/95', accent: 'from-teal-600/20' },
-  rain: { bgImage: '/backgrounds/amoled_rain.jpg', overlay: 'from-transparent via-[#0f172a]/80 to-[#0f172a]/95', accent: 'from-blue-600/20' },
-  showers: { bgImage: '/backgrounds/amoled_rain.jpg', overlay: 'from-transparent via-[#0f172a]/70 to-[#0f172a]/95', accent: 'from-blue-500/20' },
-  freezingRain: { bgImage: '/backgrounds/amoled_snow.jpg', overlay: 'from-transparent via-[#1e293b]/70 to-[#0f172a]/95', accent: 'from-cyan-400/20' },
-  snow: { bgImage: '/backgrounds/amoled_snow.jpg', overlay: 'from-transparent via-[#1e293b]/50 to-[#0f172a]/95', accent: 'from-blue-200/20' },
-  snowShowers: { bgImage: '/backgrounds/amoled_snow.jpg', overlay: 'from-transparent via-[#1e293b]/60 to-[#0f172a]/95', accent: 'from-slate-300/20' },
-  thunderstorm: { bgImage: '/backgrounds/amoled_storm.jpg', overlay: 'from-transparent via-[#1e1b4b]/80 to-[#000000]/95', accent: 'from-indigo-600/30' },
-  severeStorm: { bgImage: '/backgrounds/amoled_storm.jpg', overlay: 'from-transparent via-[#450a0a]/80 to-[#2e0404]/95', accent: 'from-red-600/30' },
-  fog: { bgImage: '/backgrounds/amoled_fog.jpg', overlay: 'from-transparent via-[#334155]/70 to-[#0f172a]/95', accent: 'from-gray-400/20' },
-  windy: { bgImage: '/backgrounds/amoled_windy.jpg', overlay: 'from-transparent via-[#0f172a]/60 to-[#0f172a]/95', accent: 'from-teal-400/20' },
-  heatWave: { bgImage: '/backgrounds/amoled_heat.jpg', overlay: 'from-transparent via-[#7f1d1d]/60 to-[#450a0a]/95', accent: 'from-orange-500/30' },
-  coldWave: { bgImage: '/backgrounds/amoled_cold.jpg', overlay: 'from-transparent via-[#0f172a]/70 to-[#020617]/95', accent: 'from-cyan-500/30' }
+  clear: { bgImage: '/backgrounds/clear.jpg', overlay: 'from-transparent via-surface-1/80 to-surface-0/95', accent: 'from-accent-DEFAULT/20' },
+  partlyCloudy: { bgImage: '/backgrounds/cloudy.jpg', overlay: 'from-transparent via-surface-1/80 to-surface-0/95', accent: 'from-blue-400/20' },
+  cloudy: { bgImage: '/backgrounds/cloudy.jpg', overlay: 'from-transparent via-surface-1/90 to-surface-0/95', accent: 'from-indigo-500/20' },
+  drizzle: { bgImage: '/backgrounds/rain.jpg', overlay: 'from-transparent via-surface-1/80 to-surface-0/95', accent: 'from-teal-600/20' },
+  rain: { bgImage: '/backgrounds/rain.jpg', overlay: 'from-transparent via-surface-1/90 to-surface-0/95', accent: 'from-blue-600/20' },
+  showers: { bgImage: '/backgrounds/showers.jpg', overlay: 'from-transparent via-surface-1/80 to-surface-0/95', accent: 'from-blue-500/20' },
+  freezingRain: { bgImage: '/backgrounds/freezing_rain.jpg', overlay: 'from-transparent via-surface-1/80 to-surface-0/95', accent: 'from-cyan-400/20' },
+  snow: { bgImage: '/backgrounds/snow.jpg', overlay: 'from-transparent via-surface-1/80 to-surface-0/95', accent: 'from-blue-200/20' },
+  snowShowers: { bgImage: '/backgrounds/snow_showers.jpg', overlay: 'from-transparent via-surface-1/80 to-surface-0/95', accent: 'from-slate-300/20' },
+  thunderstorm: { bgImage: '/backgrounds/storm.jpg', overlay: 'from-transparent via-indigo-950/80 to-surface-0/95', accent: 'from-indigo-600/30' },
+  severeStorm: { bgImage: '/backgrounds/severe_storm.jpg', overlay: 'from-transparent via-red-950/80 to-surface-0/95', accent: 'from-red-600/30' },
+  fog: { bgImage: '/backgrounds/cloudy.jpg', overlay: 'from-transparent via-slate-800/90 to-surface-0/95', accent: 'from-gray-400/20' },
+  windy: { bgImage: '/backgrounds/cloudy.jpg', overlay: 'from-transparent via-surface-1/80 to-surface-0/95', accent: 'from-teal-400/20' },
+  heatWave: { bgImage: '/backgrounds/clear.jpg', overlay: 'from-transparent via-orange-950/80 to-surface-0/95', accent: 'from-orange-500/30' },
+  coldWave: { bgImage: '/backgrounds/snow.jpg', overlay: 'from-transparent via-cyan-950/80 to-surface-0/95', accent: 'from-cyan-500/30' }
 };
 
 export function getTheme(weather, weatherInfo) {
