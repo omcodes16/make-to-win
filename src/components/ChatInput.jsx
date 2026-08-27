@@ -154,7 +154,7 @@ export default function ChatInput() {
   // Voice input using Web Speech API
   const handleVoiceInput = () => {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      alert('Voice input is not supported in this browser. Try Chrome or Edge.');
+      alert('Voice input is not supported in this browser. Try Chrome (on Android/Desktop) or Safari (on iOS).');
       return;
     }
 
@@ -176,7 +176,7 @@ export default function ChatInput() {
     const recognition = new SpeechRecognition();
     recognitionRef.current = recognition;
 
-    recognition.continuous = true;
+    recognition.continuous = false;
     recognition.lang = SPEECH_LANG_CODES[state.language] || 'en-IN';
     recognition.interimResults = true;
     recognition.maxAlternatives = 1;

@@ -695,7 +695,9 @@ app.get('/', (req, res) => {
   res.json({ status: 'active', message: 'WeatherGPT Backend is running!' });
 });
 
-app.listen(PORT, () => {
+if (process.env.NODE_ENV !== "production") { app.listen(PORT, () => {
   console.log(`WeatherGPT server running on http://localhost:${PORT}`);
 });
 
+} 
+export default app;
