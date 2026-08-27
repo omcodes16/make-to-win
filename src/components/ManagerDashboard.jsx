@@ -125,6 +125,7 @@ export default function ManagerDashboard() {
           <h2 className="text-2xl font-bold text-white mb-6 text-center">Disaster Manager Auth</h2>
           <input type="password" value={passcode} onChange={e => setPasscode(e.target.value)} placeholder="Enter Passcode" className="w-full bg-black/40 text-white p-3 rounded-lg border border-white/10 mb-4 focus:outline-none focus:border-indigo-500" />
           <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg transition-colors">Access Panel</button>
+          <button type="button" onClick={() => window.location.href = '/'} className="mt-4 w-full bg-white/5 hover:bg-white/10 text-white py-2 rounded-lg transition-colors border border-white/10 text-sm">← Back to Main App</button>
           {msg && <p className="text-red-400 mt-4 text-center text-sm">{msg}</p>}
         </form>
       </div>
@@ -136,7 +137,10 @@ export default function ManagerDashboard() {
       <div className="max-w-5xl mx-auto space-y-8">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-red-400 to-amber-400">Disaster Management Panel</h1>
-          <button onClick={() => { sessionStorage.removeItem("mgr_token"); setToken(null); }} className="text-sm bg-white/10 px-4 py-2 rounded-lg hover:bg-white/20">Logout</button>
+          <div className="flex gap-2">
+            <button onClick={() => window.location.href = '/'} className="text-sm bg-white/10 px-4 py-2 rounded-lg hover:bg-white/20">Back to App</button>
+            <button onClick={() => { sessionStorage.removeItem("mgr_token"); setToken(null); }} className="text-sm bg-white/10 px-4 py-2 rounded-lg hover:bg-white/20">Logout</button>
+          </div>
         </div>
 
         {msg && <div className="bg-green-500/20 text-green-300 border border-green-500 p-3 rounded-lg">{msg}</div>}

@@ -161,8 +161,8 @@ const verifyToken = (req, res, next) => {
 };
 
 app.post("/api/manager/login", (req, res) => {
-  const { passcode } = req.body;
-  if (passcode !== MANAGER_PASSCODE) return res.status(401).json({ error: "Invalid passcode" });
+  const { passcode } = req.body; console.log("Received passcode:", passcode);
+  if (!passcode || passcode.trim() !== MANAGER_PASSCODE) return res.status(401).json({ error: "Invalid passcode" });
   
   const payload = { exp: Date.now() + 24 * 60 * 60 * 1000 }; // 24 hours
   const payloadB64 = Buffer.from(JSON.stringify(payload)).toString("base64");
