@@ -18,9 +18,11 @@ export default function Header() {
   const [showA11y, setShowA11y] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
   const [showSaved, setShowSaved] = useState(false);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [savedWeather, setSavedWeather] = useState({}); // { [name]: { temp, icon } }
   const [loadingSaved, setLoadingSaved] = useState(false);
   const savedRef = useRef(null);
+  const moreMenuRef = useRef(null);
 
   const currentLang = LANGUAGES.find(l => l.code === state.language) || LANGUAGES[0];
   const t = UI_TRANSLATIONS[state.language] || UI_TRANSLATIONS['en'];
@@ -30,6 +32,9 @@ export default function Header() {
     const handler = (e) => {
       if (savedRef.current && !savedRef.current.contains(e.target)) {
         setShowSaved(false);
+      }
+      if (moreMenuRef.current && !moreMenuRef.current.contains(e.target)) {
+        setShowMoreMenu(false);
       }
     };
     document.addEventListener('mousedown', handler);
@@ -258,48 +263,10 @@ export default function Header() {
                 );
               })()}
 
-              <button
-                onClick={() => setShowA11y(!showA11y)}
-              className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full transition-colors text-white/70 hover:bg-white/10 bg-white/5 border border-white/10"
-              aria-label="Accessibility settings"
-            >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10"/>
-                <path d="M12 8a1 1 0 100-2 1 1 0 000 2zm-3 4h6m-5 4h4"/>
-              </svg>
-            </button>
-
-            {/* User Reviews Page Button */}
-            <button
-              onClick={() => { dispatch({ type: 'SET_ACTIVE_TAB', payload: 'reviews' }); setShowSaved(false); setShowLangPicker(false); setShowA11y(false); }}
-              className={`w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full transition-colors border ${
-                state.activeTab === 'reviews'
-                  ? 'text-yellow-400 bg-yellow-500/10 border-yellow-500/30'
-                  : 'text-white/70 bg-white/5 border-white/10 hover:bg-white/10'
-              }`}
-              aria-label="User Reviews"
-            >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill={state.activeTab === 'reviews' ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-            </button>
-
-            {/* Authority Portal (Disaster Manager) */}
-            <button
-              onClick={() => { dispatch({ type: 'SET_ACTIVE_TAB', payload: 'manager' }); setShowSaved(false); setShowLangPicker(false); setShowA11y(false); }}
-              className={`w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full transition-colors border ${
-                state.activeTab === 'manager'
-                  ? 'text-red-400 bg-red-500/10 border-red-500/30'
-                  : 'text-white/70 bg-white/5 border-white/10 hover:bg-white/10'
-              }`}
-              title="Disaster Authority Portal"
-              aria-label="Authority Portal"
-            >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            </button>
-
             {/* Saved Locations bookmark */}
             <div className="relative" ref={savedRef}>
               <button
-                onClick={() => { setShowSaved(!showSaved); setShowLangPicker(false); }}
+                onClick={() => { setShowSaved(!showSaved); setShowLangPicker(false); setShowMoreMenu(false); }}
                 className={`w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full transition-colors border ${
                   showSaved || state.savedLocations.length > 0
                     ? 'text-amber-400 bg-amber-500/10 border-amber-500/30 hover:bg-amber-500/20'
@@ -354,21 +321,76 @@ export default function Header() {
               )}
             </div>
 
-            {/* User Guide Button */}
-            <button
-              onClick={() => setShowGuide(true)}
-              className="px-2.5 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-colors flex items-center gap-1.5 bg-blue-500/20 hover:bg-blue-500/40 text-blue-100 border border-blue-400/30 whitespace-nowrap"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-              <span className="hidden sm:inline">
-                {currentLang.code === 'hi' ? 'गाइड' : currentLang.code === 'bn' ? 'গাইড' : currentLang.code === 'as' ? 'গাইড' : 'Guide'}
-              </span>
-            </button>
+            {/* More Menu Dropdown */}
+            <div className="relative" ref={moreMenuRef}>
+              <button
+                onClick={() => { setShowMoreMenu(!showMoreMenu); setShowSaved(false); setShowLangPicker(false); }}
+                className={`w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full transition-colors border ${
+                  showMoreMenu
+                    ? 'text-white bg-white/10 border-white/20'
+                    : 'text-white/70 bg-white/5 border-white/10 hover:bg-white/10'
+                }`}
+                aria-label="More options"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="5" r="1.5" />
+                  <circle cx="12" cy="12" r="1.5" />
+                  <circle cx="12" cy="19" r="1.5" />
+                </svg>
+              </button>
+
+              {showMoreMenu && (
+                <div className="absolute right-0 top-full mt-2 rounded-2xl shadow-[0_0_25px_rgba(0,0,0,0.6)] py-2 w-[220px] z-50 border bg-surface-1 border-white/10 text-white">
+                  
+                  <button
+                    onClick={() => { dispatch({ type: 'SET_ACTIVE_TAB', payload: 'reviews' }); setShowMoreMenu(false); }}
+                    className="w-full text-left flex items-center gap-3 px-4 py-3 text-sm transition-colors hover:bg-surface-2"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-yellow-400">
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                    </svg>
+                    <span>User Reviews</span>
+                  </button>
+
+                  <button
+                    onClick={() => { dispatch({ type: 'SET_ACTIVE_TAB', payload: 'manager' }); setShowMoreMenu(false); }}
+                    className="w-full text-left flex items-center gap-3 px-4 py-3 text-sm transition-colors hover:bg-surface-2"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-red-400">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    </svg>
+                    <span>Authority Portal</span>
+                  </button>
+                  
+                  <div className="h-px bg-white/10 my-1 mx-3" />
+
+                  <button
+                    onClick={() => { setShowA11y(true); setShowMoreMenu(false); }}
+                    className="w-full text-left flex items-center gap-3 px-4 py-3 text-sm transition-colors hover:bg-surface-2"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-300">
+                      <circle cx="12" cy="12" r="10"/><path d="M12 8a1 1 0 100-2 1 1 0 000 2zm-3 4h6m-5 4h4"/>
+                    </svg>
+                    <span>Accessibility</span>
+                  </button>
+
+                  <button
+                    onClick={() => { setShowGuide(true); setShowMoreMenu(false); }}
+                    className="w-full text-left flex items-center gap-3 px-4 py-3 text-sm transition-colors hover:bg-surface-2"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-teal-300">
+                      <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+                    </svg>
+                    <span>{currentLang.code === 'hi' ? 'गाइड' : currentLang.code === 'bn' ? 'গাইড' : currentLang.code === 'as' ? 'গাইড' : 'User Guide'}</span>
+                  </button>
+                </div>
+              )}
+            </div>
 
             {/* Language pill */}
             <div className="relative">
               <button
-                onClick={() => { setShowLangPicker(!showLangPicker); setShowSaved(false); }}
+                onClick={() => { setShowLangPicker(!showLangPicker); setShowSaved(false); setShowMoreMenu(false); }}
                 className="px-2.5 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-colors flex items-center gap-1 bg-white/5 hover:bg-white/10 text-white border border-white/10"
               >
                 <span className="hidden sm:inline">{currentLang.nativeLabel}</span>
