@@ -112,6 +112,8 @@ export default function Header() {
             payload: { locationName: location.name, lat, lng, weather: weatherData }
           });
 
+          fetch(`/api/alerts?state=${encodeURIComponent(location.state || location.name)}&district=${encodeURIComponent(location.district || '')}&lat=${lat}&lng=${lng}`).then(r => r.ok ? r.json() : []).then(a => dispatch({ type: 'SET_GOVERNMENT_ALERTS', payload: a })).catch(() => dispatch({ type: 'SET_GOVERNMENT_ALERTS', payload: [] }));
+          
           const severityCheck = checkSeverity(weatherData, location.name);
           if (severityCheck && severityCheck.isSevere) {
             dispatch({ type: 'SET_SEVERE_ALERT', payload: severityCheck });
@@ -267,7 +269,7 @@ export default function Header() {
               </svg>
             </button>
 
-            {/* Reviews Page Button */}
+            {/* User Reviews Page Button */}
             <button
               onClick={() => { dispatch({ type: 'SET_ACTIVE_TAB', payload: 'reviews' }); setShowSaved(false); setShowLangPicker(false); setShowA11y(false); }}
               className={`w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full transition-colors border ${
@@ -278,6 +280,20 @@ export default function Header() {
               aria-label="User Reviews"
             >
               <svg width="15" height="15" viewBox="0 0 24 24" fill={state.activeTab === 'reviews' ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </button>
+
+            {/* Authority Portal (Disaster Manager) */}
+            <button
+              onClick={() => { dispatch({ type: 'SET_ACTIVE_TAB', payload: 'manager' }); setShowSaved(false); setShowLangPicker(false); setShowA11y(false); }}
+              className={`w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full transition-colors border ${
+                state.activeTab === 'manager'
+                  ? 'text-red-400 bg-red-500/10 border-red-500/30'
+                  : 'text-white/70 bg-white/5 border-white/10 hover:bg-white/10'
+              }`}
+              title="Disaster Authority Portal"
+              aria-label="Authority Portal"
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
             </button>
 
             {/* Saved Locations bookmark */}

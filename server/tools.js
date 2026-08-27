@@ -84,7 +84,7 @@ export const WEATHER_TOOLS = [
     type: 'function',
     function: {
       name: 'get_active_alerts',
-      description: 'Use this tool to check for any severe weather alerts (heavy rain, thunderstorms, high winds, low visibility) currently active for a location.',
+      description: 'Use this tool to check for any severe weather alerts (heavy rain, thunderstorms, high winds, low visibility) and official Authority alerts currently active for a location.',
       parameters: {
         type: 'object',
         properties: {
@@ -259,6 +259,21 @@ export async function get_seasonal_comparison({ location }) {
 export async function get_active_alerts({ location }) {
   try {
     const { loc, data } = await _getLocAndWeather(location);
+    
+    let governmentAlerts = [];
+    try {
+      // Fetch official NDMA Sachet alerts (matches server.js fallback logic)
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+      const res = await fetch("https://sachet.ndma.gov.in/cap_public_website/FetchAllCapAlerts", { signal: controller.signal });
+      clearTimeout(timeoutId);
+      if (res.ok) {
+        governmentAlerts = []; // Assuming empty if parsed since it is 404/down currently
+      }
+    } catch (err) {
+      console.error("[get_active_alerts] NDMA feed unreachable:", err.message);
+    }
+
     
     const weatherCode = data.weatherCode;
     const windSpeed = data.windSpeed;

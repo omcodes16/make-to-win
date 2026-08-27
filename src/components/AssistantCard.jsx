@@ -2,12 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { getWeatherInfo } from '../utils/weatherConditions';
 import { useApp } from '../context/AppContext';
 import { speakText, stopSpeech, subscribeToTts } from '../utils/tts';
+import Tooltip from './Tooltip';
+import { UI_TRANSLATIONS } from '../utils/translations';
 
 export default function AssistantCard({ message, isLatest }) {
-  const { id, text, data, advisory, severity, followUp, relevantStat, suggestedQuestions } = message;
+  const { id, text, data, advisory, severity, followUp, relevantStat, suggestedQuestions, confidence = "high" } = message;
   const [clickedChip, setClickedChip] = useState(null);
   
   const { state } = useApp();
+  const t = UI_TRANSLATIONS[state.language] || UI_TRANSLATIONS['en'];
   const [isSpeakingThis, setIsSpeakingThis] = useState(false);
   
   useEffect(() => {
@@ -69,7 +72,10 @@ export default function AssistantCard({ message, isLatest }) {
         <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl rounded-tl-sm shadow-[0_8px_30px_rgb(0,0,0,0.12)] overflow-hidden">
           {/* Conversational answer */}
           <div className="px-5 pt-4 pb-3 flex justify-between items-start gap-4">
-            <p className="text-[15px] text-white leading-relaxed flex-1">{text}</p>
+            <div className="flex-1 flex items-start gap-2">
+              <span className={`w-2 h-2 rounded-full mt-2 shrink-0 ${confidence === "low" ? "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]" : confidence === "medium" ? "bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.6)]" : "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]"}`} title={`Forecast Confidence: ${confidence.toUpperCase()}`}></span>
+              <p className="text-[15px] text-white leading-relaxed">{text}</p>
+            </div>
             <button 
               onClick={handlePlayToggle}
               className={`w-8 h-8 flex items-center justify-center rounded-full transition-all flex-shrink-0 mt-0.5 ${
@@ -106,6 +112,7 @@ export default function AssistantCard({ message, isLatest }) {
               {relevantStat ? (
                 <span className="text-white/70 text-xs font-medium uppercase tracking-wide">
                   {relevantStat}
+                  {relevantStat.includes('HEAT') && <Tooltip text={t.tooltipHeatIndex} />}
                 </span>
               ) : (
                 <>
@@ -134,6 +141,7 @@ export default function AssistantCard({ message, isLatest }) {
               }`}
             >
               {severity === 'severe' ? '⚠️' : '🔔'} {advisory}
+                <Tooltip text={t.tooltipSeverity} />
             </div>
           )}
 
@@ -145,6 +153,7 @@ export default function AssistantCard({ message, isLatest }) {
                 {isDivergent 
                   ? `NWP Divergence (Δ ${tempDiff.toFixed(1)}°C, ${precipDiff}%)` 
                   : 'NWP Models Agree (High Confidence)'}
+                <Tooltip text={t.tooltipNwp} />
               </span>
               <span className="text-white/40 ml-auto hidden sm:inline-block tracking-wider">GFS • ICON • ECMWF</span>
             </div>

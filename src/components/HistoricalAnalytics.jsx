@@ -12,6 +12,7 @@ export default function HistoricalAnalytics({ lat, lon }) {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [chartType, setChartType] = useState('temp');
+  const [timeRange, setTimeRange] = useState('30d');
 
   useEffect(() => {
     if (!lat || !lon) return;
@@ -22,8 +23,15 @@ export default function HistoricalAnalytics({ lat, lon }) {
         const endDate = new Date();
         endDate.setDate(endDate.getDate() - 1);
         const startDate = new Date();
-        startDate.setDate(startDate.getDate() - 30);
         
+        if (timeRange === '30d') {
+          startDate.setDate(startDate.getDate() - 30);
+        } else if (timeRange === '1y') {
+          startDate.setFullYear(startDate.getFullYear() - 1);
+        } else if (timeRange === '5y') {
+          startDate.setFullYear(startDate.getFullYear() - 5);
+        }
+
         const endStr = endDate.toISOString().split('T')[0];
         const startStr = startDate.toISOString().split('T')[0];
 
@@ -33,12 +41,40 @@ export default function HistoricalAnalytics({ lat, lon }) {
         const json = await response.json();
         
         if (json && json.daily) {
-          const formatted = json.daily.time.map((time, idx) => ({
-            date: new Date(time).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }),
-            temp: json.daily.temperature_2m_max[idx],
-            rain: json.daily.precipitation_sum[idx]
-          }));
-          setData(formatted);
+          if (timeRange === '30d') {
+            const formatted = json.daily.time.map((time, idx) => ({
+              date: new Date(time).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }),
+              temp: json.daily.temperature_2m_max[idx],
+              rain: json.daily.precipitation_sum[idx]
+            }));
+            setData(formatted);
+          } else {
+            const monthlyData = {};
+            json.daily.time.forEach((time, idx) => {
+              const d = new Date(time);
+              const monthKey = d.toLocaleString('en-GB', { month: 'short', year: '2-digit' });
+              if (!monthlyData[monthKey]) {
+                monthlyData[monthKey] = { date: monthKey, tempSum: 0, tempCount: 0, rainSum: 0, order: d.getTime() };
+              }
+              const t = json.daily.temperature_2m_max[idx];
+              const r = json.daily.precipitation_sum[idx];
+              if (t != null) {
+                monthlyData[monthKey].tempSum += t;
+                monthlyData[monthKey].tempCount += 1;
+              }
+              if (r != null) {
+                monthlyData[monthKey].rainSum += r;
+              }
+            });
+            const formatted = Object.values(monthlyData)
+              .sort((a, b) => a.order - b.order)
+              .map(m => ({
+                date: m.date,
+                temp: m.tempCount > 0 ? parseFloat((m.tempSum / m.tempCount).toFixed(1)) : null,
+                rain: parseFloat(m.rainSum.toFixed(1))
+              }));
+            setData(formatted);
+          }
         }
       } catch (err) {
         console.error('Error fetching historical data:', err);
@@ -48,14 +84,52 @@ export default function HistoricalAnalytics({ lat, lon }) {
     };
 
     fetchHistory();
-  }, [lat, lon]);
+  }, [lat, lon, timeRange]);
 
   if (!lat || !lon) return null;
 
-  // Simple analytics logic for the AI Insights box
+  // Dynamic analytics logic based on timeRange
   const totalRain = data.reduce((sum, d) => sum + (d.rain || 0), 0).toFixed(1);
   const maxTempStr = data.length > 0 ? Math.max(...data.map(d => d.temp)).toFixed(1) : '--';
-  const rainDays = data.filter(d => (d.rain || 0) > 1).length;
+  // If 30d, it's rainy days. If 1y/5y, it's active months with significant rainfall (> 10mm).
+  const rainDays = data.filter(d => (d.rain || 0) > (timeRange === '30d' ? 1 : 10)).length;
+  
+  // Dynamic Text Generators
+  const getDynamicSummary = () => {
+    let baseText = t.summary(totalRain, rainDays, maxTempStr);
+    if (timeRange === '1y') {
+      baseText = baseText.replace('30 days', '1 year').replace('30 दिनों', '1 वर्ष').replace('30 দিনে', '1 বছরে').replace('৩০ দিনত', '১ বছৰত');
+      baseText = baseText.replace('rainy days', 'active months').replace('दिनों में कुल', 'महीनों में कुल').replace('দিনে মোট', 'মাসে মোট').replace('দিনত মুঠ', 'মাহত মুঠ');
+    } else if (timeRange === '5y') {
+      baseText = baseText.replace('30 days', '5 years').replace('30 दिनों', '5 वर्षों').replace('30 দিনে', '5 বছরে').replace('৩০ দিনত', '৫ বছৰত');
+      baseText = baseText.replace('rainy days', 'active months').replace('दिनों में कुल', 'महीनों में कुल').replace('দিনে মোট', 'মাসে মোট').replace('দিনত মুঠ', 'মাহত মুঠ');
+    }
+    return baseText;
+  };
+  
+  const getAgriRisk = () => {
+    const rainNum = parseFloat(totalRain);
+    if (timeRange === '30d') {
+      return rainNum > 100 
+        ? "High moisture levels detected. Ensure proper field drainage to prevent waterlogging."
+        : rainNum < 20 
+        ? "Dry conditions prevailing. Consider supplementary irrigation to prevent drought stress."
+        : "Optimal moisture balance for most regional crops. Monitor ongoing forecasts.";
+    } else if (timeRange === '1y') {
+      return rainNum > 1500 
+        ? "Annual rainfall was heavy. Prolonged wet conditions may have required robust disease management."
+        : rainNum < 500 
+        ? "Annual rainfall was below optimal for water-intensive crops. Drought mitigation strategies recommended."
+        : "Annual precipitation remained within normal agronomic bounds for a standard crop cycle.";
+    } else {
+      return rainNum > 7500 
+        ? "5-year trend shows consistently heavy monsoon seasons. Invest in long-term drainage infrastructure."
+        : rainNum < 2500 
+        ? "Long-term data indicates recurring dry spells. Transitioning to drought-resistant crop varieties is advised."
+        : "5-year precipitation patterns show stable, healthy climatic conditions for traditional farming.";
+    }
+  };
+
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mt-6">
@@ -68,7 +142,16 @@ export default function HistoricalAnalytics({ lat, lon }) {
             <h3 className="text-xl font-bold text-white tracking-wide flex items-center gap-2">
               {t.historicalTrends}
             </h3>
-            <p className="text-xs text-white/50 mt-1">{t.past30Days}</p>
+            <p className="text-xs text-white/50 mt-1">
+              {timeRange === '30d' ? t.past30Days : timeRange === '1y' ? 'Past 1 Year' : 'Past 5 Years'}
+            </p>
+          </div>
+          
+          <div className="flex bg-black/40 border border-white/10 rounded-lg p-1 shrink-0 ml-auto mr-2">
+            <button onClick={() => setTimeRange('30d')} className={`px-3 py-1.5 text-[10px] sm:text-xs font-bold rounded-md transition-colors ${timeRange === '30d' ? 'bg-indigo-500/30 text-indigo-300' : 'text-white/50 hover:text-white'}`}>30 Days</button>
+            <button onClick={() => setTimeRange('1y')} className={`px-3 py-1.5 text-[10px] sm:text-xs font-bold rounded-md transition-colors ${timeRange === '1y' ? 'bg-indigo-500/30 text-indigo-300' : 'text-white/50 hover:text-white'}`}>1 Year</button>
+            <button onClick={() => setTimeRange('5y')} className={`px-3 py-1.5 text-[10px] sm:text-xs font-bold rounded-md transition-colors ${timeRange === '5y' ? 'bg-indigo-500/30 text-indigo-300' : 'text-white/50 hover:text-white'}`}>5 Years</button>
+
           </div>
           
           <div className="flex bg-black/40 border border-white/10 rounded-lg p-1 shrink-0">
@@ -155,7 +238,7 @@ export default function HistoricalAnalytics({ lat, lon }) {
           ) : data.length > 0 ? (
             <div className="space-y-4">
               <p className="text-sm text-white/70 leading-relaxed z-10 relative">
-                {t.summary(totalRain, rainDays, maxTempStr)}
+                {getDynamicSummary()}
               </p>
               
               <div className="bg-indigo-500/10 border border-indigo-500/20 p-4 rounded-xl mt-4 z-10 relative">
@@ -164,11 +247,7 @@ export default function HistoricalAnalytics({ lat, lon }) {
                   Agri-Risk Assessment
                 </h4>
                 <p className="text-xs text-white/80 leading-relaxed">
-                  {totalRain > 100 
-                    ? "High moisture levels detected. Ensure proper field drainage to prevent waterlogging. Crops may be at risk for fungal diseases." 
-                    : totalRain < 20 
-                    ? "Dry conditions prevailing. Consider supplementary irrigation for moisture-sensitive crops to prevent drought stress."
-                    : "Optimal moisture balance for most regional crops. Monitor ongoing forecasts to maintain ideal harvesting conditions."}
+                  {getAgriRisk()}
                 </p>
               </div>
             </div>
@@ -179,7 +258,7 @@ export default function HistoricalAnalytics({ lat, lon }) {
 
         <div className="mt-6 pt-4 border-t border-white/5 flex gap-4 z-10 relative">
           <div className="flex-1">
-            <div className="text-[10px] text-white/40 uppercase font-semibold tracking-wider">{t.thirtyDayRain}</div>
+            <div className="text-[10px] text-white/40 uppercase font-semibold tracking-wider">{timeRange === '30d' ? t.thirtyDayRain : 'TOTAL RAINFALL'}</div>
             <div className="text-lg font-bold text-white">{totalRain} <span className="text-xs text-white/50">mm</span></div>
           </div>
           <div className="flex-1">
@@ -187,8 +266,8 @@ export default function HistoricalAnalytics({ lat, lon }) {
             <div className="text-lg font-bold text-white">{maxTempStr} <span className="text-xs text-white/50">°C</span></div>
           </div>
           <div className="flex-1">
-            <div className="text-[10px] text-white/40 uppercase font-semibold tracking-wider">{t.rainyDays}</div>
-            <div className="text-lg font-bold text-white">{rainDays} <span className="text-xs text-white/50">days</span></div>
+            <div className="text-[10px] text-white/40 uppercase font-semibold tracking-wider">{timeRange === '30d' ? t.rainyDays : 'ACTIVE MONTHS'}</div>
+            <div className="text-lg font-bold text-white">{rainDays} <span className="text-xs text-white/50">{timeRange === '30d' ? 'days' : 'months'}</span></div>
           </div>
         </div>
       </div>

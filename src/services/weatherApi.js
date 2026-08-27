@@ -3,31 +3,31 @@
 
 // Hardcoded NER cities for instant fallback geocoding
 const NER_CITIES = {
-  'guwahati': { lat: 26.1445, lng: 91.7362, name: 'Guwahati', state: 'Assam' },
-  'shillong': { lat: 25.5788, lng: 91.8933, name: 'Shillong', state: 'Meghalaya' },
-  'imphal': { lat: 24.8170, lng: 93.9368, name: 'Imphal', state: 'Manipur' },
-  'agartala': { lat: 23.8315, lng: 91.2868, name: 'Agartala', state: 'Tripura' },
-  'kohima': { lat: 25.6751, lng: 94.1086, name: 'Kohima', state: 'Nagaland' },
-  'aizawl': { lat: 23.7271, lng: 92.7176, name: 'Aizawl', state: 'Mizoram' },
-  'itanagar': { lat: 27.0844, lng: 93.6053, name: 'Itanagar', state: 'Arunachal Pradesh' },
-  'gangtok': { lat: 27.3389, lng: 88.6065, name: 'Gangtok', state: 'Sikkim' },
-  'dibrugarh': { lat: 27.4728, lng: 94.9120, name: 'Dibrugarh', state: 'Assam' },
-  'jorhat': { lat: 26.7509, lng: 94.2037, name: 'Jorhat', state: 'Assam' },
-  'silchar': { lat: 24.8333, lng: 92.7789, name: 'Silchar', state: 'Assam' },
-  'tezpur': { lat: 26.6338, lng: 92.8000, name: 'Tezpur', state: 'Assam' },
-  'nagaon': { lat: 26.3500, lng: 92.6833, name: 'Nagaon', state: 'Assam' },
-  'dimapur': { lat: 25.9042, lng: 93.7270, name: 'Dimapur', state: 'Nagaland' },
-  'tura': { lat: 25.5144, lng: 90.2178, name: 'Tura', state: 'Meghalaya' },
-  'tinsukia': { lat: 27.4889, lng: 95.3553, name: 'Tinsukia', state: 'Assam' },
-  'nalbari': { lat: 26.4500, lng: 91.4333, name: 'Nalbari', state: 'Assam' },
-  'bongaigaon': { lat: 26.4789, lng: 90.5583, name: 'Bongaigaon', state: 'Assam' },
-  'cherrapunji': { lat: 25.2800, lng: 91.7300, name: 'Cherrapunji', state: 'Meghalaya' },
-  'dawki': { lat: 25.1861, lng: 92.0211, name: 'Dawki', state: 'Meghalaya' },
-  'mawsynram': { lat: 25.2970, lng: 91.5826, name: 'Mawsynram', state: 'Meghalaya' },
-  'pasighat': { lat: 28.0669, lng: 95.3269, name: 'Pasighat', state: 'Arunachal Pradesh' },
-  'tawang': { lat: 27.5860, lng: 91.8596, name: 'Tawang', state: 'Arunachal Pradesh' },
-  'lunglei': { lat: 22.8800, lng: 92.7300, name: 'Lunglei', state: 'Mizoram' },
-  'namchi': { lat: 27.1667, lng: 88.3500, name: 'Namchi', state: 'Sikkim' },
+  'guwahati': { lat: 26.1445, lng: 91.7362, name: 'Guwahati', state: 'Assam', district: 'Kamrup Metropolitan' },
+  'shillong': { lat: 25.5788, lng: 91.8933, name: 'Shillong', state: 'Meghalaya', district: 'East Khasi Hills' },
+  'imphal': { lat: 24.8170, lng: 93.9368, name: 'Imphal', state: 'Manipur', district: 'Imphal West' },
+  'agartala': { lat: 23.8315, lng: 91.2868, name: 'Agartala', state: 'Tripura', district: 'West Tripura' },
+  'kohima': { lat: 25.6751, lng: 94.1086, name: 'Kohima', state: 'Nagaland', district: 'Kohima' },
+  'aizawl': { lat: 23.7271, lng: 92.7176, name: 'Aizawl', state: 'Mizoram', district: 'Aizawl' },
+  'itanagar': { lat: 27.0844, lng: 93.6053, name: 'Itanagar', state: 'Arunachal Pradesh', district: 'Papum Pare' },
+  'gangtok': { lat: 27.3389, lng: 88.6065, name: 'Gangtok', state: 'Sikkim', district: 'East Sikkim' },
+  'dibrugarh': { lat: 27.4728, lng: 94.9120, name: 'Dibrugarh', state: 'Assam', district: 'Dibrugarh' },
+  'jorhat': { lat: 26.7509, lng: 94.2037, name: 'Jorhat', state: 'Assam', district: 'Jorhat' },
+  'silchar': { lat: 24.8333, lng: 92.7789, name: 'Silchar', state: 'Assam', district: 'Cachar' },
+  'tezpur': { lat: 26.6338, lng: 92.8000, name: 'Tezpur', state: 'Assam', district: 'Sonitpur' },
+  'nagaon': { lat: 26.3500, lng: 92.6833, name: 'Nagaon', state: 'Assam', district: 'Nagaon' },
+  'dimapur': { lat: 25.9042, lng: 93.7270, name: 'Dimapur', state: 'Nagaland', district: 'Dimapur' },
+  'tura': { lat: 25.5144, lng: 90.2178, name: 'Tura', state: 'Meghalaya', district: 'West Garo Hills' },
+  'tinsukia': { lat: 27.4889, lng: 95.3553, name: 'Tinsukia', state: 'Assam', district: 'Tinsukia' },
+  'nalbari': { lat: 26.4500, lng: 91.4333, name: 'Nalbari', state: 'Assam', district: 'Nalbari' },
+  'bongaigaon': { lat: 26.4789, lng: 90.5583, name: 'Bongaigaon', state: 'Assam', district: 'Bongaigaon' },
+  'cherrapunji': { lat: 25.2800, lng: 91.7300, name: 'Cherrapunji', state: 'Meghalaya', district: 'East Khasi Hills' },
+  'dawki': { lat: 25.1861, lng: 92.0211, name: 'Dawki', state: 'Meghalaya', district: 'West Jaintia Hills' },
+  'mawsynram': { lat: 25.2970, lng: 91.5826, name: 'Mawsynram', state: 'Meghalaya', district: 'East Khasi Hills' },
+  'pasighat': { lat: 28.0669, lng: 95.3269, name: 'Pasighat', state: 'Arunachal Pradesh', district: 'East Siang' },
+  'tawang': { lat: 27.5860, lng: 91.8596, name: 'Tawang', state: 'Arunachal Pradesh', district: 'Tawang' },
+  'lunglei': { lat: 22.8800, lng: 92.7300, name: 'Lunglei', state: 'Mizoram', district: 'Lunglei' },
+  'namchi': { lat: 27.1667, lng: 88.3500, name: 'Namchi', state: 'Sikkim', district: 'South Sikkim' },
 };
 
 /**
@@ -40,13 +40,13 @@ export async function geocodeLocation(name, lang = 'en') {
   // Check local NER cities first
   if (NER_CITIES[normalized]) {
     const city = NER_CITIES[normalized];
-    return { lat: city.lat, lng: city.lng, name: city.name, state: city.state };
+    return { lat: city.lat, lng: city.lng, name: city.name, state: city.state, district: city.district };
   }
 
   // Partial match against NER cities
   for (const [key, city] of Object.entries(NER_CITIES)) {
     if (normalized.includes(key) || key.includes(normalized)) {
-      return { lat: city.lat, lng: city.lng, name: city.name, state: city.state };
+      return { lat: city.lat, lng: city.lng, name: city.name, state: city.state, district: city.district };
     }
   }
 
@@ -63,6 +63,7 @@ export async function geocodeLocation(name, lang = 'en') {
         lng: r.longitude,
         name: r.name,
         state: r.admin1 || '',
+        district: r.admin2 || ''
       };
     }
   } catch (err) {
@@ -72,7 +73,8 @@ export async function geocodeLocation(name, lang = 'en') {
   // If Open-Meteo fails, try Nominatim (OpenStreetMap) which has much better village/district coverage
   try {
     const nominatimRes = await fetch(
-      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(name)}&format=json&limit=1&accept-language=${lang}`
+      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(name)}&format=json&limit=1&accept-language=${lang}&addressdetails=1`,
+      { headers: { 'User-Agent': 'WeatherGPT' } }
     );
     const nominatimData = await nominatimRes.json();
     if (nominatimData && nominatimData.length > 0) {
@@ -81,7 +83,8 @@ export async function geocodeLocation(name, lang = 'en') {
         lat: parseFloat(r.lat),
         lng: parseFloat(r.lon),
         name: r.name || r.display_name.split(',')[0],
-        state: '', // Nominatim search results don't neatly split state at this level without extra params, but name is enough
+        state: r.address?.state || '',
+        district: r.address?.state_district || r.address?.county || ''
       };
     }
   } catch (err) {
@@ -120,7 +123,7 @@ export async function getWeather(lat, lng) {
 
   const current = data.current;
 
-  return {
+  const weatherData = {
     // Current conditions
     temperature: Math.round(current.temperature_2m),
     feelsLike: Math.round(current.apparent_temperature),
@@ -178,6 +181,27 @@ export async function getWeather(lat, lng) {
     // Metadata for caching
     fetchedAt: new Date().toISOString(),
   };
+
+  // Fetch the server-computed confidence value
+  try {
+    const baseUrl = (import.meta.env.VITE_API_URL || "").replace(/\/+$/, "");
+    const confRes = await fetch(`${baseUrl}/api/confidence`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ contextData: { modelData: weatherData.modelData } })
+    });
+    if (confRes.ok) {
+      const { confidence } = await confRes.json();
+      weatherData.confidence = confidence;
+    } else {
+      weatherData.confidence = "high";
+    }
+  } catch (err) {
+    console.error("Failed to fetch confidence from backend", err);
+    weatherData.confidence = "high";
+  }
+
+  return weatherData;
 }
 
 /**
@@ -185,13 +209,14 @@ export async function getWeather(lat, lng) {
  */
 export async function reverseGeocode(lat, lng) {
   try {
-    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10`);
+    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10`, { headers: { 'User-Agent': 'WeatherGPT' } });
     if (res.ok) {
       const data = await res.json();
       const name = data.address?.city || data.address?.town || data.address?.village || data.address?.county || data.address?.state || "Unknown Location";
       return {
         name: name,
         state: data.address?.state || '',
+        district: data.address?.state_district || data.address?.county || '',
         lat: lat,
         lng: lng
       };
@@ -199,7 +224,7 @@ export async function reverseGeocode(lat, lng) {
   } catch (err) {
     console.error('Reverse geocoding error:', err);
   }
-  return { name: "Current Location", state: "", lat, lng };
+  return { name: "Current Location", state: "", district: "", lat, lng };
 }
 
 export { NER_CITIES };

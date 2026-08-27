@@ -2,3 +2,11 @@
 dist/
 .env
 .DS_Store
+
+# Production build
+build/
+
+# Dev archives and logs
+*.log
+*.patch
+dev-archive/

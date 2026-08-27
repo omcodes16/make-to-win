@@ -24,6 +24,12 @@ export default function Onboarding() {
       {/* Overlay */}
       <div className={`fixed inset-0 z-0 bg-gradient-to-br ${theme.overlay} pointer-events-none`}></div>
 
+      {step > 2 && (
+        <button onClick={() => dispatch({ type: 'SET_ONBOARDED' })} className="absolute top-6 right-6 text-white/50 hover:text-white transition-colors z-50 font-medium px-4 py-2 bg-black/20 rounded-full border border-white/10 backdrop-blur-sm">
+          Skip
+        </button>
+      )}
+
       <div className="w-full max-w-sm flex flex-col items-center animate-fade-in relative z-10 space-y-8">
         
         {/* Logo / Icon */}
@@ -37,7 +43,7 @@ export default function Onboarding() {
             WeatherGPT
           </h1>
           <p className="text-white/70 text-lg">
-            {step === 1 ? "Select your profile" : "Choose your language"}
+            {step === 1 ? "Select your profile" : step === 2 ? "Choose your language" : step === 3 ? "Voice & Languages" : "Understanding the Data"}
           </p>
         </div>
 
@@ -63,7 +69,7 @@ export default function Onboarding() {
                 key={lang.code}
                 onClick={() => {
                   dispatch({ type: 'SET_LANGUAGE', payload: lang.code });
-                  dispatch({ type: 'SET_ONBOARDED' });
+                  setStep(3);
                 }}
                 className="bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 hover:border-white/40 text-white font-medium py-4 px-6 rounded-2xl transition-all shadow-[0_8px_30px_rgb(0,0,0,0.12)] flex items-center justify-between group"
               >
@@ -74,6 +80,28 @@ export default function Onboarding() {
               </button>
             ))
           )}
+
+        {step === 3 && (
+          <div className="bg-white/10 backdrop-blur-md border border-white/20 text-white p-6 rounded-2xl shadow-xl flex flex-col gap-4 text-center animate-fade-in w-full">
+            <span className="text-5xl mb-2">🌍</span>
+            <h2 className="text-2xl font-bold">Ask in Your Language</h2>
+            <p className="text-white/80 text-[15px] leading-relaxed">
+              Speak or type freely in English, Hindi, Bengali, or Assamese. Tap the <strong>microphone</strong> to talk, and the <strong>play icon</strong> to hear the forecast read aloud.
+            </p>
+            <button onClick={() => setStep(4)} className="mt-4 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 py-3.5 px-6 rounded-xl font-semibold transition-colors shadow-lg">Next</button>
+          </div>
+        )}
+        {step === 4 && (
+          <div className="bg-white/10 backdrop-blur-md border border-white/20 text-white p-6 rounded-2xl shadow-xl flex flex-col gap-4 text-center animate-fade-in w-full">
+            <span className="text-5xl mb-2">🧠</span>
+            <h2 className="text-2xl font-bold">Smart Insights</h2>
+            <p className="text-white/80 text-[15px] leading-relaxed">
+              Look for the <strong>Heat Index ⓘ</strong> to know how hot it <em>actually</em> feels, and the <strong>Models Agree ⓘ</strong> badge to see how reliable the forecast is based on supercomputer consensus.
+            </p>
+            <button onClick={() => dispatch({ type: 'SET_ONBOARDED' })} className="mt-4 bg-emerald-500 hover:bg-emerald-600 py-3.5 px-6 rounded-xl font-semibold transition-colors shadow-lg">Get Started</button>
+          </div>
+        )}
+
         </div>
 
         {/* SIH credit */}

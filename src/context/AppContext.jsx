@@ -8,7 +8,8 @@ const initialState = {
   language: localStorage.getItem('weathergpt-lang') || 'en',
   messages: [],   // { id, role: 'user'|'assistant'|'error', text, data?, advisory?, severity?, timestamp }
   isLoading: false,
-  currentWeather: null,    // { condition, temperature, humidity, windSpeed, rainChance, icon, locationName }
+  currentWeather: null,
+  governmentAlerts: [],    // { condition, temperature, humidity, windSpeed, rainChance, icon, locationName }
   weatherCondition: 'clear', // drives Sky Band: 'clear'|'cloudy'|'rain'|'storm'|'severe'
   severeAlert: null,   // { summary, detail, action } or null
   isOnboarded: localStorage.getItem('weathergpt-onboarded') === 'true',
@@ -22,6 +23,9 @@ const initialState = {
 
 function appReducer(state, action) {
   switch (action.type) {
+    case 'SET_GOVERNMENT_ALERTS':
+      return { ...state, governmentAlerts: action.payload };
+
     case 'SET_PROFILE':
       localStorage.setItem('weathergpt-profile', action.payload);
       return { ...state, userProfile: action.payload };

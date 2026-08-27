@@ -1,5 +1,8 @@
 export const UI_TRANSLATIONS = {
   en: {
+    tooltipHeatIndex: "Heat Index shows how hot it actually feels to the human body when humidity is combined with the air temperature.",
+    tooltipNwp: "NWP Divergence indicates how much the world's top 3 forecasting supercomputers agree or disagree. High agreement means the forecast is highly reliable.",
+    tooltipSeverity: "Severity levels indicate if you need to take action. Caution means be prepared, while Severe means you should take immediate safety measures.",
     tabChat: 'Ask WeatherGPT',
     tabStage: 'Weather View',
     tabAlerts: 'High Alerts & News',
@@ -26,6 +29,9 @@ export const UI_TRANSLATIONS = {
     fetchFailed: 'Failed to fetch weather data.',
   },
   hi: {
+    tooltipHeatIndex: "हीट इंडेक्स बताता है कि हवा के तापमान और आर्द्रता (नमी) के मिलने से मानव शरीर को असल में कितनी गर्मी महसूस होती है।",
+    tooltipNwp: "NWP डाइवर्जेंस दिखाता है कि दुनिया के 3 शीर्ष सुपरकंप्यूटर मौसम के पूर्वानुमान पर कितने सहमत हैं। सहमति का मतलब है पूर्वानुमान बहुत सटीक है।",
+    tooltipSeverity: "गंभीरता (Severity) स्तर बताता है कि क्या आपको सतर्क रहने की जरूरत है। 'सावधान' का मतलब है तैयार रहें, जबकि 'गंभीर' का मतलब है तुरंत सुरक्षा उपाय करें।",
     tabChat: 'WeatherGPT से पूछें',
     tabStage: 'मौसम दृश्य',
     tabAlerts: 'हाई अलर्ट और समाचार',
@@ -52,6 +58,9 @@ export const UI_TRANSLATIONS = {
     fetchFailed: 'मौसम डेटा प्राप्त करने में विफल।',
   },
   as: {
+    tooltipHeatIndex: "হিট ইনডেক্সে দেখায় যে বতাহৰ উষ্ণতা আৰু আৰ্দ্ৰতা মিলি মানুহৰ শৰীৰত প্ৰকৃততে কিমান গৰম অনুভৱ হয়।",
+    tooltipNwp: "NWP ডাইভাৰজেন্স দেখায় যে বিশ্বৰ শীৰ্ষ ৩টা ছুপাৰকম্পিউটাৰে বতৰৰ পূৰ্বানুমানৰ ক্ষেত্ৰত কিমান একমত। একমত হোৱাৰ অৰ্থ হ'ল পূৰ্বানুমান অতি নিৰ্ভৰযোগ্য।",
+    tooltipSeverity: "তীব্ৰতাৰ স্তৰে বুজায় যে আপুনি সাৱধান হোৱাৰ প্ৰয়োজন আছে নেকি। 'সাৱধান' মানে সাজু থাকক, আনহাতে 'গুৰুতৰ' মানে লগে লগে সুৰক্ষা ব্যৱস্থা লওক।",
     tabChat: 'WeatherGPT ক সোধক',
     tabStage: 'বতৰৰ দৃশ্য',
     tabAlerts: 'উচ্চ সতৰ্কতা আৰু বাতৰি',
@@ -78,6 +87,9 @@ export const UI_TRANSLATIONS = {
     fetchFailed: 'বতৰৰ তথ্য অনাৰ সময়ত বিফল হৈছে।',
   },
   bn: {
+    tooltipHeatIndex: "হিট ইনডেক্স দেখায় যে বাতাসের তাপমাত্রা এবং আর্দ্রতা মিলে মানুষের শরীরে আসলে কতটা গরম অনুভূত হয়।",
+    tooltipNwp: "NWP ডাইভারজেন্স দেখায় যে বিশ্বের শীর্ষ ৩টি সুপারকম্পিউটার আবহাওয়ার পূর্বাভাসের ক্ষেত্রে কতটা একমত। একমত হওয়ার অর্থ পূর্বাভাস অত্যন্ত নির্ভরযোগ্য।",
+    tooltipSeverity: "তীব্রতার স্তর বোঝায় যে আপনার সতর্ক হওয়ার প্রয়োজন আছে কিনা। 'সাবধান' মানে প্রস্তুত থাকুন, আর 'গুরুতর' মানে অবিলম্বে নিরাপত্তা ব্যবস্থা নিন।",
     tabChat: 'WeatherGPT কে জিজ্ঞাসা করুন',
     tabStage: 'আবহাওয়া দৃশ্য',
     tabAlerts: 'উচ্চ সতর্কতা ও খবর',

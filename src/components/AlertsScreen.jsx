@@ -179,6 +179,33 @@ export default function AlertsScreen() {
           </div>
 
           <div className="flex flex-col gap-4">
+            {state.governmentAlerts && state.governmentAlerts.length > 0 && state.governmentAlerts.map((govAlert, idx) => (
+              <div key={`gov-${idx}`} className="relative bg-red-900/20 border border-red-500 rounded-xl p-5 shadow-[0_0_40px_rgba(239,68,68,0.2)] overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-600 via-red-500 to-transparent"></div>
+                <div className="flex justify-between items-start mb-4">
+                  <div className="flex gap-4 items-center">
+                    <div className="w-14 h-14 rounded-full flex items-center justify-center border bg-red-500/20 border-red-500/50 text-red-500">
+                      <svg width="28" height="28" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 1.944A11.954 11.954 0 012.166 5C2.056 5.649 2 6.319 2 7c0 5.225 3.34 9.67 8 11.317C14.66 16.67 18 12.225 18 7c0-.682-.057-1.35-.166-1.998A11.954 11.954 0 0110 1.944zM11 14a1 1 0 11-2 0 1 1 0 012 0zm0-7a1 1 0 10-2 0v3a1 1 0 102 0V7z" clipRule="evenodd" /></svg>
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-[10px] font-bold text-red-400 uppercase tracking-widest">Authority Alert</span>
+                        <span className="text-[10px] bg-red-600 text-white px-1.5 py-0.5 rounded flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+                          Live
+                        </span>
+                      </div>
+                      <h3 className="text-xl font-bold text-white mb-1">{govAlert.title || "Severe Weather Warning"}</h3>
+                      <p className="text-white/80 text-sm leading-relaxed">{govAlert.description || "Official government advisory is currently active for this region."}</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-4 pt-3 border-t border-red-500/20 text-xs text-red-300">
+                  Source: WeatherGPT Disaster Manager &bull; Valid for {locationName}
+                </div>
+              </div>
+            ))}
+            
             {liveAlerts.map(alert => (
               <div key={alert.id} className={`relative bg-[#0f111a] border rounded-xl p-5 shadow-2xl overflow-hidden
                 ${alert.level === 'Severe' ? 'border-red-500/40 shadow-[0_0_30px_rgba(239,68,68,0.1)]' : 
