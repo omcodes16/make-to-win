@@ -166,9 +166,9 @@ export default function AlertsScreen() {
     if (alerts.length === 0) {
       alerts.push({
         id: 'all-clear',
-        title: `All Clear for ${locName}`,
-        desc: `No severe weather alerts are currently active for this region.`,
-        precaution: `Conditions are safe for normal agricultural and travel activities.`,
+        title: ex.allClearTitle ? ex.allClearTitle(locName) : `All Clear for ${locName}`,
+        desc: ex.allClearDesc || `No severe weather alerts are currently active for this region.`,
+        precaution: ex.allClearPrec || `Conditions are safe for normal agricultural and travel activities.`,
         level: 'Good', prob: `${probValue}%`, rain: actualRainDisplay, window: 'N/A', impact: 'Low'
       });
     }
@@ -388,7 +388,7 @@ export default function AlertsScreen() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-surface-1 border border-white/5 rounded-xl p-5 shadow-lg flex flex-col">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-bold text-white/90 tracking-wide">India Weather Risk Map</h3>
+                <h3 className="text-sm font-bold text-white/90 tracking-wide">{ex.indiaRiskMap || "India Weather Risk Map"}</h3>
                 <div className="flex gap-2 text-[10px] uppercase font-bold tracking-widest">
                   <span className="flex items-center gap-1 text-red-400"><span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span> Severe</span>
                   <span className="flex items-center gap-1 text-amber-400"><span className="w-1.5 h-1.5 bg-amber-500 rounded-full"></span> High</span>
