@@ -110,6 +110,54 @@ sequenceDiagram
 | **Aviation** | Profession Profile + Model Consensus | Improves pre-flight planning and awareness of wind shear or low visibility fog risks. |
 | **Authority** | Manager Dashboard + Custom Alerts | Instantly broadcasts localized alerts by radius or district to vulnerable populations without relying solely on state-level feeds. |
 
+## 5. SIH 2026 Problem Statement Compliance (PS 26068)
+
+### Part 1: How We Solved Every Single PS Requirement
+*Problem Statement 26068 (Ministry of Earth Sciences)*
+
+**1. Real-time weather information retrieval**
+* **Our Solution:** Integrated the **Open-Meteo API** to fetch live, sub-hourly meteorological data directly into the dashboard and chat context.
+
+**2. Natural language querying for weather forecasts**
+* **Our Solution:** Powered by **Groq (Llama-3)**, users don't have to read charts. They can simply ask, *"Will it rain heavily tomorrow?"* and get instant, conversational answers.
+
+**3. Integration with numerical weather prediction (NWP) models (GFS/WRF)**
+* **Our Solution:** Our API aggregator strictly pulls its backend data from the world's leading NWP models, including **GFS, ECMWF, and ICON**, ensuring scientific accuracy.
+
+**4. Extreme weather alerts and early warning dissemination**
+* **Our Solution:** We built a dual-alert system. First, it automatically parses the **NDMA CAP (Common Alerting Protocol) XML feed**. Second, we built a Manager Dashboard for local authorities to broadcast custom warnings.
+
+**5. Location-based forecasting and advisory generation**
+* **Our Solution:** The app uses the **Browser Geolocation API** to instantly lock onto the user's exact latitude/longitude, providing hyper-local crop and weather advisories rather than generic state-level data.
+
+**6. Multilingual support for Indian languages**
+* **Our Solution:** The LLM natively processes and responds in multiple regional languages (Hindi, Bengali, Tamil, etc.), allowing farmers to read advisories in their mother tongue.
+
+**7. Climate trend and historical weather analysis**
+* **Our Solution:** We built a dedicated `get_seasonal_comparison` tool loaded with **IMD historical climate normals**, allowing the AI to compare today's weather against 30-year seasonal averages.
+
+**8. Voice-enabled interaction for rural accessibility**
+* **Our Solution:** We fully integrated the **Web Speech API**. Rural users can tap the microphone 🎤 to speak their questions, and the AI uses **Text-to-Speech (TTS)** 🔊 to read the answers out loud to them.
+
+### Part 2: Our Innovations (BEYOND the Problem Statement)
+*This is our "Wow Factor" that sets the project apart.*
+
+**🚀 Innovation 1: Two-Way SOS Emergency System (The Lifesaver)**
+* *The Problem:* The PS only asked for a 1-way alert system (Gov -> Citizen).
+* *Our Innovation:* We built a **Rescue Coordination Platform**. If a citizen is trapped in a flood, they press one red button. It captures their exact GPS, lets them select the required help (Medical, Evacuation), allows them to take a **photo of the disaster**, and instantly transmits it to the Authority Manager Dashboard for NDRF dispatch.
+
+**🚀 Innovation 2: Role-Based Intelligence (Context-Aware AI)**
+* *The Problem:* Generic weather apps give the same data to everyone.
+* *Our Innovation:* We built **User Profiles (Farmer, Fisherman, Urban)**. If a Fisherman asks the AI a question, it automatically triggers a specialized **Marine API** to check ocean wave heights and ocean currents. If a Farmer asks, it checks soil moisture and wind shear for pesticide spraying.
+
+**🚀 Innovation 3: Zero-Downtime Disaster Architecture**
+* *The Problem:* In a disaster, cloud servers and databases (like MongoDB) often crash.
+* *Our Innovation:* We engineered a **Graceful JSON Fallback system**. If the MongoDB Atlas cloud connection drops, the backend instantly and seamlessly switches to local file storage. The website *never* goes offline during a cyclone. 
+
+**🚀 Innovation 4: The "Trust & Verification" Engine**
+* *The Problem:* AI can hallucinate. How do authorities trust it?
+* *Our Innovation:* We built a background cron-job that takes a "Snapshot" of the AI's forecast today, and compares it to the *actual* weather tomorrow. It generates a live **Accuracy Score**, keeping the AI strictly accountable to meteorological science.
+
 ## 6. Research & References
 
 **Data Sources & APIs Utilized:**
