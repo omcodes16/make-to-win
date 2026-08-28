@@ -244,7 +244,7 @@ export default function Header() {
           {/* Right: Controls */}
           <div className="flex items-center justify-end gap-1.5 sm:gap-3">
             {/* Accessibility toggle */}
-              {state.userProfile !== 'general' && state.weatherStageData && (() => {
+              {state.userProfile !== 'general' && (() => {
                 const iconClass = "w-4 h-4 mr-1";
                 let Icon = null;
                 if (state.userProfile === 'farmer') Icon = <FarmerIcon className={`${iconClass} text-emerald-300`} />;
@@ -488,13 +488,13 @@ export default function Header() {
         </button>
       </nav>
 
-      {isHubOpen && state.weatherStageData && (
+      {isHubOpen && (
         <ProfessionModal
           profile={state.userProfile}
-          lat={state.weatherStageData.lat}
-          lng={state.weatherStageData.lng}
-          locationName={state.weatherStageData.locationName}
-          weather={state.weatherStageData.weather}
+          lat={state.weatherStageData?.lat || state.currentWeather?.lat || 28.6139}
+          lng={state.weatherStageData?.lng || state.currentWeather?.lng || 77.2090}
+          locationName={state.weatherStageData?.locationName || state.currentWeather?.locationName || 'New Delhi (Default)'}
+          weather={state.weatherStageData?.weather || state.currentWeather || {}}
           onClose={() => setIsHubOpen(false)}
         />
       )}
