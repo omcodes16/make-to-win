@@ -244,14 +244,7 @@ export default function Header() {
           {/* Right: Controls */}
           <div className="flex items-center justify-end gap-1.5 sm:gap-3">
             {/* Accessibility toggle */}
-              {state.userProfile !== 'general' && (() => {
-                const iconClass = "w-4 h-4 mr-1";
-                let Icon = null;
-                if (state.userProfile === 'farmer') Icon = <FarmerIcon className={`${iconClass} text-emerald-300`} />;
-                else if (state.userProfile === 'fisherman') Icon = <FishermanIcon className={`${iconClass} text-blue-300`} />;
-                else if (state.userProfile === 'aviation') Icon = <AviationIcon className={`${iconClass} text-indigo-300`} />;
-                else if (state.userProfile === 'urbanPlanning') Icon = <UrbanIcon className={`${iconClass} text-purple-300`} />;
-                
+              {(() => {
                 return (
                   <div 
                     onClick={() => setIsHubOpen(true)}
