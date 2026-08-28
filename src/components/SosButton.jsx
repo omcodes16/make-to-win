@@ -18,33 +18,12 @@ export default function SosButton() {
     "Other"
   ];
 
-  const handleSosClick = () => setPhase("confirm");
-
-  const handleGetLocation = () => {
-    setPhase("locating");
-    if (!navigator.geolocation) {
-      setErrorMsg("Your browser does not support GPS location.");
-      setPhase("error");
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-        setPhase("form");
-      },
-      (err) => {
-        setErrorMsg("Location access denied. Please allow GPS and try again.");
-        setPhase("error");
-      },
-      { timeout: 10000 }
-    );
-  };
+  const handleSosClick = () => setPhase("form");
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Optional: Basic compression to keep payload small
     const reader = new FileReader();
     reader.onload = (event) => {
       const img = new Image();
@@ -56,7 +35,6 @@ export default function SosButton() {
         canvas.height = img.height * scaleSize;
         const ctx = canvas.getContext("2d");
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        // Convert to base64 jpg at 70% quality
         const dataUrl = canvas.toDataURL("image/jpeg", 0.7);
         setImageString(dataUrl);
       };
@@ -65,26 +43,47 @@ export default function SosButton() {
     reader.readAsDataURL(file);
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    if (!coords) return;
-    setPhase("sending");
-    try {
-      const res = await fetch(`${API_URL}/api/sos`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, lat: coords.lat, lng: coords.lng, image: imageString }),
-      });
-      if (res.ok) {
-        setPhase("success");
-      } else {
-        setErrorMsg("Failed to send SOS. Please call emergency services directly.");
-        setPhase("error");
-      }
-    } catch (e) {
-      setErrorMsg("Cannot connect to server. Please call emergency services directly.");
+    setPhase("locating");
+
+    if (!navigator.geolocation) {
+      setErrorMsg("Your browser does not support GPS location.");
       setPhase("error");
+      return;
     }
+
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        setCoords({ lat, lng });
+        
+        // Now send data
+        setPhase("sending");
+        try {
+          const res = await fetch(`${API_URL}/api/sos`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ...form, lat, lng, image: imageString }),
+          });
+          if (res.ok) {
+            setPhase("success");
+          } else {
+            setErrorMsg("Failed to send SOS. Please call emergency services directly.");
+            setPhase("error");
+          }
+        } catch (e) {
+          setErrorMsg("Cannot connect to server. Please call emergency services directly.");
+          setPhase("error");
+        }
+      },
+      (err) => {
+        setErrorMsg("Location access denied. Please allow GPS and try again.");
+        setPhase("error");
+      },
+      { timeout: 10000 }
+    );
   };
 
   const reset = () => {
@@ -110,34 +109,15 @@ export default function SosButton() {
         <div className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-gray-900 border border-red-500/40 rounded-2xl p-6 w-full max-w-sm shadow-2xl text-white max-h-[95vh] overflow-y-auto">
 
-            {phase === "confirm" && (
-              <div className="text-center space-y-4">
-                <div className="text-5xl">🆘</div>
-                <h2 className="text-2xl font-bold text-red-400">Emergency SOS</h2>
-                <p className="text-white/70 text-sm">This will share your exact GPS location with disaster management authorities so they can dispatch rescue teams to you.</p>
-                <div className="flex gap-3 mt-4">
-                  <button onClick={reset} className="flex-1 py-3 bg-white/10 hover:bg-white/20 rounded-lg font-medium transition-colors">Cancel</button>
-                  <button onClick={handleGetLocation} className="flex-1 py-3 bg-red-600 hover:bg-red-700 rounded-lg font-bold transition-colors">Share Location</button>
-                </div>
-              </div>
-            )}
-
-            {phase === "locating" && (
-              <div className="text-center space-y-4 py-4">
-                <div className="text-4xl animate-spin">📡</div>
-                <p className="text-white/80 font-medium">Getting your GPS location...</p>
-                <p className="text-white/50 text-sm">Please allow location access when prompted.</p>
-              </div>
-            )}
-
             {phase === "form" && (
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="text-center">
-                  <div className="text-3xl">📍</div>
-                  <h2 className="text-xl font-bold text-red-400 mt-1">Location Captured!</h2>
+                <div className="text-center space-y-2">
+                  <div className="text-4xl">🆘</div>
+                  <h2 className="text-2xl font-bold text-red-400">Emergency SOS</h2>
+                  <p className="text-white/60 text-xs">Fill details and share location to dispatch rescue.</p>
                 </div>
                 
-                <div>
+                <div className="pt-2">
                   <label className="text-xs text-white/60 block mb-1">Required Help Category *</label>
                   <select value={form.helpType} onChange={e => setForm({...form, helpType: e.target.value})} className="w-full bg-white/10 border border-white/20 rounded-lg p-2.5 text-sm focus:outline-none focus:border-red-500 text-white font-medium">
                     {helpCategories.map(cat => <option key={cat} value={cat} className="bg-gray-900">{cat}</option>)}
@@ -168,9 +148,17 @@ export default function SosButton() {
                 
                 <div className="flex gap-3 pt-2">
                   <button type="button" onClick={reset} className="flex-1 py-3 bg-white/10 hover:bg-white/20 rounded-lg font-medium transition-colors text-sm">Cancel</button>
-                  <button type="submit" className="flex-1 py-3 bg-red-600 hover:bg-red-700 rounded-lg font-bold text-sm transition-colors shadow-lg shadow-red-900/50">🆘 Send SOS</button>
+                  <button type="submit" className="flex-1 py-3 bg-red-600 hover:bg-red-700 rounded-lg font-bold text-sm transition-colors shadow-lg shadow-red-900/50">📍 Share Location & Send</button>
                 </div>
               </form>
+            )}
+
+            {phase === "locating" && (
+              <div className="text-center space-y-4 py-4">
+                <div className="text-4xl animate-spin">📡</div>
+                <p className="text-white/80 font-medium">Acquiring GPS Location...</p>
+                <p className="text-white/50 text-sm">Please allow location access when prompted.</p>
+              </div>
             )}
 
             {phase === "sending" && (
