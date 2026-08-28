@@ -17,7 +17,7 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 
 import { 
   WEATHER_TOOLS, 
@@ -233,9 +233,18 @@ let sosFallback = [];
 
 // POST /api/sos — Public: citizen sends GPS + message
 app.post("/api/sos", async (req, res) => {
-  const { name, phone, message, lat, lng } = req.body;
+  const { name, phone, message, lat, lng, helpType, image } = req.body;
   if (!lat || !lng) return res.status(400).json({ error: "Location coordinates are required" });
-  const entry = { name: name || 'Anonymous', phone: phone || '', message: message || 'Emergency assistance needed', lat, lng, status: 'pending', timestamp: new Date() };
+  const entry = { 
+    name: name || 'Anonymous', 
+    phone: phone || '', 
+    message: message || '', 
+    lat, lng, 
+    helpType: helpType || 'General Emergency',
+    image: image || null,
+    status: 'pending', 
+    timestamp: new Date() 
+  };
   if (USE_MONGODB) {
     try { const saved = await SosRequest.create(entry); return res.json({ success: true, id: saved._id }); }
     catch (e) { return res.status(500).json({ error: "Failed to save SOS" }); }
