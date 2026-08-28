@@ -1,94 +1,155 @@
 <div align="center">
   <img src="public/logo_new.jpg" alt="WeatherGPT Logo" width="120" />
   <h1>WeatherGPT — SIH 2026</h1>
-  <p><strong>Advanced AI-Powered Weather & Disaster Management Platform for Northeast India</strong></p>
-
-  [![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
-  [![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=Vite&logoColor=white)](https://vitejs.dev/)
-  [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
-  [![Node.js](https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
-  [![GROQ](https://img.shields.io/badge/GROQ_AI-F55036?style=for-the-badge&logo=ai&logoColor=white)](https://groq.com/)
+  <p><strong>Advanced AI-Powered Weather & Disaster Management Platform</strong></p>
 </div>
 
 <hr/>
 
-## 🏆 Overview & Problem Statement (PS)
+## 1. Title & Tagline
+**WeatherGPT: Hyper-localized, Context-Aware AI Weather & Disaster Advisory System**  
+**Problem Statement ID:** [VERIFY: Add SIH 2026 Problem Statement ID/Title here]
 
-**WeatherGPT** is a hyper-localized, AI-driven weather and disaster management platform built specifically to address the complex meteorological challenges of **Northeast India (NER)**. 
+## 2. Proposed Solution
 
-### The Problem
-Traditional weather apps provide generic data (temperature, humidity) that lacks actionable context for specific demographics. Farmers, fishermen, and aviation personnel in regions with erratic weather patterns need **role-specific, multilingual advisories** rather than just raw numbers. Furthermore, local disaster management authorities lack a streamlined way to push localized alerts directly to vulnerable populations.
+**The Problem:** Traditional weather applications only provide raw meteorological numbers (like "35°C, 80% humidity") which lack actionable context for specific demographics. A farmer, a pilot, and a local disaster management authority all require vastly different insights from the exact same weather data. Furthermore, warnings are often generic and fail to reach rural populations in their native languages.
 
-### Our Proposed Solution
-WeatherGPT bridges the gap between raw meteorological data (from IMD, Open-Meteo, ECMWF) and end-users using an **Agentic AI architecture**. The platform translates complex weather parameters into actionable insights tailored to specific professions, delivered in native languages (Hindi, Bengali, Assamese, English), alongside a robust dashboard for disaster management authorities.
+**The Solution:** WeatherGPT bridges the gap between complex meteorological data and end-users through an **Agentic AI architecture**. By utilizing a conversational LLM interface coupled with real-time weather function calling, it translates raw data into structured, easy-to-understand advice.
 
----
+**What Makes It Innovative:**
+- **Contextual Advisory Layer:** The AI behavior radically shifts based on the selected user profile (Farmer, Fisherman, Aviation, General, Urban Planner), changing its terminology and reasoning.
+- **Multilingual Support & Voice:** Supports native languages (Hindi, Bengali, Assamese) with Google Text-to-Speech (TTS) integration, making it accessible to non-English speakers and illiterate users.
+- **Structured AI Responses:** The AI does not just output a block of text; it returns a strict JSON containing specific severities, advisories, relevant statistics, and predictive follow-up questions.
+- **Authority Manager Portal:** Allows local disaster managers to securely bypass the standard feed and push targeted alerts to specific districts or geographic radiuses.
 
-## 🏗️ Technical Approach & Architecture
+## 3. Technical Approach
 
-### 1. Agentic AI Layer (GROQ Qwen 3.8-27b + Tool Calling)
-Instead of relying on static rule-based systems, WeatherGPT uses a cutting-edge **Large Language Model (LLM)** equipped with function-calling capabilities.
-- When a user asks a question in their native language (e.g., "Will it rain in Guwahati tomorrow?"), the AI autonomously calls the `get_forecast` API tool.
-- The AI interprets the raw JSON response (precipitation probability, WMO weather codes, UV index) and formulates an answer specific to the user's selected **Profession Profile** (e.g., advising a farmer on crop spraying vs. advising a pilot on wind shear).
+### Tech Stack
+- **Frontend:** React (v18), Vite, Tailwind CSS, React-Leaflet (for Radar Maps), Recharts.
+- **Backend:** Node.js, Express proxy.
+- **AI/LLM Integrations:** Groq API (Qwen 3.8-27b for function calling) as primary, Google Gemini API as fallback.
+- **External Data APIs:** Open-Meteo (aggregating GFS, ECMWF, ICON models), Nominatim (OpenStreetMap geocoding), NDMA Sachet (CAP feeds), Google News RSS, Google TTS API.
 
-### 2. Multi-Model Weather Consensus
-We aggregate data from leading Numerical Weather Prediction (NWP) models to ensure the highest accuracy:
-- **GFS (Global Forecast System)**
-- **ECMWF (European Centre)**
-- **ICON (German model)**
-- **IMD Data** (via local integrations)
+### Architecture Diagram
 
-### 3. Progressive Web App (PWA) & Multi-Platform
-Built with React and Vite, the platform is fully responsive and behaves like a native app on mobile devices.
-- **Offline Resilience:** Aggressive local caching using a custom versioned `localStorage` system ensures the app never crashes during data structure changes and provides cached alerts when users lose internet connectivity during disasters.
-- **Accessible Design:** Features high-contrast modes, large text toggles, and integrated Google Text-to-Speech (TTS) for illiterate users.
+```mermaid
+flowchart TD
+    User([User]) --> |Interacts with PWA| Frontend(Frontend - React, Vite, Tailwind)
+    Frontend --> |Sends Chat/Profile/Location| Backend(Backend - Express Proxy)
+    Backend --> |Prompts + Tools| LLM{AI Engine: Groq / Gemini}
+    
+    LLM -.-> |Function Calls| Tools(Tool Executor in server.js)
+    Tools --> |Fetch Data| OpenMeteo(Open-Meteo: GFS, ECMWF, ICON)
+    Tools --> |Geocode| Nominatim(Nominatim/OSM)
+    Tools -.-> |Returns JSON| LLM
+    
+    LLM --> |Generates Structured Response| Backend
+    Backend --> |Calculates Confidence Score| Frontend
+    
+    Manager([Disaster Manager]) --> |Issues Alerts| AuthPortal(Backend Alert Manager)
+    AuthPortal --> |Syncs Active Alerts| Frontend
+```
 
----
+### The "Ask WeatherGPT" Chat Flow
 
-## 🌟 Key Features That Set Us Apart
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant F as Frontend (React)
+    participant B as Backend (Express)
+    participant AI as LLM (Groq/Gemini)
+    participant API as External Weather APIs
 
-1. **🧑‍🌾 Profession-Aware Contextual AI**  
-   The same weather data generates completely different insights depending on the active profile:
-   - *Farmer:* Soil moisture retention, pesticide spraying windows.
-   - *Fisherman:* Wind gust warnings, wave height approximations, safe sea times.
-   - *Aviation/Urban:* Fog visibility, severe storm cell tracking.
+    U->>F: "Will it rain tomorrow?" + Profile (Farmer)
+    F->>B: POST /api/chat (Message, Profile, Language, Current Location)
+    B->>AI: Inject System Prompt (Geography/Profile) + Chat History
+    AI->>B: Tool Call: get_forecast(location)
+    B->>API: Fetch Open-Meteo Forecast
+    API-->>B: Return Weather JSON
+    B-->>AI: Tool Result (Rain probability, temp)
+    AI-->>B: Final JSON (answer, advisory, severity, followUps)
+    B->>B: Calculate Confidence Score (GFS vs ICON vs ECMWF)
+    B-->>F: Return Final JSON
+    F-->>U: Render Chat Bubble + Severe Alert Banner
+```
 
-2. **🌍 Native Multilingual Support**  
-   Full interface and AI translation for **English, Hindi, Bengali, and Assamese**. The AI understands Romanized native text (e.g., "aaj barish hogi kya") and responds accurately.
+### Key Technical Decisions
+- **Express Proxy Backend:** Prevents exposing sensitive AI API keys (Groq, Gemini) to the client side. It also acts as the central orchestrator for function calling.
+- **Groq over Standard OpenAI:** Chosen for its ultra-low latency inference, which is crucial for a real-time conversational weather interface.
+- **Server-Side Confidence Calculation:** We fetch data from three major models (GFS, ECMWF, ICON). The backend calculates the variance between these models. High variance equals a "Low Confidence" flag shown to the user, ensuring algorithmic transparency.
 
-3. **🛡️ Authority Dashboard (Disaster Management)**  
-   A secure, passcode-protected portal (`ManagerDashboard`) for state authorities to instantly broadcast custom severe weather alerts (NDMA standard) to users in specific districts.
+## 4. Feasibility & Viability
 
-4. **⚡ Real-Time WMO Code Alert Engine**  
-   Our alert engine doesn't just look at rainfall amounts. It parses real-time WMO (World Meteorological Organization) weather codes. If a severe thunderstorm (Code 95/96) is detected, alerts are triggered instantly even if millimeter rainfall predictions are low.
+### Feasibility (What is implemented)
+- Fully functioning conversational AI engine with tool-calling capabilities (`get_current_weather`, `get_forecast`, `get_historical_trend`, `get_seasonal_comparison`, `get_active_alerts`).
+- Multi-profile persona switching (Farmer, Fisherman, Aviation).
+- Manager dashboard for issuing custom radius/district disaster alerts.
+- Live fetching of NDMA Sachet CAP feeds and Google News RSS.
 
-5. **📡 Live GPS & Geocoding**  
-   One-tap "Live Location" automatically reverse-geocodes the user's coordinates and queries the AI for an immediate, hyper-local situational report.
+### Challenges & Mitigation Strategies
+1. **API Rate Limits / AI Hallucination:** 
+   *Mitigation:* We have a built-in fallback strategy. If Groq hits a rate limit, the Express backend automatically degrades gracefully to the Gemini API. To prevent hallucinations, the LLM is restricted via the System Prompt to only answer weather/agriculture/travel questions and is heavily grounded by the real-time JSON tool data.
+2. **Offline/Low Connectivity in Rural Areas:**
+   *Mitigation:* The frontend caches critical alerts and recent weather stages in memory. Once an alert is downloaded, it persists even if the connection drops.
+3. **NDMA Feed Reliability:**
+   *Mitigation:* The backend wraps the Sachet feed fetch with a 5-second abort controller. If the feed is down (404), it gracefully falls back to showing only internal manager alerts instead of breaking the app.
 
----
+### Scalability Path
+- Transitioning to premium tiers for Open-Meteo/weather providers for higher TPM.
+- Integrating official IMD automated weather station (AWS) APIs for deeper localized accuracy.
+- Implementing a persistent database (PostgreSQL/MongoDB) to scale the Manager Alerts system beyond the current local JSON storage.
 
-## ⚙️ Tech Stack
+## 5. Impact & Benefits
 
-- **Frontend:** React.js, TailwindCSS, Vite
-- **Backend:** Node.js, Express.js
-- **AI/LLM Provider:** GROQ (Qwen3.8-27b) with Gemini as an automated fallback
-- **Weather APIs:** Open-Meteo, OpenStreetMap (Geocoding)
-- **Deployment:** Ready for Vercel (Frontend) & Render/Heroku (Backend)
+**Social & Economic Impact:** Early warnings drastically reduce crop damage, protect marine livelihoods, and save lives during severe weather events. By delivering these insights in native languages with Voice TTS, WeatherGPT breaks the digital literacy barrier, reaching the most vulnerable populations in rural India.
 
----
+| User Persona | Feature Used | Benefit / Outcome |
+|--------------|--------------|-------------------|
+| **Farmer** | Profession Profile + `get_forecast` | Avoids pesticide washout by knowing optimal spraying windows based on rainfall and humidity context. |
+| **Fisherman** | Profession Profile + `get_active_alerts` | Prevents venturing into the sea during high wind gusts and severe WMO code conditions, protecting lives. |
+| **Aviation** | Profession Profile + Model Consensus | Improves pre-flight planning and awareness of wind shear or low visibility fog risks. |
+| **Authority** | Manager Dashboard + Custom Alerts | Instantly broadcasts localized alerts by radius or district to vulnerable populations without relying solely on state-level feeds. |
 
-## 🚀 How to Run Locally
+## 6. Research & References
 
-### Prerequisites
-- Node.js (v18+)
-- GROQ API Key (for the AI Agent)
+**Data Sources & APIs Utilized:**
+- **Open-Meteo:** An open-source weather API providing access to high-resolution NWP models including GFS (Global Forecast System), ECMWF (European Centre), and ICON.
+- **Nominatim / OpenStreetMap:** Open-source geocoding used to map village/city names to exact latitude/longitude coordinates.
+- **NDMA Sachet:** Integrated endpoints designed to read official Common Alerting Protocol (CAP) disaster feeds.
+- **Google News RSS:** Fetches real-time, keyword-filtered disaster news for situational awareness.
 
-### Setup Instructions
+**References:**
+- [VERIFY: Add specific IMD/government reports, disaster management papers, or academic references relevant to your SIH 2026 problem statement here.]
+
+## 7. Standard Project Sections
+
+### Folder Structure
+```text
+📦 SIH-2026-WEATHER-GPT
+ ┣ 📂 public/              # Static assets, icons, logos
+ ┣ 📂 src/
+ ┃ ┣ 📂 components/        # React components (ChatScreen, AlertsScreen, WeatherDashboard, etc.)
+ ┃ ┣ 📂 context/           # React Global State context
+ ┃ ┣ 📂 services/          # API wrapper functions
+ ┃ ┣ 📂 utils/             # Helper functions (theme logic, WMO weather codes)
+ ┃ ┣ 📜 App.jsx            # Main Frontend Router/Wrapper
+ ┃ ┗ 📜 main.jsx           # React DOM Entry point
+ ┣ 📂 server/
+ ┃ ┗ 📜 tools.js           # Backend OpenAI/Groq Tool Definitions & API executors
+ ┣ 📜 server.js            # Express Backend Server & AI Orchestrator
+ ┣ 📜 package.json         # Project Dependencies
+ ┣ 📜 tailwind.config.js   # Tailwind Styling Configuration
+ ┗ 📜 README.md
+```
+
+### Installation & Setup
+
+**Prerequisites:** Node.js (v18+)
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/omcodes16/weather-gpt-sih-2026.git
-   cd weather-gpt-sih-2026
+   git clone https://github.com/omcodes16/sih-2026.git
+   cd sih-2026
    ```
 
 2. **Install Dependencies:**
@@ -96,31 +157,26 @@ Built with React and Vite, the platform is fully responsive and behaves like a n
    npm install
    ```
 
-3. **Environment Variables:**
-   Create a `.env` file in the root directory:
+3. **Configure Environment Variables:**
+   Create a `.env` file in the root directory based on `.env.example`:
    ```env
    GROQ_API_KEY=your_groq_api_key_here
    GEMINI_API_KEY=your_gemini_api_key_here
+   MANAGER_PASSCODE=weather2026
+   MANAGER_SECRET=super-secret-key-123
    ```
 
 4. **Run the Application:**
-   Start both the backend Express server and the Vite frontend simultaneously:
+   You can run both the frontend and backend concurrently:
    ```bash
-   # Terminal 1: Start AI Backend
-   node server.js
-
-   # Terminal 2: Start Frontend
-   npm run dev
+   npm run dev:all
    ```
+   *(Alternatively, run `node server.js` and `npm run dev` in separate terminals).*  
    Open `http://localhost:5173` in your browser.
 
----
+### Team
+- **Team Name:** [VERIFY: Add your SIH Team Name here]
+- **Members:** [VERIFY: Add team member names here]
 
-## 🎯 How We Win Across Platforms
-- **Scalability:** The decoupled architecture allows the Express backend to serve mobile apps (Flutter/React Native) in the future using the exact same `/api/chat` endpoints.
-- **Cost Efficiency:** Using GROQ provides ultra-fast inference at a fraction of the cost of GPT-4, combined with free-tier weather APIs, making state-wide deployment economically viable.
-- **Human-Centric:** By focusing on *what the weather means* rather than *what the weather is*, WeatherGPT directly impacts livelihoods and saves lives.
-
-<div align="center">
-  <i>Built with ❤️ for Smart India Hackathon 2026</i>
-</div>
+### License
+[VERIFY: Add license information here, e.g., MIT License. If none, leave blank or specify proprietary for SIH.]
