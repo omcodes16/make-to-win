@@ -26,6 +26,14 @@ function AppContent() {
   const weatherInfo = weather ? getWeatherInfo(weather.weatherCode, state.language) : null;
   const theme = getTheme(weather, weatherInfo);
 
+  // Profile-based Custom Background (Overriding weather bg with high-quality profile image)
+  let customBg = theme.bgImage; 
+  if (state.userProfile === 'general') customBg = '/backgrounds/general.jpg';
+  else if (state.userProfile === 'farmer') customBg = '/backgrounds/farmer.jpg';
+  else if (state.userProfile === 'fisherman') customBg = '/backgrounds/fisherman.jpg';
+  else if (state.userProfile === 'aviation') customBg = '/backgrounds/aviation.jpg';
+  else if (state.userProfile === 'urbanPlanning') customBg = '/backgrounds/urban.jpg';
+
   if (state.activeTab === 'manager') {
     return <div key="manager" className="animate-fade-in"><ManagerDashboard /></div>;
   }
@@ -37,7 +45,7 @@ function AppContent() {
   return (
     <div className="relative min-h-[100dvh] bg-surface-0 transition-colors duration-1000 overflow-hidden">
       {/* Global Fixed Background Image */}
-      <div className="fixed inset-0 z-0 bg-cover bg-center transition-opacity duration-1000" style={{ backgroundImage: `url("${theme.bgImage}")` }}></div>
+      <div className="fixed inset-0 z-0 bg-cover bg-center transition-opacity duration-1000" style={{ backgroundImage: `url("${customBg}")` }}></div>
       {/* Global Overlays */}
       <div className={`fixed inset-0 z-0 bg-gradient-to-b ${theme.overlay} backdrop-blur-md pointer-events-none transition-colors duration-1000`}></div>
       <div className={`fixed inset-0 z-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] ${theme.accent} via-transparent to-transparent pointer-events-none transition-colors duration-1000`}></div>
