@@ -8,6 +8,7 @@ export default function ManagerDashboard() {
   const [token, setToken] = useState(null); // Start null, validate on mount
   const [passcode, setPasscode] = useState("");
   const [alerts, setAlerts] = useState([]);
+  const [sosRequests, setSosRequests] = useState([]);
   
   const [form, setForm] = useState({ 
     targetMode: "state", // 'state', 'district', 'radius'
@@ -33,7 +34,6 @@ export default function ManagerDashboard() {
   useEffect(() => {
     const saved = sessionStorage.getItem("mgr_token");
     if (saved) {
-      // Quick validation - check expiry from payload
       try {
         const [payloadB64] = saved.split(".");
         const payload = JSON.parse(atob(payloadB64));
@@ -49,7 +49,13 @@ export default function ManagerDashboard() {
   }, []);
 
   useEffect(() => {
-    if (token) fetchAlerts();
+    if (token) {
+      fetchAlerts();
+      fetchSos();
+      // Auto-refresh SOS every 30 seconds
+      const interval = setInterval(fetchSos, 30000);
+      return () => clearInterval(interval);
+    }
   }, [token]);
 
   const fetchAlerts = async () => {
@@ -60,6 +66,24 @@ export default function ManagerDashboard() {
     } catch (e) {
       console.error(e);
     }
+  };
+
+  const fetchSos = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/manager/sos`, { headers: { Authorization: `Bearer ${token}` } });
+      if (res.ok) setSosRequests(await res.json());
+    } catch (e) { console.error(e); }
+  };
+
+  const updateSosStatus = async (id, status) => {
+    try {
+      await fetch(`${API_URL}/api/manager/sos/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ status })
+      });
+      fetchSos();
+    } catch (e) { console.error(e); }
   };
 
   const handleLogin = async (e) => {
@@ -287,6 +311,56 @@ export default function ManagerDashboard() {
             </div>
           </div>
         </div>
+
+        {/* Live SOS Emergency Requests */}
+        <div className="bg-red-950/30 border border-red-500/30 p-6 rounded-2xl backdrop-blur-lg">
+          <h2 className="text-xl font-bold mb-4 flex justify-between items-center">
+            <span className="flex items-center gap-2">🆘 Live SOS Requests</span>
+            <span className={`px-3 py-1 rounded-full text-sm font-bold ${sosRequests.length > 0 ? 'bg-red-500 text-white animate-pulse' : 'bg-white/10 text-white/50'}`}>
+              {sosRequests.length} Active
+            </span>
+          </h2>
+          {sosRequests.length === 0 ? (
+            <p className="text-white/40 text-sm">✅ No active SOS requests. All clear.</p>
+          ) : (
+            <div className="space-y-4">
+              {sosRequests.map((sos) => (
+                <div key={sos._id || sos.id} className="bg-black/50 border border-red-500/30 p-4 rounded-xl space-y-2">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="font-bold text-red-300">{sos.name || 'Anonymous'}</p>
+                      {sos.phone && <p className="text-xs text-white/60">📞 {sos.phone}</p>}
+                      <p className="text-sm text-white/80 mt-1">{sos.message}</p>
+                      <p className="text-xs text-white/50 mt-1">🕐 {new Date(sos.timestamp).toLocaleString('en-IN')}</p>
+                    </div>
+                    <span className={`text-xs px-2 py-1 rounded-full font-bold ${sos.status === 'pending' ? 'bg-red-500/30 text-red-300' : 'bg-amber-500/30 text-amber-300'}`}>
+                      {sos.status.toUpperCase()}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    <a
+                      href={`https://www.google.com/maps?q=${sos.lat},${sos.lng}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs bg-blue-600/40 hover:bg-blue-600/70 text-blue-300 px-3 py-1.5 rounded-lg transition-colors"
+                    >
+                      📍 Open in Maps ({sos.lat?.toFixed(4)}, {sos.lng?.toFixed(4)})
+                    </a>
+                    {sos.status === 'pending' && (
+                      <button onClick={() => updateSosStatus(sos._id || sos.id, 'dispatched')} className="text-xs bg-amber-600/40 hover:bg-amber-600/70 text-amber-300 px-3 py-1.5 rounded-lg transition-colors">
+                        🚁 Dispatch Rescue
+                      </button>
+                    )}
+                    <button onClick={() => updateSosStatus(sos._id || sos.id, 'resolved')} className="text-xs bg-green-600/40 hover:bg-green-600/70 text-green-300 px-3 py-1.5 rounded-lg transition-colors">
+                      ✅ Mark Resolved
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
       </div>
     </div>
   );

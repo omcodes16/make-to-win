@@ -30,7 +30,7 @@ import {
 } from './server/tools.js';
 
 import mongoose from 'mongoose';
-import { Alert, Snapshot, AccuracyLog } from './server/models.js';
+import { Alert, Snapshot, AccuracyLog, SosRequest } from './server/models.js';
 
 export let USE_MONGODB = false;
 if (process.env.MONGODB_URI) {
@@ -226,6 +226,48 @@ app.delete("/api/manager/alerts/:id", verifyToken, (req, res) => {
   managerAlerts = managerAlerts.filter(a => a.id !== req.params.id);
   saveAlerts();
   res.json({ success: true });
+});
+
+// --- SOS EMERGENCY RESPONSE ROUTES ---
+let sosFallback = [];
+
+// POST /api/sos — Public: citizen sends GPS + message
+app.post("/api/sos", async (req, res) => {
+  const { name, phone, message, lat, lng } = req.body;
+  if (!lat || !lng) return res.status(400).json({ error: "Location coordinates are required" });
+  const entry = { name: name || 'Anonymous', phone: phone || '', message: message || 'Emergency assistance needed', lat, lng, status: 'pending', timestamp: new Date() };
+  if (USE_MONGODB) {
+    try { const saved = await SosRequest.create(entry); return res.json({ success: true, id: saved._id }); }
+    catch (e) { return res.status(500).json({ error: "Failed to save SOS" }); }
+  } else {
+    entry.id = 'sos-' + Date.now();
+    sosFallback.push(entry);
+    return res.json({ success: true, id: entry.id });
+  }
+});
+
+// GET /api/manager/sos — Manager only: see all active SOS requests
+app.get("/api/manager/sos", verifyToken, async (req, res) => {
+  if (USE_MONGODB) {
+    try { const requests = await SosRequest.find({ status: { $ne: 'resolved' } }).sort({ timestamp: -1 }); return res.json(requests); }
+    catch (e) { return res.status(500).json({ error: "DB Error" }); }
+  } else {
+    return res.json(sosFallback.filter(s => s.status !== 'resolved'));
+  }
+});
+
+// PUT /api/manager/sos/:id — Manager only: update SOS status
+app.put("/api/manager/sos/:id", verifyToken, async (req, res) => {
+  const { status } = req.body;
+  if (!['pending', 'dispatched', 'resolved'].includes(status)) return res.status(400).json({ error: "Invalid status" });
+  if (USE_MONGODB) {
+    try { await SosRequest.findByIdAndUpdate(req.params.id, { status }); return res.json({ success: true }); }
+    catch (e) { return res.status(500).json({ error: "DB Error" }); }
+  } else {
+    const sos = sosFallback.find(s => s.id === req.params.id);
+    if (sos) sos.status = status;
+    return res.json({ success: true });
+  }
 });
 
 function haversineDistance(lat1, lon1, lat2, lon2) {

@@ -6,6 +6,7 @@ import WeatherDashboard from './components/WeatherDashboard';
 import AlertsScreen from './components/AlertsScreen';
 import ReviewsScreen from './components/ReviewsScreen';
 import ManagerDashboard from './components/ManagerDashboard';
+import SosButton from './components/SosButton';
 
 import { getTheme } from './utils/themes';
 import { getWeatherInfo } from './utils/weatherConditions';
@@ -49,6 +50,9 @@ function AppContent() {
          state.activeTab === 'reviews' ? <ReviewsScreen /> : 
          <ChatScreen />}
       </div>
+
+      {/* Global SOS Button — visible on all screens */}
+      <SosButton />
     </div>
   );
 }
