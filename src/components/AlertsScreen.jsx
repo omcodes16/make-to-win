@@ -35,52 +35,43 @@ export default function AlertsScreen() {
   const [activeModal, setActiveModal] = useState(null);
   const [newsFilter, setNewsFilter] = useState('All');
 
-  // Generate realistic alerts without needing a backend
+  // Fetch real-time news and alerts from backend
   useEffect(() => {
-    setIsLoadingNews(true);
-    // Simulate network delay for realism
-    setTimeout(() => {
-      // Dynamic news based on current season (using current month)
-      const isMonsoon = currentMonthIndex >= 5 && currentMonthIndex <= 9;
-      setNews([
-        {
-          id: 1,
-          title: isMonsoon ? "IMD issues red alert for heavy rainfall in coastal regions" : "Heatwave conditions expected to continue in northern plains",
-          source: "Live Weather Dept",
-          time: "2 hours ago",
-          type: "warning"
-        },
-        {
-          id: 2,
-          title: isMonsoon ? "Farmers advised to delay fertilizer application due to rains" : "Farmers advised to ensure adequate irrigation for Rabi crops",
-          source: "Agricultural Advisory",
-          time: "5 hours ago",
-          type: "info"
-        },
-        {
-          id: 3,
-          title: "New satellite data improves local forecasting accuracy by 40%",
-          source: "Tech Update",
-          time: "1 day ago",
-          type: "update"
+    let isMounted = true;
+    
+    const fetchNewsAndAlerts = async () => {
+      setIsLoadingNews(true);
+      try {
+        const baseUrl = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
+        
+        // Fetch Real News
+        const newsRes = await fetch(`${baseUrl}/api/news`);
+        if (newsRes.ok && isMounted) {
+          const data = await newsRes.json();
+          if (data.news && data.news.length > 0) {
+            setNews(data.news);
+          }
         }
-      ]);
-
-      // Dynamic national alerts
-      const alerts = [];
-      if (weather && weather.temperature > 40) {
-        alerts.push({ state: locationName || "Local Region", level: "Severe", issue: "Extreme Heat" });
-      } else if (weather && (weather.rain > 15 || weather.precipitation > 15)) {
-        alerts.push({ state: locationName || "Local Region", level: "High", issue: "Heavy Rainfall" });
-      } else {
-        alerts.push({ state: "Assam", level: "Moderate", issue: "Flood Risk" });
-        alerts.push({ state: "Rajasthan", level: "Moderate", issue: "Heatwave" });
+        
+        // Fetch National Alerts
+        const alertsRes = await fetch(`${baseUrl}/api/national-alerts`);
+        if (alertsRes.ok && isMounted) {
+          const alertsData = await alertsRes.json();
+          if (Array.isArray(alertsData)) {
+            setNationalAlerts(alertsData);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch real-time news/alerts:', err);
+      } finally {
+        if (isMounted) setIsLoadingNews(false);
       }
-      setNationalAlerts(alerts);
-      
-      setIsLoadingNews(false);
-    }, 800);
-  }, [weather, locationName, currentMonthIndex]);
+    };
+
+    fetchNewsAndAlerts();
+
+    return () => { isMounted = false; };
+  }, []);
 
   // Compute live alerts based on actual location data
   const computeAlerts = () => {
