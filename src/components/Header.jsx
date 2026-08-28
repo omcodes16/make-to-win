@@ -116,7 +116,8 @@ export default function Header() {
             payload: { locationName: location.name, lat, lng, weather: weatherData }
           });
 
-          fetch(`/api/alerts?state=${encodeURIComponent(location.state || location.name)}&district=${encodeURIComponent(location.district || '')}&lat=${lat}&lng=${lng}`).then(r => r.ok ? r.json() : []).then(a => dispatch({ type: 'SET_GOVERNMENT_ALERTS', payload: a })).catch(() => dispatch({ type: 'SET_GOVERNMENT_ALERTS', payload: [] }));
+          const baseUrl = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
+          fetch(`${baseUrl}/api/alerts?state=${encodeURIComponent(location.state || location.name)}&district=${encodeURIComponent(location.district || '')}&lat=${lat}&lng=${lng}`).then(r => r.ok ? r.json() : []).then(a => dispatch({ type: 'SET_GOVERNMENT_ALERTS', payload: a })).catch(() => dispatch({ type: 'SET_GOVERNMENT_ALERTS', payload: [] }));
           
           const severityCheck = checkSeverity(weatherData, location.name);
           if (severityCheck && severityCheck.isSevere) {
