@@ -29,6 +29,22 @@ import {
   get_marine_weather
 } from './server/tools.js';
 
+import mongoose from 'mongoose';
+import { Alert, Snapshot, AccuracyLog } from './server/models.js';
+
+export let USE_MONGODB = false;
+if (process.env.MONGODB_URI) {
+  mongoose.connect(process.env.MONGODB_URI)
+    .then(() => {
+      console.log("✅ Connected to MongoDB Atlas");
+      USE_MONGODB = true;
+    })
+    .catch(err => console.error("❌ MongoDB connection error:", err));
+} else {
+  console.log("⚠️ No MONGODB_URI found. Falling back to local JSON files.");
+}
+
+
 // System prompt for Groq — PS 26068 enhanced
 const SYSTEM_PROMPT = `You are WeatherGPT, a friendly and highly knowledgeable weather assistant built for India.
 Your goal is to answer ANY weather-related query in a way that is incredibly EASY and UNDERSTANDABLE — especially for farmers, rural workers, and common people.
@@ -231,7 +247,12 @@ app.get("/api/alerts", async (req, res) => {
   const now = Date.now();
   
   // 1. Get active internal manager alerts that apply to this user's location
-  const activeManagerAlerts = managerAlerts.filter(a => {
+  let currentManagerAlerts = managerAlerts;
+  if (USE_MONGODB) {
+    try { currentManagerAlerts = await Alert.find({ expiresAt: { $gt: now } }); } catch (e) { currentManagerAlerts = []; }
+  }
+  
+  const activeManagerAlerts = currentManagerAlerts.filter(a => {
     if (a.expiresAt <= now) return false;
 
     // Mode B: Radius Match
@@ -544,7 +565,7 @@ app.post('/api/chat', async (req, res) => {
               if (args.daysAhead === 1 && resultData && !resultData.error) {
                 try {
                   const locData = await import('./src/services/weatherApi.js').then(m => m.geocodeLocation(args.location, 'en'));
-                  if (locData) recordForecastSnapshot(args.location, locData.lat, locData.lng, resultData.maxTemp, resultData.precipProbMax);
+                  if (locData) await recordForecastSnapshot(args.location, locData.lat, locData.lng, resultData.maxTemp, resultData.precipProbMax);
                 } catch (snapshotErr) { /* non-critical, skip */ }
               }
             }

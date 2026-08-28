@@ -1,1 +1,14 @@
-[]
+[
+  {
+    "id": "mgr-1787930819279",
+    "state": "Assam",
+    "district": "Guwahati",
+    "targetMode": "state",
+    "severity": "severe",
+    "title": "Test Flash Flood",
+    "description": "Testing MongoDB alert system",
+    "issuedAt": 1787930819279,
+    "expiresAt": 1788017219279,
+    "source": "Authority Alert"
+  }
+]

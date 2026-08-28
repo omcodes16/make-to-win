@@ -5,7 +5,7 @@ import { geocodeLocation } from "../services/weatherApi";
 const API_URL = import.meta.env.VITE_API_URL || "";
 
 export default function ManagerDashboard() {
-  const [token, setToken] = useState(sessionStorage.getItem("mgr_token") || null);
+  const [token, setToken] = useState(null); // Start null, validate on mount
   const [passcode, setPasscode] = useState("");
   const [alerts, setAlerts] = useState([]);
   
@@ -25,8 +25,28 @@ export default function ManagerDashboard() {
   
   const [msg, setMsg] = useState("");
   const [isSearchingLoc, setIsSearchingLoc] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   const STATES = ["Assam", "Meghalaya", "Manipur", "Tripura", "Nagaland", "Mizoram", "Arunachal Pradesh", "Sikkim", "Maharashtra", "Tamil Nadu", "Gujarat", "West Bengal", "Uttar Pradesh", "Odisha"];
+
+  // Validate saved token on mount - clear if expired/invalid
+  useEffect(() => {
+    const saved = sessionStorage.getItem("mgr_token");
+    if (saved) {
+      // Quick validation - check expiry from payload
+      try {
+        const [payloadB64] = saved.split(".");
+        const payload = JSON.parse(atob(payloadB64));
+        if (payload.exp && payload.exp > Date.now()) {
+          setToken(saved);
+        } else {
+          sessionStorage.removeItem("mgr_token");
+        }
+      } catch {
+        sessionStorage.removeItem("mgr_token");
+      }
+    }
+  }, []);
 
   useEffect(() => {
     if (token) fetchAlerts();
@@ -36,7 +56,7 @@ export default function ManagerDashboard() {
     try {
       const res = await fetch(`${API_URL}/api/manager/alerts`, { headers: { Authorization: `Bearer ${token}` } });
       if (res.ok) setAlerts(await res.json());
-      else if (res.status === 401) setToken(null);
+      else if (res.status === 401) { sessionStorage.removeItem("mgr_token"); setToken(null); }
     } catch (e) {
       console.error(e);
     }
@@ -44,9 +64,12 @@ export default function ManagerDashboard() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    if (!passcode.trim()) { setMsg("Please enter the passcode"); return; }
+    setIsLoggingIn(true);
+    setMsg("");
     try {
       const res = await fetch(`${API_URL}/api/manager/login`, {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ passcode })
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ passcode: passcode.trim() })
       });
       if (res.ok) {
         const data = await res.json();
@@ -54,10 +77,13 @@ export default function ManagerDashboard() {
         setToken(data.token);
         setMsg("");
       } else {
-        setMsg(`Error ${res.status}: ${res.status === 404 ? 'Backend Not Connected' : 'Invalid Passcode'}`);
+        const errData = await res.json().catch(() => ({}));
+        setMsg(res.status === 401 ? "❌ Wrong passcode. Try: weather2026" : `Error ${res.status}: ${errData.error || 'Unknown error'}`);
       }
     } catch (e) {
-      setMsg(`Network error: ${e.message}`);
+      setMsg(`❌ Cannot connect to server. Make sure the backend is running.`);
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
@@ -123,8 +149,21 @@ export default function ManagerDashboard() {
       <div className="min-h-screen bg-surface-0 flex items-center justify-center p-4">
         <form onSubmit={handleLogin} className="bg-white/10 p-8 rounded-2xl backdrop-blur-xl border border-white/20 w-full max-w-sm">
           <h2 className="text-2xl font-bold text-white mb-6 text-center">Disaster Manager Auth</h2>
-          <input type="password" value={passcode} onChange={e => setPasscode(e.target.value)} placeholder="Enter Passcode" className="w-full bg-black/40 text-white p-3 rounded-lg border border-white/10 mb-4 focus:outline-none focus:border-indigo-500" />
-          <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg transition-colors">Access Panel</button>
+          <input 
+            type="password" 
+            value={passcode} 
+            onChange={e => setPasscode(e.target.value)} 
+            placeholder="Enter Passcode (weather2026)" 
+            className="w-full bg-black/40 text-white p-3 rounded-lg border border-white/10 mb-4 focus:outline-none focus:border-indigo-500" 
+            disabled={isLoggingIn}
+          />
+          <button 
+            type="submit" 
+            disabled={isLoggingIn}
+            className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white font-bold py-3 rounded-lg transition-colors"
+          >
+            {isLoggingIn ? "Verifying..." : "Access Panel"}
+          </button>
           <button type="button" onClick={() => window.location.href = '/'} className="mt-4 w-full bg-white/5 hover:bg-white/10 text-white py-2 rounded-lg transition-colors border border-white/10 text-sm">← Back to Main App</button>
           {msg && <p className="text-red-400 mt-4 text-center text-sm">{msg}</p>}
         </form>
