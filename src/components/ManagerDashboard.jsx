@@ -325,19 +325,32 @@ export default function ManagerDashboard() {
           ) : (
             <div className="space-y-4">
               {sosRequests.map((sos) => (
-                <div key={sos._id || sos.id} className="bg-black/50 border border-red-500/30 p-4 rounded-xl space-y-2">
+                <div key={sos._id || sos.id} className="bg-black/50 border border-red-500/30 p-4 rounded-xl space-y-3">
                   <div className="flex justify-between items-start">
                     <div>
-                      <p className="font-bold text-red-300">{sos.name || 'Anonymous'}</p>
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="font-bold text-red-300">{sos.name || 'Anonymous'}</p>
+                        <span className="bg-red-900/50 text-red-200 text-[10px] px-2 py-0.5 rounded border border-red-500/30">
+                          {sos.helpType || 'General'}
+                        </span>
+                      </div>
                       {sos.phone && <p className="text-xs text-white/60">📞 {sos.phone}</p>}
-                      <p className="text-sm text-white/80 mt-1">{sos.message}</p>
+                      {sos.message && <p className="text-sm text-white/80 mt-1">{sos.message}</p>}
                       <p className="text-xs text-white/50 mt-1">🕐 {new Date(sos.timestamp).toLocaleString('en-IN')}</p>
                     </div>
                     <span className={`text-xs px-2 py-1 rounded-full font-bold ${sos.status === 'pending' ? 'bg-red-500/30 text-red-300' : 'bg-amber-500/30 text-amber-300'}`}>
                       {sos.status.toUpperCase()}
                     </span>
                   </div>
-                  <div className="flex flex-wrap gap-2 pt-1">
+
+                  {sos.image && (
+                    <div className="mt-2">
+                      <p className="text-[10px] text-white/50 mb-1">ATTACHED PHOTO:</p>
+                      <img src={sos.image} alt="Emergency Situation" className="h-32 w-auto object-cover rounded-lg border border-white/20" />
+                    </div>
+                  )}
+
+                  <div className="flex flex-wrap gap-2 pt-1 border-t border-white/10 mt-2">
                     <a
                       href={`https://www.google.com/maps?q=${sos.lat},${sos.lng}`}
                       target="_blank"

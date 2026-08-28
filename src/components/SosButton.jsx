@@ -5,8 +5,18 @@ const API_URL = import.meta.env.VITE_API_URL || "";
 export default function SosButton() {
   const [phase, setPhase] = useState("idle"); // idle | confirm | locating | form | sending | success | error
   const [coords, setCoords] = useState(null);
-  const [form, setForm] = useState({ name: "", phone: "", message: "" });
+  const [form, setForm] = useState({ name: "", phone: "", message: "", helpType: "Medical Emergency" });
+  const [imageString, setImageString] = useState(null);
   const [errorMsg, setErrorMsg] = useState("");
+
+  const helpCategories = [
+    "Medical Emergency",
+    "Evacuation Needed",
+    "Food/Water Required",
+    "Shelter Needed",
+    "Fire Rescue",
+    "Other"
+  ];
 
   const handleSosClick = () => setPhase("confirm");
 
@@ -30,6 +40,31 @@ export default function SosButton() {
     );
   };
 
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Optional: Basic compression to keep payload small
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const MAX_WIDTH = 800;
+        const scaleSize = MAX_WIDTH / img.width;
+        canvas.width = MAX_WIDTH;
+        canvas.height = img.height * scaleSize;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        // Convert to base64 jpg at 70% quality
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.7);
+        setImageString(dataUrl);
+      };
+      img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!coords) return;
@@ -38,7 +73,7 @@ export default function SosButton() {
       const res = await fetch(`${API_URL}/api/sos`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, lat: coords.lat, lng: coords.lng }),
+        body: JSON.stringify({ ...form, lat: coords.lat, lng: coords.lng, image: imageString }),
       });
       if (res.ok) {
         setPhase("success");
@@ -55,13 +90,13 @@ export default function SosButton() {
   const reset = () => {
     setPhase("idle");
     setCoords(null);
-    setForm({ name: "", phone: "", message: "" });
+    setForm({ name: "", phone: "", message: "", helpType: "Medical Emergency" });
+    setImageString(null);
     setErrorMsg("");
   };
 
   return (
     <>
-      {/* Floating SOS Button */}
       <button
         onClick={handleSosClick}
         className="fixed bottom-6 right-6 z-50 w-16 h-16 rounded-full bg-red-600 hover:bg-red-700 text-white font-bold text-sm shadow-2xl shadow-red-900/60 border-2 border-red-400 animate-pulse flex flex-col items-center justify-center gap-0.5 transition-transform hover:scale-110"
@@ -71,12 +106,10 @@ export default function SosButton() {
         <span className="text-[10px] font-bold tracking-wide">SOS</span>
       </button>
 
-      {/* Modal Overlay */}
       {phase !== "idle" && (
         <div className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-gray-900 border border-red-500/40 rounded-2xl p-6 w-full max-w-sm shadow-2xl text-white">
+          <div className="bg-gray-900 border border-red-500/40 rounded-2xl p-6 w-full max-w-sm shadow-2xl text-white max-h-[95vh] overflow-y-auto">
 
-            {/* CONFIRM */}
             {phase === "confirm" && (
               <div className="text-center space-y-4">
                 <div className="text-5xl">🆘</div>
@@ -89,7 +122,6 @@ export default function SosButton() {
               </div>
             )}
 
-            {/* LOCATING */}
             {phase === "locating" && (
               <div className="text-center space-y-4 py-4">
                 <div className="text-4xl animate-spin">📡</div>
@@ -98,57 +130,69 @@ export default function SosButton() {
               </div>
             )}
 
-            {/* FORM */}
             {phase === "form" && (
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="text-center">
                   <div className="text-3xl">📍</div>
                   <h2 className="text-xl font-bold text-red-400 mt-1">Location Captured!</h2>
-                  <p className="text-white/50 text-xs mt-1">{coords?.lat.toFixed(5)}, {coords?.lng.toFixed(5)}</p>
                 </div>
+                
                 <div>
-                  <label className="text-xs text-white/60 block mb-1">Your Name (Optional)</label>
-                  <input type="text" value={form.name} onChange={e => setForm({...form, name: e.target.value})} placeholder="e.g. Ramesh Kumar" className="w-full bg-white/10 border border-white/20 rounded-lg p-2.5 text-sm focus:outline-none focus:border-red-500" />
+                  <label className="text-xs text-white/60 block mb-1">Required Help Category *</label>
+                  <select value={form.helpType} onChange={e => setForm({...form, helpType: e.target.value})} className="w-full bg-white/10 border border-white/20 rounded-lg p-2.5 text-sm focus:outline-none focus:border-red-500 text-white font-medium">
+                    {helpCategories.map(cat => <option key={cat} value={cat} className="bg-gray-900">{cat}</option>)}
+                  </select>
                 </div>
+
                 <div>
-                  <label className="text-xs text-white/60 block mb-1">Phone Number (Optional)</label>
-                  <input type="tel" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} placeholder="e.g. 9876543210" className="w-full bg-white/10 border border-white/20 rounded-lg p-2.5 text-sm focus:outline-none focus:border-red-500" />
+                  <label className="text-xs text-white/60 block mb-1">Upload Photo of Situation (Optional)</label>
+                  <input type="file" accept="image/*" capture="environment" onChange={handleImageUpload} className="w-full text-xs text-white/50 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-white/10 file:text-white hover:file:bg-white/20 cursor-pointer" />
+                  {imageString && <img src={imageString} alt="Preview" className="mt-2 h-20 w-auto rounded border border-white/20 object-cover" />}
                 </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-xs text-white/60 block mb-1">Your Name</label>
+                    <input type="text" value={form.name} onChange={e => setForm({...form, name: e.target.value})} placeholder="Optional" className="w-full bg-white/10 border border-white/20 rounded-lg p-2 text-sm focus:outline-none focus:border-red-500" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-white/60 block mb-1">Phone Number</label>
+                    <input type="tel" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} placeholder="Optional" className="w-full bg-white/10 border border-white/20 rounded-lg p-2 text-sm focus:outline-none focus:border-red-500" />
+                  </div>
+                </div>
+
                 <div>
-                  <label className="text-xs text-white/60 block mb-1">Emergency Description (Optional)</label>
-                  <textarea value={form.message} onChange={e => setForm({...form, message: e.target.value})} placeholder="e.g. House flooded, need evacuation" rows={2} className="w-full bg-white/10 border border-white/20 rounded-lg p-2.5 text-sm focus:outline-none focus:border-red-500 resize-none" />
+                  <label className="text-xs text-white/60 block mb-1">Additional Details (Optional)</label>
+                  <textarea value={form.message} onChange={e => setForm({...form, message: e.target.value})} placeholder="e.g. 3 people trapped on roof" rows={2} className="w-full bg-white/10 border border-white/20 rounded-lg p-2.5 text-sm focus:outline-none focus:border-red-500 resize-none" />
                 </div>
-                <div className="flex gap-3">
+                
+                <div className="flex gap-3 pt-2">
                   <button type="button" onClick={reset} className="flex-1 py-3 bg-white/10 hover:bg-white/20 rounded-lg font-medium transition-colors text-sm">Cancel</button>
-                  <button type="submit" className="flex-1 py-3 bg-red-600 hover:bg-red-700 rounded-lg font-bold text-sm transition-colors">🆘 Send SOS Now</button>
+                  <button type="submit" className="flex-1 py-3 bg-red-600 hover:bg-red-700 rounded-lg font-bold text-sm transition-colors shadow-lg shadow-red-900/50">🆘 Send SOS</button>
                 </div>
               </form>
             )}
 
-            {/* SENDING */}
             {phase === "sending" && (
               <div className="text-center space-y-4 py-4">
                 <div className="text-4xl animate-bounce">📤</div>
-                <p className="text-white/80 font-medium">Sending your SOS alert...</p>
+                <p className="text-white/80 font-medium">Transmitting Data & Images...</p>
               </div>
             )}
 
-            {/* SUCCESS */}
             {phase === "success" && (
               <div className="text-center space-y-4 py-4">
                 <div className="text-5xl">✅</div>
                 <h2 className="text-2xl font-bold text-green-400">Help is Coming!</h2>
-                <p className="text-white/70 text-sm">Your location has been sent to disaster management authorities. A rescue team will be dispatched to your coordinates.</p>
-                <p className="text-white/50 text-xs">Keep your phone on and stay in a safe location if possible.</p>
+                <p className="text-white/70 text-sm">Your location and details have been sent to disaster management authorities.</p>
                 <button onClick={reset} className="w-full py-3 bg-green-700 hover:bg-green-600 rounded-lg font-bold transition-colors">OK</button>
               </div>
             )}
 
-            {/* ERROR */}
             {phase === "error" && (
               <div className="text-center space-y-4 py-4">
                 <div className="text-5xl">⚠️</div>
-                <h2 className="text-xl font-bold text-amber-400">Could Not Send SOS</h2>
+                <h2 className="text-xl font-bold text-amber-400">Transmission Failed</h2>
                 <p className="text-white/70 text-sm">{errorMsg}</p>
                 <p className="text-red-400 font-bold">📞 Call 112 immediately!</p>
                 <button onClick={reset} className="w-full py-3 bg-white/10 hover:bg-white/20 rounded-lg font-medium transition-colors">Close</button>
