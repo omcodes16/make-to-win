@@ -98,7 +98,7 @@ export default function AlertsScreen() {
     const severeThreshold = isProb ? 80 : 40;
     const cautionThreshold = isProb ? 50 : 15;
     
-    const probValue = weather.daily.precipitationProbabilityMax?.[0] || (isProb ? maxRain : (maxRain > 10 ? 90 : Math.round((maxRain/40)*100)));
+    const probValue = weather.daily.precipProbMax?.[0] !== undefined ? weather.daily.precipProbMax[0] : (isProb ? maxRain : (maxRain > 10 ? 90 : Math.round((maxRain/40)*100)));
     const rainRange = isProb ? 'Unknown' : `${Math.floor(maxRain * 0.8)}-${Math.ceil(maxRain * 1.2)}`;
     const actualRainDisplay = isProb ? 'N/A' : maxRain.toFixed(1);
 
