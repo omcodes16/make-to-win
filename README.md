@@ -202,6 +202,36 @@ sequenceDiagram
 | Direct IMD API / Satellite Imagery Integration | Replaces generalized Open-Meteo aggregation with official Indian Meteorological Department (IMD) radar and satellite endpoints for greater local authority. | Medium |
 | Aggressive Redis Caching Layer | Caches geocoding and weather responses to dramatically reduce third-party API costs and improve response latency during traffic spikes. | Low |
 
+## 🚀 What's Built & The Vision Ahead
+
+WeatherGPT already ships a fully functional AI-powered weather advisory platform covering agriculture, aviation, flood, and marine use-cases — built and working end-to-end, not just mocked UI.
+
+### ✅ What's Complete
+
+| Feature | Description | Tech Behind It |
+|---------|-------------|----------------|
+| **Conversational AI Weather Chat** | Users can ask natural language questions ("Will it rain tomorrow?") and get hyper-local, accurate answers. | Groq/Gemini LLMs + Open-Meteo API function calling. |
+| **Context-Aware Profiles** | Advisory responses radically adapt depending on if the user is a Farmer, Fisherman, Pilot, or General user. | Prompt engineering with dynamic persona injection. |
+| **Severe Weather & Authority Alerts** | Real-time warnings for extreme WMO conditions and a portal for authorities to push custom alerts. | WMO code triggers + NDMA Sachet fetcher + Manager JSON API. |
+| **Multilingual Voice Support** | Natively understands and speaks English, Hindi, Bengali, and Assamese. | Google Text-to-Speech (TTS) + LLM translation logic. |
+| **Live Radar & Weather Dashboard** | Interactive map for precipitation tracking and dynamic charts for daily forecasts. | React-Leaflet, OpenStreetMap, Recharts. |
+| **Historical Climate Tracking** | Analyzes past weather data trends and provides accuracy tracking for previous forecasts. | Open-Meteo Archive API + Backend Accuracy Tracker. |
+
+### 🇮🇳 Future Vision — Scaling for India
+
+Beyond solving the immediate problem statement, here's how we envision WeatherGPT evolving into critical national infrastructure for climate resilience in India.
+
+| Future Upgrade | Vision & Impact for India | Feasibility Timeline |
+|----------------|---------------------------|----------------------|
+| **Direct IMD Data Integration** | Replaces aggregated open-source weather data with official India Meteorological Department (IMD) feeds to guarantee government-grade accuracy, legitimacy, and regulatory compliance. | Short-term (0-6mo) |
+| **SMS / IVR Fallback Alerts** | Bridges the extreme digital divide by ensuring critical flood/cyclone warnings reach non-smartphone users and feature phones in the deepest rural pockets. | Mid-term (6-18mo) |
+| **AI Tuned to Indian Crop Calendars** | Evolving the farmer profile by fine-tuning the LLM specifically on localized Rabi/Kharif sowing cycles and regional monsoon patterns rather than generic global models. | Mid-term (6-18mo) |
+| **22 Scheduled Languages Expansion** | Expanding NLP and TTS support to cover all official Indian languages, making the platform universally accessible across every state. | Short-term (0-6mo) |
+| **Village-Level Micro-Climate Sensors** | Fusing satellite data with on-the-ground IoT weather sensors to provide hyper-local (village-level) accuracy, rather than interpolating from distant city-level weather stations. | Long-term (18mo+) |
+| **Kisan Call Center Integration** | Partnering with existing government agricultural helplines to provide human operators with AI-assisted weather intelligence dashboards for faster farmer response times. | Long-term (18mo+) |
+
+This roadmap reflects our intent to build not just a hackathon prototype, but a foundation for a national-scale climate resilience platform — because weather intelligence should be accessible to every farmer, pilot, and citizen in India, regardless of language, connectivity, or device.
+
 ### Team
 - **Team Name:** [VERIFY: Add your SIH Team Name here]
 - **Members:** [VERIFY: Add team member names here]
