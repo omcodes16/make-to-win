@@ -63,18 +63,18 @@ export default function AssistantCard({ message, isLatest }) {
   }
 
   return (
-    <div className="flex justify-start mb-6 animate-slide-up">
-      <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 flex items-center justify-center shadow-lg border border-white/10 mr-3 flex-shrink-0">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white"><rect x="3" y="11" width="18" height="10" rx="2" /><circle cx="12" cy="5" r="2" /><path d="M12 7v4" /><line x1="8" y1="16" x2="8.01" y2="16" /><line x1="16" y1="16" x2="16.01" y2="16" /></svg>
+    <div className="flex justify-start mb-4 sm:mb-6 animate-slide-up">
+      <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center ai-avatar-glow border border-indigo-400/30 mr-2 sm:mr-3 flex-shrink-0">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white sm:w-5 sm:h-5"><rect x="3" y="11" width="18" height="10" rx="2" /><circle cx="12" cy="5" r="2" /><path d="M12 7v4" /><line x1="8" y1="16" x2="8.01" y2="16" /><line x1="16" y1="16" x2="16.01" y2="16" /></svg>
       </div>
-      <div className="max-w-[85%] space-y-2">
+      <div className="max-w-[90%] sm:max-w-[85%] space-y-2">
         {/* Main response card */}
-        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl rounded-tl-sm shadow-[0_8px_30px_rgb(0,0,0,0.12)] overflow-hidden">
+        <div className="glass-ai-card rounded-2xl sm:rounded-3xl rounded-tl-sm">
           {/* Conversational answer */}
-          <div className="px-5 pt-4 pb-3 flex justify-between items-start gap-4">
+          <div className="px-4 py-3 sm:px-5 sm:pt-4 sm:pb-3 flex justify-between items-start gap-3 sm:gap-4">
             <div className="flex-1 flex items-start gap-2">
-              <span className={`w-2 h-2 rounded-full mt-2 shrink-0 ${confidence === "low" ? "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]" : confidence === "medium" ? "bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.6)]" : "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]"}`} title={`Forecast Confidence: ${confidence.toUpperCase()}`}></span>
-              <p className="text-[15px] text-white leading-relaxed">{text}</p>
+              <span className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full mt-1.5 sm:mt-2 shrink-0 ${confidence === "low" ? "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]" : confidence === "medium" ? "bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.6)]" : "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]"}`} title={`Forecast Confidence: ${confidence.toUpperCase()}`}></span>
+              <p className="text-sm sm:text-[15px] text-white leading-relaxed">{text}</p>
             </div>
             <button 
               onClick={handlePlayToggle}
@@ -173,10 +173,10 @@ export default function AssistantCard({ message, isLatest }) {
                 key={i}
                 onClick={() => handleChipClick(q)}
                 disabled={clickedChip !== null}
-                className={`text-xs px-3.5 py-2 rounded-full border transition-all text-left max-w-full truncate ${
+                className={`text-xs px-3.5 py-2 rounded-full border transition-all text-left max-w-full truncate shimmer-hover ${
                   clickedChip === q
-                    ? 'bg-blue-600/50 border-blue-400 text-white scale-95 shadow-[0_0_15px_rgba(37,99,235,0.4)]'
-                    : 'bg-white/10 border-white/20 text-white/80 hover:bg-white/20 hover:text-white shadow-sm hover:scale-105'
+                    ? 'bg-indigo-600/50 border-indigo-400 text-white scale-95 shadow-[0_0_15px_rgba(99,102,241,0.4)]'
+                    : 'glass-card border-white/10 text-white/80 hover:bg-white/10 hover:text-white hover:border-indigo-400/30 hover:scale-105'
                 }`}
               >
                 {q}

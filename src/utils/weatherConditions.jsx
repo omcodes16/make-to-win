@@ -84,16 +84,25 @@ const WMO_CODE_MAP = {
 /**
  * Get weather condition info from WMO code.
  */
-export function getWeatherInfo(code, lang = 'en') {
+export function getWeatherInfo(code, lang = 'en', isDay = true) {
   const info = WMO_CODE_MAP[code] || { condition: 'clear', icon: <img src="https://cdn.jsdelivr.net/gh/basmilius/weather-icons@latest/production/fill/all/clear-day.svg" alt="Clear" className="w-[1.2em] h-[1.2em] drop-shadow-md inline-block align-middle" />, key: 'unknown' };
   
+  // Clone to avoid mutating the constant
+  const result = { ...info };
+
+  if (!isDay && result.icon && result.icon.props && result.icon.props.src) {
+    if (result.icon.props.src.includes('-day.svg')) {
+      const newSrc = result.icon.props.src.replace('-day.svg', '-night.svg');
+      result.icon = React.cloneElement(result.icon, { src: newSrc });
+    }
+  }
+
   // Get translation dictionary for language, fallback to English
   const dict = WEATHER_CONDITIONS_I18N[lang] || WEATHER_CONDITIONS_I18N['en'];
   
-  return {
-    ...info,
-    label: dict[info.key] || WEATHER_CONDITIONS_I18N['en'][info.key] || 'Unknown'
-  };
+  result.label = dict[info.key] || WEATHER_CONDITIONS_I18N['en'][info.key] || 'Unknown';
+  
+  return result;
 }
 
 /**

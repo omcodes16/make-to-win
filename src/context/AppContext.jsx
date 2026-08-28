@@ -1,28 +1,45 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import { safeLoad, safeSave } from '../utils/cache';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HOW THE CACHE WORKS:
+//   Every item saved to localStorage is tagged with a version number (in cache.js).
+//   On startup, if the stored version doesn't match → data is discarded automatically.
+//
+//   TO FIX FUTURE CRASHES FROM DATA STRUCTURE CHANGES:
+//   Just open src/utils/cache.js and bump CACHE_VERSION by 1. That's it.
+// ─────────────────────────────────────────────────────────────────────────────
 
 const AppContext = createContext();
 
+// ─────────────────────────────────────────────────────────────────────────────
+// INITIAL STATE
+// ─────────────────────────────────────────────────────────────────────────────
 const initialState = {
-  activeTab: 'chat', // 'chat' or 'stage'
-  weatherStageData: JSON.parse(localStorage.getItem('weathergpt-stage-cache') || 'null'),
+  activeTab: 'chat',
+  weatherStageData: safeLoad('weathergpt-stage-cache', null),
   language: localStorage.getItem('weathergpt-lang') || 'en',
-  messages: [],   // { id, role: 'user'|'assistant'|'error', text, data?, advisory?, severity?, timestamp }
+  messages: [],
   isLoading: false,
   currentWeather: null,
-  governmentAlerts: [],    // { condition, temperature, humidity, windSpeed, rainChance, icon, locationName }
-  weatherCondition: 'clear', // drives Sky Band: 'clear'|'cloudy'|'rain'|'storm'|'severe'
-  severeAlert: null,   // { summary, detail, action } or null
+  governmentAlerts: [],
+  weatherCondition: 'clear',
+  severeAlert: null,
   isOnboarded: localStorage.getItem('weathergpt-onboarded') === 'true',
   isOnline: navigator.onLine,
   isLargeText: localStorage.getItem('weathergpt-largetext') === 'true',
   isHighContrast: localStorage.getItem('weathergpt-highcontrast') === 'true',
-  lastCachedResponse: JSON.parse(localStorage.getItem('weathergpt-cache') || 'null'),
-  savedLocations: JSON.parse(localStorage.getItem('weathergpt-saved-locations') || '[]'), // [{ name, lat, lng }]
-  userProfile: localStorage.getItem('weathergpt-profile') || 'general', // 'general', 'farmer', 'fisherman'
+  lastCachedResponse: safeLoad('weathergpt-cache', null),
+  savedLocations: safeLoad('weathergpt-saved-locations', []),
+  userProfile: localStorage.getItem('weathergpt-profile') || 'general',
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// REDUCER
+// ─────────────────────────────────────────────────────────────────────────────
 function appReducer(state, action) {
   switch (action.type) {
+
     case 'SET_GOVERNMENT_ALERTS':
       return { ...state, governmentAlerts: action.payload };
 
@@ -34,7 +51,7 @@ function appReducer(state, action) {
       return { ...state, activeTab: action.payload };
 
     case 'SET_WEATHER_STAGE_DATA':
-      localStorage.setItem('weathergpt-stage-cache', JSON.stringify(action.payload));
+      safeSave('weathergpt-stage-cache', action.payload);
       return { ...state, weatherStageData: action.payload };
 
     case 'SET_LANGUAGE':
@@ -72,9 +89,8 @@ function appReducer(state, action) {
         suggestedQuestions: Array.isArray(suggestedQuestions) ? suggestedQuestions : [],
         timestamp: new Date().toISOString(),
       };
-      // Cache last successful response
       const cache = { ...newMsg, cachedAt: new Date().toISOString() };
-      localStorage.setItem('weathergpt-cache', JSON.stringify(cache));
+      safeSave('weathergpt-cache', cache);
       return {
         ...state,
         messages: [...state.messages, newMsg],
@@ -124,18 +140,17 @@ function appReducer(state, action) {
     }
 
     case 'SAVE_LOCATION': {
-      const loc = action.payload; // { name, lat, lng }
-      // Remove duplicate if exists, then prepend, cap at 5
+      const loc = action.payload;
       const filtered = state.savedLocations.filter(l => l.name !== loc.name);
       const updated = [loc, ...filtered].slice(0, 5);
-      localStorage.setItem('weathergpt-saved-locations', JSON.stringify(updated));
+      safeSave('weathergpt-saved-locations', updated);
       return { ...state, savedLocations: updated };
     }
 
     case 'REMOVE_LOCATION': {
-      const name = action.payload; // location name string
+      const name = action.payload;
       const remaining = state.savedLocations.filter(l => l.name !== name);
-      localStorage.setItem('weathergpt-saved-locations', JSON.stringify(remaining));
+      safeSave('weathergpt-saved-locations', remaining);
       return { ...state, savedLocations: remaining };
     }
 
@@ -144,24 +159,25 @@ function appReducer(state, action) {
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// PROVIDER
+// ─────────────────────────────────────────────────────────────────────────────
 export function AppProvider({ children }) {
   const [state, dispatch] = useReducer(appReducer, initialState);
 
-  // Listen for online/offline events
   useEffect(() => {
-    const handleOnline = () => dispatch({ type: 'SET_ONLINE', payload: true });
+    const handleOnline  = () => dispatch({ type: 'SET_ONLINE', payload: true });
     const handleOffline = () => dispatch({ type: 'SET_ONLINE', payload: false });
-    window.addEventListener('online', handleOnline);
+    window.addEventListener('online',  handleOnline);
     window.addEventListener('offline', handleOffline);
     return () => {
-      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('online',  handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
 
-  // Apply body classes for accessibility
   useEffect(() => {
-    document.body.classList.toggle('large-text', state.isLargeText);
+    document.body.classList.toggle('large-text',    state.isLargeText);
     document.body.classList.toggle('high-contrast', state.isHighContrast);
   }, [state.isLargeText, state.isHighContrast]);
 

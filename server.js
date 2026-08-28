@@ -364,11 +364,21 @@ app.get("/api/accuracy", (req, res) => {
 
 app.post('/api/chat', async (req, res) => {
   const { message, language, weatherData, history = [], profile = 'general' } = req.body;
-  const apiKey = process.env.GROQ_API_KEY;
+  const geminiKey = process.env.GEMINI_API_KEY;
+  const groqKey = process.env.GROQ_API_KEY;
 
-  if (!apiKey) {
-    return res.status(500).json({ error: 'Groq API key not configured. Add GROQ_API_KEY to .env file.' });
+  if (!geminiKey && !groqKey) {
+    return res.status(500).json({ error: 'No AI API key configured. Add GEMINI_API_KEY or GROQ_API_KEY to .env file.' });
   }
+
+  // Select the active API — prefer GROQ (no quota limits on free tier), fall back to Gemini
+  const useGroq = !!groqKey;
+  const apiKey = useGroq ? groqKey : geminiKey;
+  const apiBase = useGroq
+    ? 'https://api.groq.com/openai/v1/chat/completions'
+    : 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
+  // qwen3.8-27b supports function/tool calling; groq/compound does not
+  const apiModel = useGroq ? 'qwen/qwen3.8-27b' : 'gemini-3.6-flash';
 
   let finalContent = null;
 
@@ -376,7 +386,20 @@ app.post('/api/chat', async (req, res) => {
     // ---------------------------------------------------------
     // PRIMARY STRATEGY: FUNCTION CALLING LOOP
     // ---------------------------------------------------------
-    const locHint = weatherData?.location ? `\n(Hint: The user's location is generally ${weatherData.location}${weatherData.state ? ', ' + weatherData.state : ''}. Use tools to fetch precise data if needed.)` : '';
+    let localContext = '';
+    const locNameLower = (weatherData?.location || '').toLowerCase();
+    
+    if (locNameLower.includes('betul')) {
+      localContext = '\n[LOCAL GEOGRAPHY (BETUL): Tapti and Machna rivers originate near Betul in the Satpura range. Mention river conditions or tribal agriculture (Soyabean, Maize) if relevant to the query.]';
+    } else if (locNameLower.includes('ujjain')) {
+      localContext = '\n[LOCAL GEOGRAPHY (UJJAIN): Located on the banks of the Kshipra river. Mention Kshipra river water levels and Malwa plateau agricultural impact if relevant.]';
+    } else if (locNameLower.includes('indore')) {
+      localContext = '\n[LOCAL GEOGRAPHY (INDORE): Located near Khan and Saraswati rivers in Malwa plateau. Mention urban heat island effect or local crop conditions.]';
+    } else if (locNameLower.includes('guwahati') || locNameLower.includes('assam')) {
+      localContext = '\n[LOCAL GEOGRAPHY (ASSAM): Brahmaputra river dominates the landscape. Flood risks and tea garden impacts are highly relevant.]';
+    }
+    
+    const locHint = weatherData?.location ? `\n(Hint: The user's location is generally ${weatherData.location}${weatherData.state ? ', ' + weatherData.state : ''}. Use tools to fetch precise data if needed.)${localContext}` : '';
     const initialUserPrompt = `User question (language: ${language}): "${message}"${locHint}`;
 
     let messages = [
@@ -394,14 +417,14 @@ app.post('/api/chat', async (req, res) => {
     }
 
     while (loopCount < MAX_LOOPS) {
-      const response = await fetchWithRetry('https://api.groq.com/openai/v1/chat/completions', {
+      const response = await fetchWithRetry(apiBase, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${apiKey}`
         },
         body: JSON.stringify({
-          model: 'openai/gpt-oss-120b',
+          model: apiModel,
           messages: messages,
           tools: WEATHER_TOOLS,
           tool_choice: 'auto',
@@ -411,7 +434,7 @@ app.post('/api/chat', async (req, res) => {
       });
 
       if (!response.ok) {
-        throw new Error(`Groq API error during tool loop: ${response.status} ${await response.text()}`);
+        throw new Error(`AI API error during tool loop: ${response.status} ${await response.text()}`);
       }
 
       const data = await response.json();
@@ -420,10 +443,10 @@ app.post('/api/chat', async (req, res) => {
       console.log(`[DEBUG] Loop ${loopCount} responseMessage:`, JSON.stringify(responseMessage));
 
       if (!responseMessage) {
-        throw new Error('Empty response from Groq');
+        throw new Error('Empty response from AI');
       }
 
-      // Check if Groq wants to call tools
+      // Check if the model wants to call tools
       if (responseMessage.tool_calls && responseMessage.tool_calls.length > 0) {
         messages.push(responseMessage); // Add assistant's tool request to history
 
@@ -461,7 +484,7 @@ app.post('/api/chat', async (req, res) => {
         // No tool calls -> final answer!
         finalContent = responseMessage.content;
         if (!finalContent) {
-           console.log('GROQ RETURNED EMPTY CONTENT. Full response:', JSON.stringify(responseMessage));
+           console.log('AI RETURNED EMPTY CONTENT. Full response:', JSON.stringify(responseMessage));
         }
         break;
       }
@@ -508,11 +531,11 @@ Current weather data (Fallback):
 ${heatIndexNote ? '- ' + heatIndexNote : ''}
 ${modelNote}`;
 
-      const fallbackRes = await fetchWithRetry('https://api.groq.com/openai/v1/chat/completions', {
+      const fallbackRes = await fetchWithRetry(apiBase, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
         body: JSON.stringify({
-          model: 'openai/gpt-oss-120b',
+          model: apiModel,
           messages: [
             { role: 'system', content: SYSTEM_PROMPT + `\n\nActive User Profile: ${profile.toUpperCase()}\n\nCRITICAL INSTRUCTION: DO NOT CALL ANY TOOLS. You are in fallback mode. Answer the user directly using the provided Current weather data (Fallback).` },
             ...history,
@@ -597,6 +620,36 @@ ${modelNote}`;
 
 // GET /api/news
 // Fetches real-time weather & disaster news for India via Google News RSS
+
+// GET /api/national-alerts
+// Uses Gemini to determine current top 3 high-risk states in India realistically
+app.get('/api/national-alerts', async (req, res) => {
+  try {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) return res.json([{ state: "Assam", level: "High" }, { state: "West Bengal", level: "High" }, { state: "Bihar", level: "Moderate" }]);
+
+    const response = await fetchWithRetry('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+      body: JSON.stringify({
+        model: 'gemini-3.6-flash',
+        messages: [{
+          role: 'system',
+          content: 'You are a meteorologist. Output ONLY a valid JSON array of the 3 Indian states with the highest weather risks today based on current season/events. Each object must have: "state" (string), "level" (must be "Severe", "High", or "Moderate"). No markdown, no other text.'
+        }],
+        temperature: 0.1
+      })
+    });
+    
+    if (!response.ok) throw new Error('API failed');
+    const data = await response.json();
+    let content = data.choices[0].message.content.replace(/```json\n?|\n?```/g, '').trim();
+    res.json(JSON.parse(content));
+  } catch (err) {
+    console.error('National alerts error:', err);
+    res.json([{ state: "Assam", level: "High" }, { state: "West Bengal", level: "High" }, { state: "Bihar", level: "Moderate" }]);
+  }
+});
 
 // POST /api/tts
 // Uses Google TTS to generate high-quality audio buffers for any language

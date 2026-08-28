@@ -13,7 +13,7 @@ export default function SevereAlertBanner() {
   return (
     <div className="mx-3 mb-1 space-y-2">
       {hasGovAlerts && state.governmentAlerts.map((alert, idx) => (
-        <div key={idx} className="bg-red-600 text-white rounded-bubble overflow-hidden shadow-lg border border-red-500">
+        <div key={idx} className="bg-red-950/60 glass-alert text-white rounded-3xl overflow-hidden border-red-500/40">
           <button
             onClick={() => setGovExpanded(!govExpanded)}
             className="w-full flex items-center justify-between px-4 py-3 text-left"
@@ -49,7 +49,7 @@ export default function SevereAlertBanner() {
       ))}
 
       {state.severeAlert && (
-        <div className={`${state.severeAlert.isSevere !== false ? 'bg-clay' : 'bg-amber'} text-white rounded-bubble overflow-hidden shadow-lg`}>
+        <div className={`${state.severeAlert.isSevere !== false ? 'bg-red-950/50' : 'bg-amber-950/50'} glass-alert text-white rounded-3xl overflow-hidden`}>
           <button
             onClick={() => setExpanded(!expanded)}
             className="w-full flex items-center justify-between px-4 py-3 text-left"
@@ -73,7 +73,7 @@ export default function SevereAlertBanner() {
             <div className="px-4 pb-3 space-y-2 border-t border-white/20 pt-2">
               <p className="text-sm text-white/90">{state.severeAlert.detail}</p>
               {state.severeAlert.action && (
-                <p className="text-sm font-medium bg-white/15 rounded-lg px-3 py-2">
+                <p className="text-sm font-medium bg-white/10 backdrop-blur-md rounded-xl px-3 py-2 border border-white/10">
                   🛡️ {state.severeAlert.action}
                 </p>
               )}

@@ -4,7 +4,7 @@ import RadarMap from './RadarMap';
 import HistoricalAnalytics from './HistoricalAnalytics';
 
 import { geocodeLocation, getWeather } from '../services/weatherApi';
-import { getWeatherInfo } from '../utils/weatherConditions';
+import { getWeatherInfo, checkSeverity } from '../utils/weatherConditions';
 import { UI_TRANSLATIONS } from '../utils/translations';
 import { SPEECH_LANG_CODES } from '../utils/constants';
 import { getTheme } from '../utils/themes';
@@ -55,27 +55,21 @@ export default function WeatherDashboard() {
   };
 
   if (!stageData) {
-    const defaultTheme = getTheme(null, null);
     return (
-      <div className="min-h-[100dvh] bg-surface-0 flex flex-col transition-colors duration-1000">
-        {/* Fixed Background Image (Hardware Accelerated, Smooth) */}
-        <div className="fixed inset-0 z-0 bg-cover bg-center transition-opacity duration-1000" style={{ backgroundImage: `url(${defaultTheme.bgImage})` }}></div>
-        <div className={`fixed inset-0 z-0 bg-gradient-to-b ${defaultTheme.overlay} pointer-events-none transition-colors duration-1000`}></div>
-        
-        <Header />
+      <div className="min-h-[100dvh] flex flex-col">
         
         <div className="relative z-10 flex-1 flex items-center justify-center p-4 sm:p-6 pb-24 md:pb-6 pt-20">
-          <div className="w-full max-w-md bg-white/5 backdrop-blur-xl p-6 sm:p-8 rounded-3xl border border-white/10 shadow-2xl">
-            <h2 className="text-xl sm:text-2xl font-semibold text-white mb-6 text-center">{t.searchPrompt}</h2>
+          <div className="w-full max-w-md glass-card p-6 sm:p-8 rounded-3xl shadow-2xl">
+            <h2 className="text-xl sm:text-2xl font-semibold text-white mb-6 text-center text-gradient-hero">{t.searchPrompt}</h2>
             <form onSubmit={handleSearch} className="flex gap-2">
               <input
                 type="text"
                 placeholder={t.searchPlaceholder}
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                className="flex-1 bg-black/30 border border-white/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors text-sm sm:text-base"
+                className="flex-1 glass-input rounded-xl px-4 py-3 text-white focus:outline-none transition-colors text-sm sm:text-base glow-focus"
               />
-              <button type="submit" className="px-4 sm:px-6 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-medium transition-colors text-sm sm:text-base">Go</button>
+              <button type="submit" className="px-4 sm:px-6 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-medium transition-all shadow-[0_0_15px_rgba(99,102,241,0.3)] hover:shadow-[0_0_25px_rgba(99,102,241,0.5)] text-sm sm:text-base">Go</button>
             </form>
           </div>
         
@@ -92,7 +86,8 @@ export default function WeatherDashboard() {
   const displayCode = isToday ? weather.weatherCode : weather.daily.weatherCode[selectedDay];
   const displayUv = isToday ? weather.uvIndex : weather.daily.uvIndexMax[selectedDay];
   
-  const weatherInfo = getWeatherInfo(displayCode, state.language);
+  const isDayCurrent = isToday ? weather.isDay : true;
+  const weatherInfo = getWeatherInfo(displayCode, state.language, isDayCurrent);
   const theme = getTheme({ ...weather, weatherCode: displayCode }, weatherInfo); // Pass mock weather with selected code
 
   // Generate hourly data (every 1 hour for next 12 hours instead of 3 hours)
@@ -104,7 +99,7 @@ export default function WeatherDashboard() {
     for (let i = 0; i < 12; i++) {
       if (currentHourIdx + i < weather.hourly.time.length) {
         const timeObj = new Date(weather.hourly.time[currentHourIdx + i]);
-        const wInfo = getWeatherInfo(weather.hourly.weatherCode[currentHourIdx + i], state.language);
+        const wInfo = getWeatherInfo(weather.hourly.weatherCode[currentHourIdx + i], state.language, weather.hourly.isDay[currentHourIdx + i]);
         hourlyData.push({
           timeLabel: i === 0 ? (state.language === 'hi' ? 'अब' : 'Now') : timeObj.toLocaleTimeString(locale, { hour: 'numeric', hour12: true }),
           temp: Math.round(weather.hourly.temperature[currentHourIdx + i]),
@@ -119,7 +114,7 @@ export default function WeatherDashboard() {
   if (weather && weather.daily) {
     for (let i = 0; i < 7; i++) {
       const dateObj = new Date(weather.daily.time[i]);
-      const wInfo = getWeatherInfo(weather.daily.weatherCode[i], state.language);
+      const wInfo = getWeatherInfo(weather.daily.weatherCode[i], state.language, true);
       dailyData.push({
         index: i,
         day: i === 0 ? t.today : dateObj.toLocaleDateString(locale, { weekday: 'short' }),
@@ -173,16 +168,8 @@ export default function WeatherDashboard() {
   // ──────────────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-[100dvh] bg-surface-0 text-white overflow-y-auto pb-24 md:pb-20 relative font-body transition-colors duration-1000">
-      {/* Fixed Background Image (Hardware Accelerated, Smooth) */}
-      <div className="fixed inset-0 z-0 bg-cover bg-center transition-opacity duration-1000" style={{ backgroundImage: `url(${theme.bgImage})` }}></div>
+    <div className="min-h-[100dvh] text-white overflow-y-auto pb-24 md:pb-20 relative font-body transition-colors duration-1000">
       
-      {/* Overlay Gradients */}
-      <div className={`fixed inset-0 z-0 bg-gradient-to-b ${theme.overlay} pointer-events-none transition-colors duration-1000`}></div>
-      <div className={`fixed inset-0 z-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] ${theme.accent} via-transparent to-transparent pointer-events-none transition-colors duration-1000`}></div>
-      
-      <Header />
-
       <div className="relative z-10 max-w-[1400px] mx-auto px-3 sm:px-6 pt-20 sm:pt-28 md:pt-32">
         
         {/* Search Bar */}
@@ -193,7 +180,7 @@ export default function WeatherDashboard() {
               placeholder={t.searchPlaceholder}
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              className="w-full bg-white/5 backdrop-blur-md border border-white/20 rounded-full px-5 sm:px-6 py-3 sm:py-3.5 text-sm text-white focus:outline-none focus:border-indigo-400 shadow-[0_0_20px_rgba(99,102,241,0.15)] transition-all placeholder:text-white/40 text-center"
+              className="w-full glass-input rounded-full px-5 sm:px-6 py-3 sm:py-3.5 text-sm text-white focus:outline-none shadow-[0_0_20px_rgba(99,102,241,0.15)] transition-all placeholder:text-white/40 text-center glow-focus"
             />
             <button type="submit" className="absolute right-4 sm:right-6 top-1/2 -translate-y-1/2 text-white/50 hover:text-white transition-colors">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
@@ -228,18 +215,18 @@ export default function WeatherDashboard() {
               </button>
             </div>
             <div className="flex items-center gap-2 sm:gap-4 mb-2">
-              <div className="text-7xl sm:text-[100px] lg:text-[120px] font-medium leading-none tracking-tighter drop-shadow-2xl">{displayTemp}°</div>
-              <div className="text-4xl sm:text-5xl lg:text-6xl drop-shadow-xl">{weatherInfo?.icon}</div>
+              <div className="text-6xl sm:text-[90px] lg:text-[110px] font-medium leading-none tracking-tighter drop-shadow-2xl">{displayTemp}°</div>
+              <div className="text-3xl sm:text-5xl lg:text-6xl drop-shadow-xl">{weatherInfo?.icon}</div>
             </div>
-            <div className="flex items-center gap-3 mt-2 flex-wrap">
-              <div className="text-lg sm:text-2xl font-medium tracking-wide drop-shadow-md">{weatherInfo?.label}</div>
-              <div className="bg-white/10 backdrop-blur-md px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium border border-white/10 shadow-sm">
+            <div className="flex items-center gap-2 sm:gap-3 mt-1 sm:mt-2 flex-wrap">
+              <div className="text-base sm:text-2xl font-medium tracking-wide drop-shadow-md">{weatherInfo?.label}</div>
+              <div className="bg-white/10 backdrop-blur-md px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-sm font-medium border border-white/10 shadow-sm">
                 {t.feelsLike} {displayFeelsLike}°
               </div>
               {/* Feature 3: Heat Index Risk Badge */}
               {heatRisk && (
-                <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs sm:text-sm font-semibold border backdrop-blur-md shadow-sm ${heatRisk.bg} ${heatRisk.border} ${heatRisk.color}`}>
-                  <span className={`w-2 h-2 rounded-full ${heatRisk.dot} shrink-0`}></span>
+                <div className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-sm font-semibold border backdrop-blur-md shadow-sm ${heatRisk.bg} ${heatRisk.border} ${heatRisk.color}`}>
+                  <span className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${heatRisk.dot} shrink-0`}></span>
                   {heatRisk.icon} Heat: {heatRisk.label}
                 </div>
               )}
@@ -255,10 +242,10 @@ export default function WeatherDashboard() {
               { icon: '💨', val: isToday ? `${weather.windSpeed} ${t.kmh}` : '--', lbl: t.windTab },
               { icon: '☀️', val: `${displayUv}`, lbl: 'UV Max' }
             ].map((stat, i) => (
-              <div key={i} className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-[1.5rem] sm:rounded-[2rem] p-3 sm:p-5 flex flex-col items-center justify-center min-w-[72px] sm:min-w-[100px] shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
-                <div className="text-xl sm:text-2xl mb-2 sm:mb-3 opacity-90">{stat.icon}</div>
-                <div className="font-semibold text-base sm:text-xl mb-0.5 sm:mb-1 whitespace-nowrap">{stat.val}</div>
-                <div className="text-white/50 text-[9px] sm:text-[11px] font-medium uppercase tracking-wider">{stat.lbl}</div>
+              <div key={i} className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl sm:rounded-[2rem] p-2.5 sm:p-5 flex flex-col items-center justify-center min-w-[64px] sm:min-w-[90px] shadow-[0_8px_30px_rgb(0,0,0,0.12)] shimmer-hover stat-card-hover">
+                <div className="text-lg sm:text-2xl mb-1 sm:mb-3 opacity-90">{stat.icon}</div>
+                <div className="font-semibold text-sm sm:text-xl mb-0.5 sm:mb-1 whitespace-nowrap">{stat.val}</div>
+                <div className="text-white/50 text-[8px] sm:text-[11px] font-medium uppercase tracking-wider">{stat.lbl}</div>
               </div>
             ))}
           </div>
@@ -269,7 +256,7 @@ export default function WeatherDashboard() {
 
         {/* Hourly Forecast */}
         {isToday && (
-          <div className="bg-white/5 backdrop-blur-2xl border border-indigo-400/30 rounded-3xl p-4 sm:p-6 mb-4 sm:mb-6 shadow-[0_0_25px_rgba(99,102,241,0.15)] relative overflow-hidden">
+          <div className="bg-white/5 backdrop-blur-md border border-indigo-400/30 rounded-3xl p-4 sm:p-6 mb-4 sm:mb-6 shadow-[0_0_25px_rgba(99,102,241,0.15)] relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-indigo-400/60 to-transparent"></div>
             <div className="text-white/80 font-medium mb-4 sm:mb-6 text-xs sm:text-sm tracking-wide">Hourly Forecast</div>
             <div className="flex justify-between items-center overflow-x-auto scrollbar-hide gap-3 sm:gap-6 pb-2">
@@ -285,77 +272,16 @@ export default function WeatherDashboard() {
           </div>
         )}
 
-        {/* Feature 1: Role-based Action Advisory & Profile Selector */}
-        <div className="mb-4 sm:mb-6">
-          <div className="flex justify-between items-center mb-2 px-1">
-            <div className="text-white/80 font-medium text-xs sm:text-sm tracking-wide">
-              {state.userProfile === 'farmer' ? '🌾' : state.userProfile === 'fisherman' ? '🎣' : state.userProfile === 'aviation' ? '✈️' : state.userProfile === 'urbanPlanning' ? '🏙️' : '🌍'} Action Advisory
-            </div>
-                          <div className="flex gap-2 items-center">
-                              <select 
-                value={state.userProfile}
-                onChange={(e) => dispatch({ type: 'SET_PROFILE', payload: e.target.value })}
-                className="bg-white/10 border border-white/20 text-white text-xs rounded-lg px-2 py-1 focus:outline-none focus:border-indigo-400"
-              >
-                <option value="general" className="bg-surface-2">General</option>
-                <option value="farmer" className="bg-surface-2">Farmer (किसान)</option>
-                <option value="fisherman" className="bg-surface-2">Fisherman (मछुआरा)</option>
-                <option value="aviation" className="bg-surface-2">Aviation (उड़ान)</option>
-                <option value="urbanPlanning" className="bg-surface-2">Urban Planner (शहर योजना)</option>
-              </select>
-                
-              </div>
-          </div>
-          
-          {activeAdvisory ? (
-            <div className={`backdrop-blur-2xl border rounded-3xl p-5 sm:p-6 shadow-xl relative overflow-hidden flex items-start sm:items-center gap-4
-              ${activeAdvisory.type === 'danger' ? 'bg-red-950/40 border-red-500/50' : 
-                activeAdvisory.type === 'caution' ? 'bg-amber-950/40 border-amber-500/40' : 
-                'bg-emerald-950/40 border-emerald-500/40'}`}>
-              <div className={`text-3xl sm:text-4xl p-3 rounded-2xl shrink-0
-                ${activeAdvisory.type === 'danger' ? 'bg-red-500/20' : 
-                  activeAdvisory.type === 'caution' ? 'bg-amber-500/20' : 
-                  'bg-emerald-500/20'}`}>
-                {activeAdvisory.icon === 'storm' ? '⛈️' :
-                 activeAdvisory.icon === 'rain' ? '🌧️' :
-                 activeAdvisory.icon === 'drizzle' ? '🌦️' :
-                 activeAdvisory.icon === 'uv' ? '☀️' :
-                 activeAdvisory.icon === 'wind' ? '💨' :
-                 activeAdvisory.icon === 'fungal' ? '🍄' :
-                 activeAdvisory.icon === 'fog' ? '🌫️' :
-                 activeAdvisory.icon === 'frost' ? '❄️' :
-                 activeAdvisory.icon === 'good' ? '✅' : '🌤️'}
-              </div>
-              <div className="flex-1">
-                <div className="text-xs sm:text-sm font-semibold uppercase tracking-wider mb-1 opacity-80">
-                  {state.userProfile === 'fisherman' 
-                    ? (lang === 'hi' ? 'मछुआरों के लिए सलाह' : lang === 'bn' ? 'মৎস্যজীবী পরামর্শ' : lang === 'as' ? 'মৎস্যজীৱীৰ পৰামৰ্শ' : 'Marine Advisory')
-                    : state.userProfile === 'aviation'
-                    ? (lang === 'hi' ? 'उड़ान सलाह' : lang === 'bn' ? 'বিমান পরামর্শ' : lang === 'as' ? 'বিমান পৰামৰ্শ' : 'Aviation Advisory')
-                    : state.userProfile === 'urbanPlanning'
-                    ? (lang === 'hi' ? 'नगर योजना सलाह' : lang === 'bn' ? 'নগর পরিকল্পনা পরামর্শ' : lang === 'as' ? 'নগৰ পৰিকল্পনা পৰামৰ্শ' : 'Urban Planning Advisory')
-                    : (lang === 'hi' ? 'किसान सलाह' : lang === 'bn' ? 'কৃষক পরামর্শ' : lang === 'as' ? 'কৃষক পৰামৰ্শ' : 'Farmer Advisory')}
-                </div>
-                <h3 className="text-base sm:text-lg font-bold mb-1 sm:mb-2">{activeAdvisory.title}</h3>
-                <p className="text-sm sm:text-base opacity-90 leading-relaxed">{activeAdvisory.advice}</p>
-              </div>
-            </div>
-          ) : (
-            <div className="backdrop-blur-2xl border border-white/10 rounded-3xl p-5 sm:p-6 shadow-xl flex items-center justify-center min-h-[100px] bg-white/5">
-              <p className="text-white/50 text-sm text-center">No specific advisory for general profile today. Enjoy the weather!</p>
-            </div>
-          )}
-        </div>
 
         {/* 7-Day Forecast */}
-        <div className="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl p-4 sm:p-6 mb-6 sm:mb-8 shadow-xl">
+        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-4 sm:p-6 mb-6 sm:mb-8 shadow-xl">
           <div className="text-white/80 font-medium mb-4 sm:mb-6 text-xs sm:text-sm tracking-wide">7-Day Forecast</div>
           <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-7 gap-2 sm:gap-4">
             {dailyData.map((day, i) => (
               <button
                 key={i}
                 onClick={() => setSelectedDay(i)}
-                className={`bg-white/5 border rounded-xl sm:rounded-2xl p-2.5 sm:p-5 flex flex-col items-center transition-all duration-300 ${selectedDay === i ? 'border-indigo-400/80 bg-indigo-900/40 shadow-[0_0_20px_rgba(99,102,241,0.3)] scale-[1.02]' : 'border-white/10 hover:bg-white/10'}`}
+                className={`bg-white/5 border rounded-xl sm:rounded-2xl p-2.5 sm:p-5 flex flex-col items-center transition-all duration-300 shimmer-hover ${selectedDay === i ? 'border-indigo-400/80 bg-indigo-900/40 shadow-[0_0_20px_rgba(99,102,241,0.3)] scale-[1.02]' : 'border-white/10 hover:bg-white/10 stat-card-hover'}`}
               >
                 <div className="text-[10px] sm:text-sm font-semibold text-white/80 mb-2 sm:mb-4">{day.day}</div>
                 <div className="text-2xl sm:text-4xl mb-2 sm:mb-5 drop-shadow-lg">{day.icon}</div>
@@ -372,7 +298,7 @@ export default function WeatherDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
           
           {/* Detailed Info */}
-          <div className="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl p-4 sm:p-6 shadow-xl flex flex-col gap-4 sm:gap-6">
+          <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-4 sm:p-6 shadow-xl flex flex-col gap-4 sm:gap-6">
             <div className="text-white/80 font-medium text-xs sm:text-sm tracking-wide">Detailed Conditions</div>
             <div className="flex justify-between items-center text-sm border-b border-white/10 pb-3 sm:pb-4">
               <span className="text-white/60 flex items-center gap-2 sm:gap-3 text-xs sm:text-sm"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Rain Probability</span>
@@ -412,7 +338,7 @@ export default function WeatherDashboard() {
           </div>
 
           {/* Radar */}
-          <div className="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl p-4 sm:p-6 shadow-xl flex flex-col min-h-[280px] sm:min-h-[320px]">
+          <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-4 sm:p-6 shadow-xl flex flex-col min-h-[280px] sm:min-h-[320px]">
             <div className="flex justify-between items-center mb-4 sm:mb-5">
               <span className="text-white/80 font-medium text-xs sm:text-sm tracking-wide">Live Weather Radar</span>
               <span className="bg-red-500/20 text-red-400 text-[10px] font-bold px-2 py-0.5 rounded uppercase border border-red-500/30 flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span> Live</span>
@@ -427,7 +353,7 @@ export default function WeatherDashboard() {
           {/* AQI & Sun/Moon */}
           <div className="flex flex-col gap-4 sm:gap-6">
             {isToday ? (
-              <div className="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl p-4 sm:p-6 shadow-xl">
+              <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-4 sm:p-6 shadow-xl">
                 <div className="text-white/80 font-medium text-xs sm:text-sm flex items-center gap-2 mb-3 sm:mb-4 tracking-wide">🍃 Air Quality</div>
                 <div className="flex items-baseline gap-2 sm:gap-3 mb-3 sm:mb-5">
                   <span className="text-4xl sm:text-5xl font-bold text-white tracking-tighter">{weather.aqi}</span>
@@ -443,47 +369,87 @@ export default function WeatherDashboard() {
                 </p>
               </div>
             ) : (
-              <div className="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl p-4 sm:p-6 shadow-xl flex items-center justify-center min-h-[140px] sm:min-h-[160px]">
+              <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-4 sm:p-6 shadow-xl flex items-center justify-center min-h-[140px] sm:min-h-[160px]">
                 <p className="text-white/50 text-sm text-center">AQI forecasting is not available for future dates.</p>
               </div>
             )}
 
-            <div className="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl p-4 sm:p-6 shadow-xl flex-1 flex flex-col justify-between">
-              <div className="text-white/80 font-medium text-xs sm:text-sm mb-4 sm:mb-6 flex items-center gap-2 tracking-wide">🌅 {t.sunrise} & {t.sunset}</div>
-              <div className="relative h-24 sm:h-28 w-full flex items-end justify-between px-2 pb-2 border-b border-dashed border-white/20">
-                <svg className="absolute inset-0 w-full h-full" preserveAspectRatio="none" viewBox="0 0 100 50">
-                  <path d="M 5 50 Q 50 -10 95 50" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5" strokeDasharray="3 3" />
+            <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-4 sm:p-6 shadow-xl flex-1 flex flex-col justify-between">
+              <div className="text-white/80 font-medium text-xs sm:text-sm mb-2 flex items-center gap-2 tracking-wide">🌅 {t.sunrise} & {t.sunset}</div>
+              <div className="relative h-40 sm:h-48 w-full flex items-center justify-center mt-2 sm:mt-0">
+                <svg className="absolute inset-0 w-full h-full" preserveAspectRatio="xMidYMid meet" viewBox="0 0 200 80">
+                  {/* Horizon Line */}
+                  <line x1="5" y1="40" x2="195" y2="40" stroke="rgba(255,255,255,0.15)" strokeWidth="1" strokeDasharray="3 4" />
+                  
+                  {/* Top Arc (Day) - Ellipse */}
+                  <path d="M 20 40 A 80 28 0 0 1 180 40" fill="none" stroke="rgba(251, 191, 36, 0.4)" strokeWidth="2" strokeDasharray="4 5" />
+                  
+                  {/* Bottom Arc (Night) - Ellipse */}
+                  <path d="M 180 40 A 80 28 0 0 1 20 40" fill="none" stroke="rgba(96, 165, 250, 0.3)" strokeWidth="2" strokeDasharray="4 5" />
+
                   {(() => {
-                    if (!isToday) return null; // Don't show live sun for future days
+                    if (!isToday) return null;
                     
                     const now = new Date().getTime();
                     const sunrise = new Date(weather.daily.sunrise[selectedDay]).getTime();
                     const sunset = new Date(weather.daily.sunset[selectedDay]).getTime();
                     
-                    // If before sunrise, sit at start. If after sunset, sit at end.
-                    let t_val = 0;
-                    if (now > sunset) t_val = 1;
-                    else if (now > sunrise) t_val = (now - sunrise) / (sunset - sunrise);
+                    let cx, cy, isNightIcon = false;
+                    if (now >= sunrise && now <= sunset) {
+                      // Day
+                      const t_val = (now - sunrise) / (sunset - sunrise);
+                      const angle = Math.PI - (t_val * Math.PI);
+                      cx = 100 + 80 * Math.cos(angle);
+                      cy = 40 - 28 * Math.sin(angle);
+                    } else {
+                      // Night
+                      isNightIcon = true;
+                      let t_night = 0;
+                      if (now > sunset) {
+                        const nextSunrise = sunrise + 86400000;
+                        t_night = (now - sunset) / (nextSunrise - sunset);
+                      } else {
+                        const prevSunset = sunset - 86400000;
+                        t_night = (now - prevSunset) / (sunrise - prevSunset);
+                      }
+                      t_night = Math.max(0, Math.min(1, t_night));
+                      const angle = t_night * Math.PI;
+                      cx = 100 + 80 * Math.cos(angle);
+                      cy = 40 + 28 * Math.sin(angle);
+                    }
                     
-                    // Quadratic bezier: M 5 50 Q 50 -10 95 50
-                    // x(t) = 5(1-t)^2 + 2*50(1-t)t + 95t^2 = 5 + 90t
-                    // y(t) = 50(1-t)^2 + 2(-10)(1-t)t + 50t^2 = 120t^2 - 120t + 50
-                    const cx = 5 + 90 * t_val;
-                    const cy = 120 * t_val * t_val - 120 * t_val + 50;
-                    
+                    const srStr = new Date(sunrise).toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit' });
+                    const ssStr = new Date(sunset).toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit' });
+
                     return (
-                      <circle cx={cx} cy={cy} r="5" fill="#E8A33D" filter="drop-shadow(0px 0px 4px rgba(232, 163, 61, 0.8))" className="transition-all duration-1000 ease-in-out" />
+                      <>
+                        {/* Sunrise / Sunset Labels */}
+                        <text x="50" y="32" fill="rgba(255,255,255,0.4)" fontSize="6" textAnchor="middle" fontWeight="bold" letterSpacing="1">{t.sunrise.toUpperCase()}</text>
+                        <text x="50" y="39" fill="white" fontSize="8" textAnchor="middle" fontWeight="bold">{srStr}</text>
+                        
+                        <text x="150" y="32" fill="rgba(255,255,255,0.4)" fontSize="6" textAnchor="middle" fontWeight="bold" letterSpacing="1">{t.sunset.toUpperCase()}</text>
+                        <text x="150" y="39" fill="white" fontSize="8" textAnchor="middle" fontWeight="bold">{ssStr}</text>
+
+                        {/* Animated Sun or Moon Shape */}
+                        <g transform={`translate(${cx}, ${cy})`}>
+                          {isNightIcon ? (
+                            <path d="M-2.5,-6 A 6 6 0 1 0 6 6 A 8 8 0 1 1 -2.5,-6 Z" fill="#BFDBFE" filter="drop-shadow(0px 0px 5px rgba(96,165,250,0.8))">
+                              <animate attributeName="opacity" values="0.7; 1; 0.7" dur="3s" repeatCount="indefinite" />
+                            </path>
+                          ) : (
+                            <>
+                              <circle r="7" fill="#FBBF24" filter="drop-shadow(0px 0px 6px rgba(245,158,11,0.9))">
+                                <animate attributeName="r" values="6; 8; 6" dur="2s" repeatCount="indefinite" />
+                                <animate attributeName="opacity" values="0.8; 1; 0.8" dur="2s" repeatCount="indefinite" />
+                              </circle>
+                              <circle r="4" fill="#FEF08A" />
+                            </>
+                          )}
+                        </g>
+                      </>
                     );
                   })()}
                 </svg>
-                <div className="flex flex-col items-center z-10 -mb-5">
-                  <span className="text-[9px] sm:text-[10px] text-white/50 mb-1 uppercase font-semibold tracking-wider">{t.sunrise}</span>
-                  <span className="text-xs sm:text-sm font-bold">{new Date(weather.daily.sunrise[selectedDay]).toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit' })}</span>
-                </div>
-                <div className="flex flex-col items-center z-10 -mb-5">
-                  <span className="text-[9px] sm:text-[10px] text-white/50 mb-1 uppercase font-semibold tracking-wider">{t.sunset}</span>
-                  <span className="text-xs sm:text-sm font-bold">{new Date(weather.daily.sunset[selectedDay]).toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit' })}</span>
-                </div>
               </div>
             </div>
           </div>

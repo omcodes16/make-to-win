@@ -130,13 +130,7 @@ export default function ReviewsScreen() {
   reviews.forEach(r => { if (ratingCounts[r.rating] !== undefined) ratingCounts[r.rating]++; });
 
   return (
-    <div className="min-h-[100dvh] bg-surface-0 text-white overflow-y-auto pb-24 md:pb-20 relative font-body transition-colors duration-1000">
-      {/* Background styling matching the dark theme */}
-      <div className="fixed inset-0 z-0 bg-cover bg-center transition-opacity duration-1000 opacity-30" style={{ backgroundImage: `url('/backgrounds/amoled_clear.jpg')` }}></div>
-      <div className="fixed inset-0 z-0 bg-gradient-to-b from-surface-0/80 via-surface-0/95 to-surface-0 pointer-events-none"></div>
-      <div className="fixed inset-0 z-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/20 via-transparent to-transparent pointer-events-none"></div>
-
-      <Header />
+    <div className="min-h-[100dvh] text-white overflow-y-auto pb-24 md:pb-20 relative font-body transition-colors duration-1000">
 
       <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 pt-24 sm:pt-32 pb-10">
         

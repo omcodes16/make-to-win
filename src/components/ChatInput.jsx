@@ -260,15 +260,15 @@ export default function ChatInput() {
         </div>
         <form 
           onSubmit={handleSend}
-          className="relative bg-white/5 backdrop-blur-xl border border-white/15 rounded-3xl p-1.5 flex items-center shadow-[0_0_20px_rgba(0,0,0,0.3)] transition-all focus-within:bg-white/10 focus-within:border-white/30"
+          className="relative glass-input rounded-full p-1.5 pl-3 flex items-center shadow-[0_8px_32px_rgba(0,0,0,0.4)] hover:shadow-[0_8px_32px_rgba(129,140,248,0.1)] transition-all duration-500 glow-focus"
         >
           <button
             type="button"
             onClick={handleVoiceInput}
             disabled={state.isLoading}
-            className={`w-10 h-10 flex items-center justify-center transition-colors ${
-              isListening ? 'text-red-400 animate-pulse' : 
-              isSpeaking ? 'text-amber-400 hover:text-amber-300' : 'text-white/50 hover:text-white'
+            className={`w-10 h-10 flex items-center justify-center rounded-full transition-all ${
+              isListening ? 'text-red-400 animate-pulse bg-red-500/10' : 
+              isSpeaking ? 'text-amber-400 hover:text-amber-300 bg-amber-500/10' : 'text-white/40 hover:text-white hover:bg-white/5'
             }`}
             aria-label={isListening ? 'Stop listening' : isSpeaking ? 'Stop speaking' : 'Voice input'}
           >
@@ -284,13 +284,13 @@ export default function ChatInput() {
             }}
             placeholder={placeholder}
             disabled={state.isLoading}
-            className="flex-1 bg-transparent px-3 py-2 text-white placeholder-white/40 focus:outline-none text-sm md:text-base"
+            className="flex-1 bg-transparent px-3 py-2 text-white placeholder-white/30 focus:outline-none text-sm md:text-base focus:ring-0"
           />
 
           <button
             type="submit"
             disabled={!input.trim() || state.isLoading}
-            className="w-10 h-10 flex items-center justify-center rounded-full bg-blue-600 text-white disabled:opacity-50 disabled:bg-white/10 hover:bg-blue-500 transition-colors shadow-lg"
+            className="w-10 h-10 flex items-center justify-center rounded-full bg-indigo-500 text-white disabled:opacity-30 disabled:bg-white/10 hover:bg-indigo-400 transition-all shadow-[0_0_15px_rgba(129,140,248,0.5)] hover:shadow-[0_0_25px_rgba(129,140,248,0.8)] active:scale-95"
           >
             {state.isLoading ? (
               <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

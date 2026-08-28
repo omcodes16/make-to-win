@@ -34,34 +34,22 @@ export default function WeatherScene({ condition, weatherCode }) {
         ></div>
       )}
 
-      {/* 3D Volumetric Clouds (CSS Box Shadow Magic) */}
+      {/* Optimized Clouds (Simpler CSS) */}
       {isCloudy && (
         <>
           <div className="absolute top-10 left-[-10%] opacity-80 animate-drift-slow z-20">
-            <div className="w-32 h-32 bg-white rounded-full relative"
+            <div className="w-32 h-32 bg-white/90 rounded-full relative blur-[2px]"
                  style={{
-                   boxShadow: `
-                     60px -20px 0 -10px white,
-                     100px 10px 0 10px white,
-                     150px -10px 0 -5px white,
-                     40px 10px 40px rgba(0,0,0,0.1),
-                     inset -10px -20px 20px rgba(0,0,0,0.05)
-                   `,
+                   boxShadow: `60px -20px 0 -10px rgba(255,255,255,0.9), 100px 10px 0 10px rgba(255,255,255,0.9), 150px -10px 0 -5px rgba(255,255,255,0.9)`,
                    filter: isRainy ? 'brightness(0.6)' : 'brightness(1)'
                  }}
             ></div>
           </div>
           
           <div className="absolute top-24 left-[-20%] opacity-60 animate-drift-fast z-10" style={{ transform: 'scale(1.5)' }}>
-            <div className="w-40 h-40 bg-white rounded-full relative"
+            <div className="w-40 h-40 bg-white/80 rounded-full relative blur-[4px]"
                  style={{
-                   boxShadow: `
-                     80px -30px 0 -10px white,
-                     130px 20px 0 20px white,
-                     190px -20px 0 -5px white,
-                     50px 20px 50px rgba(0,0,0,0.15),
-                     inset -20px -30px 30px rgba(0,0,0,0.1)
-                   `,
+                   boxShadow: `80px -30px 0 -10px rgba(255,255,255,0.8), 130px 20px 0 20px rgba(255,255,255,0.8), 190px -20px 0 -5px rgba(255,255,255,0.8)`,
                    filter: isRainy ? 'brightness(0.5)' : 'brightness(0.9)'
                  }}
             ></div>

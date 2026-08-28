@@ -1,101 +1,126 @@
 <div align="center">
-  <h1>🌦️ WeatherGPT</h1>
-  <p><strong>Next-Generation Multilingual Meteorological AI | Smart India Hackathon 2026</strong></p>
+  <img src="public/logo_new.jpg" alt="WeatherGPT Logo" width="120" />
+  <h1>WeatherGPT — SIH 2026</h1>
+  <p><strong>Advanced AI-Powered Weather & Disaster Management Platform for Northeast India</strong></p>
+
+  [![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
+  [![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=Vite&logoColor=white)](https://vitejs.dev/)
+  [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+  [![Node.js](https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
+  [![GROQ](https://img.shields.io/badge/GROQ_AI-F55036?style=for-the-badge&logo=ai&logoColor=white)](https://groq.com/)
 </div>
 
----
+<hr/>
 
-## 📖 Overview
+## 🏆 Overview & Problem Statement (PS)
 
-**WeatherGPT** is a production-ready, generative AI-powered meteorological dashboard built for the **Smart India Hackathon 2026**. 
+**WeatherGPT** is a hyper-localized, AI-driven weather and disaster management platform built specifically to address the complex meteorological challenges of **Northeast India (NER)**. 
 
-Traditional weather apps are passive—users have to dig through charts to find what they need. WeatherGPT flips this paradigm by offering an **Agentic AI Chatbot** that understands complex, conversational queries in **English, Hindi, Bengali, and Assamese**. Whether you are a farmer asking about pesticide schedules, a pilot checking wind shear, or a daily commuter, WeatherGPT fetches hyper-local data and gives you exact, personalized answers.
+### The Problem
+Traditional weather apps provide generic data (temperature, humidity) that lacks actionable context for specific demographics. Farmers, fishermen, and aviation personnel in regions with erratic weather patterns need **role-specific, multilingual advisories** rather than just raw numbers. Furthermore, local disaster management authorities lack a streamlined way to push localized alerts directly to vulnerable populations.
 
----
-
-## 🎯 The Problem vs. Our Solution
-
-| The Challenge (SIH Requirements) | WeatherGPT's Solution |
-| :--- | :--- |
-| **Language Barriers** in rural areas. | Native support for **4 languages** with localized **Cloud Text-to-Speech (TTS)** audio playback. |
-| **Complex Meteorological Data** is hard to read. | **Agentic RAG System:** The AI mathematically analyzes raw API data and translates it into simple human advice. |
-| **Lack of Specialized Data** for industries. | **Dedicated Hubs** for Agriculture, Marine, Aviation, and Urban Planning with targeted APIs (Soil Moisture, Tide charts, etc). |
-| **Internet Unreliability** during disasters. | **Offline SMS Simulation:** Authorities can broadcast Red/Yellow alerts directly to rural feature phones. |
-| **Forecast Inaccuracy** | **NWP Divergence Engine:** We cross-check the world's top 3 supercomputers (GFS, ECMWF, ICON) and warn users if they disagree. |
+### Our Proposed Solution
+WeatherGPT bridges the gap between raw meteorological data (from IMD, Open-Meteo, ECMWF) and end-users using an **Agentic AI architecture**. The platform translates complex weather parameters into actionable insights tailored to specific professions, delivered in native languages (Hindi, Bengali, Assamese, English), alongside a robust dashboard for disaster management authorities.
 
 ---
 
-## ✨ Features: From Small Details to Massive Systems
+## 🏗️ Technical Approach & Architecture
 
-### 🔍 Micro-Interactions (The Small Details)
-- **Glassmorphism UI:** Stunning, frosted-glass interface that adapts dynamically.
-- **Photorealistic Contextual Backgrounds:** The background seamlessly changes based on the active tab (e.g., Farmer fields, Ocean waves) and live weather conditions.
-- **Context-Aware Icons:** SVG icons dynamically adapt to the severity of the weather.
-- **Progressive Web App (PWA):** Installable directly to iOS/Android home screens as a native app.
+### 1. Agentic AI Layer (GROQ Qwen 3.8-27b + Tool Calling)
+Instead of relying on static rule-based systems, WeatherGPT uses a cutting-edge **Large Language Model (LLM)** equipped with function-calling capabilities.
+- When a user asks a question in their native language (e.g., "Will it rain in Guwahati tomorrow?"), the AI autonomously calls the `get_forecast` API tool.
+- The AI interprets the raw JSON response (precipitation probability, WMO weather codes, UV index) and formulates an answer specific to the user's selected **Profession Profile** (e.g., advising a farmer on crop spraying vs. advising a pilot on wind shear).
 
-### 📊 Core Application (The Medium Systems)
-- **Interactive Weather Dashboard:** Hyper-local live data, 7-day visual forecast grids, and hourly condition sliders.
-- **Interactive Radar Maps:** Real-time visual overlays for precipitation, temperature, and wind.
-- **Crowdsource Reporting:** Users can submit ground-truth weather reports (e.g., "It is flooding here") to validate our data models.
-- **Historical Analytics:** Compare today's weather against 10-year historical averages to track climate trends.
+### 2. Multi-Model Weather Consensus
+We aggregate data from leading Numerical Weather Prediction (NWP) models to ensure the highest accuracy:
+- **GFS (Global Forecast System)**
+- **ECMWF (European Centre)**
+- **ICON (German model)**
+- **IMD Data** (via local integrations)
 
-### 🧠 Enterprise Logic (The Massive Features)
-- **Deterministic Agentic LLM:** Powered by `openai/gpt-oss-120b`, the AI is physically restricted from hallucinating. It must output strict JSON tool calls to fetch real data before answering.
-- **NWP Model Divergence:** Forecasts are rarely 100% accurate. We fetch data from **GFS (USA)**, **ICON (Germany)**, and **ECMWF (Europe)**. If the models heavily disagree, the UI flags the forecast with an "NWP Divergence (High Uncertainty)" badge.
-- **Zero-CORS Base64 Audio Proxy:** We built a custom Node.js backend to stream Google TTS audio files as Base64 URIs, bypassing browser CORS restrictions and delivering instant multilingual voice playback.
-
----
-
-## 🛠️ System Architecture
-
-### Core Chat & Agentic Function Calling
-*How the AI determines answers without hallucinating.*
-
-```mermaid
-sequenceDiagram
-    actor User
-    participant Frontend
-    participant Backend
-    participant AI as Groq LLM
-    participant API as Weather APIs
-
-    User->>Frontend: "Is it safe to fly in Shillong?"
-    Frontend->>Backend: POST /api/chat
-    Backend->>AI: Send prompt + Available Tools
-    AI-->>Backend: Tool Request (get_current_weather: Shillong)
-    Backend->>API: Fetch Aviation Data for Shillong
-    API-->>Backend: Return Wind, Visibility, Precipitation
-    Backend->>AI: Inject real data into context
-    AI-->>Backend: Generate final human-readable answer
-    Backend-->>Frontend: Return JSON Answer
-    Frontend-->>User: Display UI Card + TTS Audio
-```
-
-### Automated Alert Notification Flow
-*How the system automatically triggers severe warnings and SMS fallbacks.*
-
-```mermaid
-graph LR
-    A[User Opens Dashboard] --> B[Fetch Local Weather Data]
-    B --> C[Pass Data to Severity Engine]
-    C --> D{Check Thresholds}
-    
-    D -->|Wind > 60km/h OR Rain > 50mm| E[Trigger SEVERE Alert]
-    D -->|High UV OR Heavy Heat Index| F[Trigger CAUTION Alert]
-    D -->|Normal Conditions| G[Dismiss Alerts]
-    
-    E --> H[Render Red UI Banner & Push Sound]
-    F --> I[Render Yellow Advisory UI]
-    G --> J[Standard UI Render]
-```
+### 3. Progressive Web App (PWA) & Multi-Platform
+Built with React and Vite, the platform is fully responsive and behaves like a native app on mobile devices.
+- **Offline Resilience:** Aggressive local caching using a custom versioned `localStorage` system ensures the app never crashes during data structure changes and provides cached alerts when users lose internet connectivity during disasters.
+- **Accessible Design:** Features high-contrast modes, large text toggles, and integrated Google Text-to-Speech (TTS) for illiterate users.
 
 ---
 
-## 💻 Tech Stack Justification
+## 🌟 Key Features That Set Us Apart
 
-1. **Frontend:** `React.js (Vite)` + `Tailwind CSS` — Chosen for maximum rendering speed, component modularity, and rapid UI prototyping.
-2. **Backend:** `Node.js` + `Express.js` — Acts as a secure middleman to protect API keys (Groq, Google TTS) and proxy heavy requests.
-3. **AI Inference:** `Groq API` + `openai/gpt-oss-120b` — Groq LPUs provide lightning-fast inference (~500 tokens/sec), essential for a real-time chat interface.
-4. **Data Layer:** `Open-Meteo API` — Completely open-source, highly granular, and provides specialized endpoints (Marine, Agriculture, Ensemble models) without rate-limiting our demo.
+1. **🧑‍🌾 Profession-Aware Contextual AI**  
+   The same weather data generates completely different insights depending on the active profile:
+   - *Farmer:* Soil moisture retention, pesticide spraying windows.
+   - *Fisherman:* Wind gust warnings, wave height approximations, safe sea times.
+   - *Aviation/Urban:* Fog visibility, severe storm cell tracking.
+
+2. **🌍 Native Multilingual Support**  
+   Full interface and AI translation for **English, Hindi, Bengali, and Assamese**. The AI understands Romanized native text (e.g., "aaj barish hogi kya") and responds accurately.
+
+3. **🛡️ Authority Dashboard (Disaster Management)**  
+   A secure, passcode-protected portal (`ManagerDashboard`) for state authorities to instantly broadcast custom severe weather alerts (NDMA standard) to users in specific districts.
+
+4. **⚡ Real-Time WMO Code Alert Engine**  
+   Our alert engine doesn't just look at rainfall amounts. It parses real-time WMO (World Meteorological Organization) weather codes. If a severe thunderstorm (Code 95/96) is detected, alerts are triggered instantly even if millimeter rainfall predictions are low.
+
+5. **📡 Live GPS & Geocoding**  
+   One-tap "Live Location" automatically reverse-geocodes the user's coordinates and queries the AI for an immediate, hyper-local situational report.
 
 ---
+
+## ⚙️ Tech Stack
+
+- **Frontend:** React.js, TailwindCSS, Vite
+- **Backend:** Node.js, Express.js
+- **AI/LLM Provider:** GROQ (Qwen3.8-27b) with Gemini as an automated fallback
+- **Weather APIs:** Open-Meteo, OpenStreetMap (Geocoding)
+- **Deployment:** Ready for Vercel (Frontend) & Render/Heroku (Backend)
+
+---
+
+## 🚀 How to Run Locally
+
+### Prerequisites
+- Node.js (v18+)
+- GROQ API Key (for the AI Agent)
+
+### Setup Instructions
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/omcodes16/weather-gpt-sih-2026.git
+   cd weather-gpt-sih-2026
+   ```
+
+2. **Install Dependencies:**
+   ```bash
+   npm install
+   ```
+
+3. **Environment Variables:**
+   Create a `.env` file in the root directory:
+   ```env
+   GROQ_API_KEY=your_groq_api_key_here
+   GEMINI_API_KEY=your_gemini_api_key_here
+   ```
+
+4. **Run the Application:**
+   Start both the backend Express server and the Vite frontend simultaneously:
+   ```bash
+   # Terminal 1: Start AI Backend
+   node server.js
+
+   # Terminal 2: Start Frontend
+   npm run dev
+   ```
+   Open `http://localhost:5173` in your browser.
+
+---
+
+## 🎯 How We Win Across Platforms
+- **Scalability:** The decoupled architecture allows the Express backend to serve mobile apps (Flutter/React Native) in the future using the exact same `/api/chat` endpoints.
+- **Cost Efficiency:** Using GROQ provides ultra-fast inference at a fraction of the cost of GPT-4, combined with free-tier weather APIs, making state-wide deployment economically viable.
+- **Human-Centric:** By focusing on *what the weather means* rather than *what the weather is*, WeatherGPT directly impacts livelihoods and saves lives.
+
+<div align="center">
+  <i>Built with ❤️ for Smart India Hackathon 2026</i>
+</div>

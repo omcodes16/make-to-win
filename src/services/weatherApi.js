@@ -104,8 +104,8 @@ export async function geocodeLocation(name, lang = 'en') {
  * timezone: Asia/Kolkata, forecast_days: 7
  */
 export async function getWeather(lat, lng) {
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,rain,weather_code,wind_speed_10m,wind_direction_10m,uv_index,visibility&hourly=temperature_2m,precipitation_probability,wind_speed_10m,wind_direction_10m,weather_code&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,uv_index_max,sunrise,sunset,weather_code&timezone=Asia%2FKolkata&forecast_days=7&models=best_match,gfs_seamless,icon_seamless,ecmwf_ifs04`;
-  const aqiUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lng}&current=us_aqi&timezone=Asia%2FKolkata`;
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,rain,weather_code,wind_speed_10m,wind_direction_10m,uv_index,visibility,is_day&hourly=temperature_2m,precipitation_probability,wind_speed_10m,wind_direction_10m,weather_code,is_day&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,uv_index_max,sunrise,sunset,weather_code&timezone=auto&forecast_days=7`;
+  const aqiUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lng}&current=us_aqi&timezone=auto`;
 
   const [res, aqiRes] = await Promise.all([fetch(url), fetch(aqiUrl)]);
   
@@ -136,69 +136,64 @@ export async function getWeather(lat, lng) {
     uvIndex: current.uv_index,
     visibility: current.visibility,
     aqi: Math.round(aqiValue),
+    isDay: current.is_day === 1,
 
     // Hourly forecast (next 24 hours)
     hourly: {
       time: data.hourly.time,
-      temperature: data.hourly.temperature_2m_best_match,
-      precipProb: data.hourly.precipitation_probability_best_match,
-      windSpeed: data.hourly.wind_speed_10m_best_match,
-      windDirection: data.hourly.wind_direction_10m_best_match,
-      weatherCode: data.hourly.weather_code_best_match,
+      temperature: data.hourly.temperature_2m,
+      precipProb: data.hourly.precipitation_probability,
+      windSpeed: data.hourly.wind_speed_10m,
+      windDirection: data.hourly.wind_direction_10m,
+      weatherCode: data.hourly.weather_code,
+      isDay: (data.hourly.is_day || []).map(d => d === 1),
     },
 
     // 7-day forecast
     daily: {
       time: data.daily.time,
-      maxTemp: data.daily.temperature_2m_max_best_match,
-      minTemp: data.daily.temperature_2m_min_best_match,
-      precipProbMax: data.daily.precipitation_probability_max_best_match,
-      precipitationSum: data.daily.precipitation_sum_best_match,
-      uvIndexMax: data.daily.uv_index_max_best_match,
-      sunrise: data.daily.sunrise_best_match,
-      sunset: data.daily.sunset_best_match,
-      weatherCode: data.daily.weather_code_best_match,
+      maxTemp: data.daily.temperature_2m_max,
+      minTemp: data.daily.temperature_2m_min,
+      precipProbMax: data.daily.precipitation_probability_max,
+      precipitationSum: data.daily.precipitation_sum,
+      uvIndexMax: data.daily.uv_index_max,
+      sunrise: data.daily.sunrise,
+      sunset: data.daily.sunset,
+      weatherCode: data.daily.weather_code,
     },
 
-    // NWP Model Transparency Data
+    // NWP Model Transparency Data (not available without multi-model, set to null)
     modelData: {
       daily: {
-        gfs: {
-          maxTemp: data.daily.temperature_2m_max_gfs_seamless,
-          precipProbMax: data.daily.precipitation_probability_max_gfs_seamless,
-        },
-        icon: {
-          maxTemp: data.daily.temperature_2m_max_icon_seamless,
-          precipProbMax: data.daily.precipitation_probability_max_icon_seamless,
-        },
-        ecmwf: {
-          maxTemp: data.daily.temperature_2m_max_ecmwf_ifs04,
-          precipProbMax: data.daily.precipitation_probability_max_ecmwf_ifs04,
-        }
+        gfs: { maxTemp: null, precipProbMax: null },
+        icon: { maxTemp: null, precipProbMax: null },
+        ecmwf: { maxTemp: null, precipProbMax: null },
       }
     },
 
     // Metadata for caching
     fetchedAt: new Date().toISOString(),
+
   };
 
   // Fetch the server-computed confidence value
   try {
-    const baseUrl = (import.meta.env.VITE_API_URL || "").replace(/\/+$/, "");
+    // import.meta.env is only available in Vite/browser context, not in Node.js server
+    const metaEnv = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env : {};
+    const baseUrl = (metaEnv.VITE_API_URL || '').replace(/\/+$/, '');
     const confRes = await fetch(`${baseUrl}/api/confidence`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ contextData: { modelData: weatherData.modelData } })
     });
     if (confRes.ok) {
       const { confidence } = await confRes.json();
       weatherData.confidence = confidence;
     } else {
-      weatherData.confidence = "high";
+      weatherData.confidence = 'high';
     }
   } catch (err) {
-    console.error("Failed to fetch confidence from backend", err);
-    weatherData.confidence = "high";
+    weatherData.confidence = 'high';
   }
 
   return weatherData;
@@ -239,30 +234,30 @@ export async function getSpecializedData(lat, lng, profile) {
     const currentHour = new Date().getHours();
     
     if (profile === 'farmer') {
-      url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&hourly=soil_temperature_6cm,soil_moisture_1_to_3cm,et0_fao_evapotranspiration&timezone=Asia%2FKolkata`;
+      url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&hourly=soil_temperature_6cm,soil_moisture_1_to_3cm,et0_fao_evapotranspiration&timezone=auto`;
     } 
     else if (profile === 'fisherman') {
-      url = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lng}&hourly=wave_height,wave_period,wave_direction&timezone=Asia%2FKolkata`;
+      url = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lng}&hourly=wave_height,wave_period,wave_direction&timezone=auto`;
     } 
     else if (profile === 'aviation') {
-      url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&hourly=visibility,cloudcover_low,windgusts_10m,cape&timezone=Asia%2FKolkata`;
+      url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&hourly=visibility,cloudcover_low,windgusts_10m,cape&timezone=auto`;
     } 
     else if (profile === 'urbanPlanning') {
-      const aqiUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lng}&hourly=pm10,pm2_5&timezone=Asia%2FKolkata`;
-      const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&hourly=uv_index,apparent_temperature&timezone=Asia%2FKolkata`;
+      const aqiUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lng}&hourly=pm10,pm2_5&timezone=auto`;
+      const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&hourly=uv_index,apparent_temperature&timezone=auto`;
       
       const [aqiRes, weatherRes] = await Promise.all([fetch(aqiUrl), fetch(weatherUrl)]);
       if (aqiRes.ok && weatherRes.ok) {
         const aqiData = await aqiRes.json();
         const weatherData = await weatherRes.json();
         return {
-          pm2_5: aqiData.hourly.pm2_5[currentHour],
-          pm10: aqiData.hourly.pm10[currentHour],
-          uv_index: weatherData.hourly.uv_index[currentHour],
-          feels_like: weatherData.hourly.apparent_temperature[currentHour],
+          pm2_5: aqiData.hourly?.pm2_5?.[currentHour] ?? 0,
+          pm10: aqiData.hourly?.pm10?.[currentHour] ?? 0,
+          uv_index: weatherData.hourly?.uv_index?.[currentHour] ?? 0,
+          feels_like: weatherData.hourly?.apparent_temperature?.[currentHour] ?? 0,
         };
       }
-      throw new Error('Failed to fetch urban data');
+      return { pm2_5: 0, pm10: 0, uv_index: 0, feels_like: 0 };
     }
     else {
       return null;
@@ -274,26 +269,30 @@ export async function getSpecializedData(lat, lng, profile) {
     
     if (profile === 'farmer') {
       return {
-        soil_temp: data.hourly.soil_temperature_6cm[currentHour],
-        soil_moisture: data.hourly.soil_moisture_1_to_3cm[currentHour],
-        evapotranspiration: data.hourly.et0_fao_evapotranspiration[currentHour]
+        soil_temp: data.hourly?.soil_temperature_6cm?.[currentHour] ?? 0,
+        soil_moisture: data.hourly?.soil_moisture_1_to_3cm?.[currentHour] ?? 0,
+        evapotranspiration: data.hourly?.et0_fao_evapotranspiration?.[currentHour] ?? 0
       };
     } else if (profile === 'fisherman') {
       return {
-        wave_height: data.hourly.wave_height[currentHour],
-        wave_period: data.hourly.wave_period[currentHour],
-        wave_direction: data.hourly.wave_direction[currentHour]
+        wave_height: data.hourly?.wave_height?.[currentHour] ?? null,
+        wave_period: data.hourly?.wave_period?.[currentHour] ?? null,
+        wave_direction: data.hourly?.wave_direction?.[currentHour] ?? null
       };
     } else if (profile === 'aviation') {
       return {
-        visibility: data.hourly.visibility[currentHour],
-        cloudcover_low: data.hourly.cloudcover_low[currentHour],
-        windgusts: data.hourly.windgusts_10m[currentHour],
-        cape: data.hourly.cape[currentHour]
+        visibility: data.hourly?.visibility?.[currentHour] ?? 10000,
+        cloudcover_low: data.hourly?.cloudcover_low?.[currentHour] ?? 0,
+        windgusts: data.hourly?.windgusts_10m?.[currentHour] ?? 0,
+        cape: data.hourly?.cape?.[currentHour] ?? 0
       };
     }
   } catch (err) {
     console.error('Error fetching specialized data:', err);
+    if (profile === 'farmer') return { soil_temp: 0, soil_moisture: 0, evapotranspiration: 0 };
+    if (profile === 'fisherman') return { wave_height: null, wave_period: null, wave_direction: null };
+    if (profile === 'aviation') return { visibility: 10000, cloudcover_low: 0, windgusts: 0, cape: 0 };
+    if (profile === 'urbanPlanning') return { pm2_5: 0, pm10: 0, uv_index: 0, feels_like: 0 };
     return null;
   }
 }

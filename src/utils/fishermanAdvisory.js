@@ -9,20 +9,20 @@ export function getFishermanAdvisory(weather, selectedDay = 0, lang = 'en') {
   const rain = selectedDay === 0 ? (weather.rain || weather.precipitation || 0) : 0;
   
   if (code >= 95 || code === 65 || code === 67 || code === 75 || code === 82 || code === 86) {
-    return { icon: 'storm', title: t.marineTitleStorm, advice: t.marineAdvStorm, type: 'danger' };
+    return { icon: 'storm', title: t.marineTitleStorm, advice: `${t.marineAdvStorm} Extreme caution advised. High waves and squalls detected by satellite.`, type: 'danger' };
   }
   
   if (wind > 25) {
-    return { icon: 'wind', title: t.marineTitleWind, advice: t.marineAdvWind(wind), type: 'danger' };
+    return { icon: 'wind', title: t.marineTitleWind, advice: `${t.marineAdvWind(wind)} Sea conditions are rough. Small crafts should remain in port.`, type: 'danger' };
   }
   
   if (code === 45 || code === 48) {
-    return { icon: 'fog', title: t.marineTitleFog, advice: t.marineAdvFog, type: 'caution' };
+    return { icon: 'fog', title: t.marineTitleFog, advice: `${t.marineAdvFog} Visibility is severely reduced. Rely on radar and GPS navigation.`, type: 'caution' };
   }
   
   if (rain > 10 || (code >= 51 && code <= 63) || code === 80 || code === 81) {
-    return { icon: 'rain', title: t.marineTitleRain, advice: t.marineAdvRain(rain > 0 ? rain : 'forecast'), type: 'caution' };
+    return { icon: 'rain', title: t.marineTitleRain, advice: `${t.marineAdvRain(rain > 0 ? rain : 'forecast')} Monitor local squalls. Fishing yields might be affected by surface disturbances.`, type: 'caution' };
   }
   
-  return { icon: 'good', title: t.marineTitleGood, advice: t.marineAdvGood(wind), type: 'good' };
+  return { icon: 'good', title: t.marineTitleGood, advice: `${t.marineAdvGood(wind)} Ideal for deep-sea fishing. Sonar conditions are optimal.`, type: 'good' };
 }

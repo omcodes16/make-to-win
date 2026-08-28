@@ -2,6 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { getSpecializedData } from '../services/weatherApi';
 import { useApp } from '../context/AppContext';
 import { FarmerIcon, FishermanIcon, AviationIcon, UrbanIcon } from './HubIcons';
+import { getFarmerAdvisory } from '../utils/farmerAdvisory';
+import { getFishermanAdvisory } from '../utils/fishermanAdvisory';
+import { getAviationAdvisory } from '../utils/aviationAdvisory';
+import { getUrbanPlanningAdvisory } from '../utils/urbanPlanningAdvisory';
 
 // --- TRANSLATIONS DICTIONARY ---
 const tHub = {
@@ -200,10 +204,13 @@ tHub.as = { ...tHub.bn, farmerTitle: 'কৃষি চোৰাংচোৱা �
 
 
 
-export default function ProfessionModal({ profile, lat, lng, locationName, weather, onClose }) {
-  const { state } = useApp();
+export default function ProfessionModal({ lat, lng, locationName, weather, onClose }) {
+  const { state, dispatch } = useApp();
   const lang = state.language || 'en';
   const t = tHub[lang] || tHub['en'];
+  
+  // If general, default the Hub view to farmer without forcing global profile change yet
+  const displayProfile = state.userProfile === 'general' ? 'farmer' : state.userProfile;
   
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -211,17 +218,17 @@ export default function ProfessionModal({ profile, lat, lng, locationName, weath
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
-      const res = await getSpecializedData(lat, lng, profile);
+      const res = await getSpecializedData(lat, lng, displayProfile);
+      if (res) res._profile = displayProfile; // Tag the data with the profile it belongs to
       setData(res);
       setLoading(false);
     }
     fetchData();
-  }, [lat, lng, profile]);
-
-  if (!profile || profile === 'general') return null;
+  }, [lat, lng, displayProfile]);
 
   const renderContent = () => {
-    if (loading) {
+    // Prevent white screen crash: Don't render the new tab's UI until we have the new tab's data
+    if (loading || (data && data._profile !== displayProfile)) {
       return (
         <div className="flex flex-col items-center justify-center py-20">
           <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4"></div>
@@ -232,8 +239,60 @@ export default function ProfessionModal({ profile, lat, lng, locationName, weath
 
     if (!data) return <p className="text-red-400 py-10 text-center">{t.error}</p>;
 
+    // Generate detailed AI Action Advisory
+    let activeAdvisory = null;
+    const currentProfile = displayProfile || 'farmer';
+    
+    if (currentProfile === 'farmer') {
+      activeAdvisory = getFarmerAdvisory(weather, 0, lang);
+    } else if (currentProfile === 'fisherman') {
+      activeAdvisory = getFishermanAdvisory(weather, 0, lang);
+    } else if (currentProfile === 'aviation') {
+      activeAdvisory = getAviationAdvisory(weather, 0, lang);
+    } else if (currentProfile === 'urbanPlanning') {
+      activeAdvisory = getUrbanPlanningAdvisory(weather, 0, lang);
+    }
+
+    const AdvisoryCard = () => {
+      if (!activeAdvisory) return null;
+      return (
+        <div className={`backdrop-blur-2xl border rounded-3xl p-5 sm:p-6 mb-6 shadow-xl relative overflow-hidden flex items-start sm:items-center gap-4
+          ${activeAdvisory.type === 'danger' ? 'bg-red-950/40 border-red-500/50' : 
+            activeAdvisory.type === 'caution' ? 'bg-amber-950/40 border-amber-500/40' : 
+            'bg-emerald-950/40 border-emerald-500/40'}`}>
+          <div className={`text-3xl sm:text-4xl p-3 rounded-2xl shrink-0
+            ${activeAdvisory.type === 'danger' ? 'bg-red-500/20' : 
+              activeAdvisory.type === 'caution' ? 'bg-amber-500/20' : 
+              'bg-emerald-500/20'}`}>
+            {activeAdvisory.icon === 'storm' ? '⛈️' :
+             activeAdvisory.icon === 'rain' ? '🌧️' :
+             activeAdvisory.icon === 'drizzle' ? '🌦️' :
+             activeAdvisory.icon === 'uv' ? '☀️' :
+             activeAdvisory.icon === 'wind' ? '💨' :
+             activeAdvisory.icon === 'fungal' ? '🍄' :
+             activeAdvisory.icon === 'fog' ? '🌫️' :
+             activeAdvisory.icon === 'frost' ? '❄️' :
+             activeAdvisory.icon === 'good' ? '✅' : '🌤️'}
+          </div>
+          <div className="flex-1">
+            <div className="text-xs sm:text-sm font-semibold uppercase tracking-wider mb-1 opacity-80">
+              {currentProfile === 'fisherman' 
+                ? (lang === 'hi' ? 'मछुआरों के लिए सलाह' : lang === 'bn' ? 'মৎস্যজীবী পরামর্শ' : lang === 'as' ? 'মৎস্যজীৱীৰ পৰামৰ্শ' : 'Marine Advisory')
+                : currentProfile === 'aviation'
+                ? (lang === 'hi' ? 'उड़ान सलाह' : lang === 'bn' ? 'বিমান পরামর্শ' : lang === 'as' ? 'বিমান পৰামৰ্শ' : 'Aviation Advisory')
+                : currentProfile === 'urbanPlanning'
+                ? (lang === 'hi' ? 'नगर योजना सलाह' : lang === 'bn' ? 'নগর পরিকল্পনা পরামর্শ' : lang === 'as' ? 'নগৰ পৰিকল্পনা পৰামৰ্শ' : 'Urban Planning Advisory')
+                : (lang === 'hi' ? 'किसान सलाह' : lang === 'bn' ? 'কৃষক পরামর্শ' : lang === 'as' ? 'কৃষক পৰামৰ্শ' : 'Farmer Advisory')}
+            </div>
+            <h3 className="text-base sm:text-lg font-bold mb-1 sm:mb-2 text-white">{activeAdvisory.title}</h3>
+            <p className="text-sm sm:text-base text-white/80 leading-relaxed">{activeAdvisory.advice}</p>
+          </div>
+        </div>
+      );
+    };
+
     // --- FARMER (AGRICULTURE HUB) ---
-    if (profile === 'farmer') {
+    if (displayProfile === 'farmer') {
       const moisturePct = (data.soil_moisture * 100).toFixed(1);
       const isDry = data.soil_moisture < 0.2;
       const windSpeed = weather?.windSpeed || 0;
@@ -251,19 +310,7 @@ export default function ProfessionModal({ profile, lat, lng, locationName, weath
 
       return (
         <div className="space-y-6">
-          <div className={`p-5 rounded-2xl border flex items-start gap-4 ${isDry || heatStress ? 'bg-amber-500/10 border-amber-500/30' : 'bg-emerald-500/10 border-emerald-500/30 shadow-[inset_0_0_20px_rgba(16,185,129,0.05)]'}`}>
-            <div className={`text-3xl ${isDry || heatStress ? 'text-amber-400' : 'text-emerald-400'}`}>
-              {isDry || heatStress ? '⚠️' : '✅'}
-            </div>
-            <div>
-              <h3 className={`text-lg font-bold ${isDry || heatStress ? 'text-amber-400' : 'text-emerald-400'}`}>
-                {isDry ? t.irrigationReq : heatStress ? t.heatStress : t.optMoisture}
-              </h3>
-              <p className="text-white/70 text-sm mt-1 leading-relaxed">
-                {isDry ? t.irrigationDesc : heatStress ? t.heatStressDesc : t.optMoistureDesc}
-              </p>
-            </div>
-          </div>
+          <AdvisoryCard />
 
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-gradient-to-br from-surface-2 to-surface-0 border border-white/10 rounded-2xl p-5 relative overflow-hidden group hover:border-blue-500/30 transition-all shadow-lg">
@@ -313,37 +360,34 @@ export default function ProfessionModal({ profile, lat, lng, locationName, weath
     }
 
     // --- FISHERMAN (MARINE HUB) ---
-    if (profile === 'fisherman') {
+    if (displayProfile === 'fisherman') {
       const isDangerous = data.wave_height > 1.5;
       const windSpeed = weather?.windSpeed || 0;
       const activityHigh = !isDangerous && windSpeed < 20;
+      const isDataUnavailable = data.wave_height === null;
 
       return (
         <div className="space-y-6">
-          <div className={`p-5 rounded-2xl border flex items-start gap-4 ${isDangerous ? 'bg-red-500/10 border-red-500/30' : 'bg-emerald-500/10 border-emerald-500/30'}`}>
-             <div className={`text-3xl ${isDangerous ? 'text-red-400' : 'text-emerald-400'}`}>
-              {isDangerous ? '⛔' : '✅'}
+          <AdvisoryCard />
+          
+          {isDataUnavailable && (
+            <div className="bg-blue-500/10 border border-blue-500/20 text-blue-300 text-xs sm:text-sm p-4 rounded-xl flex items-start gap-3">
+              <span className="text-xl">ℹ️</span>
+              <p>Live marine data (wave height/period) is unavailable for this location. It may be too far inland or outside supported coastal zones.</p>
             </div>
-            <div>
-              <h3 className={`text-lg font-bold ${isDangerous ? 'text-red-400' : 'text-emerald-400'}`}>
-                {isDangerous ? t.unsafeMarine : t.safeMarine}
-              </h3>
-              <p className="text-white/70 text-sm mt-1 leading-relaxed">
-                {isDangerous ? t.unsafeMarineDesc : t.safeMarineDesc}
-              </p>
-            </div>
-          </div>
+          )}
+
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
             <div className="bg-gradient-to-br from-blue-900/40 to-black/40 border border-blue-500/30 rounded-2xl p-5 col-span-2 sm:col-span-3 flex items-center justify-between shadow-[0_0_30px_rgba(59,130,246,0.1)]">
               <div>
                 <div className="text-blue-400/80 text-[10px] sm:text-xs font-bold uppercase tracking-widest mb-1">{t.waveHeight}</div>
-                <div className="text-5xl font-black text-white tracking-tight">{data.wave_height ? data.wave_height.toFixed(1) : '0'} <span className="text-xl text-white/50 font-medium">m</span></div>
+                <div className="text-5xl font-black text-white tracking-tight">{data.wave_height ? data.wave_height.toFixed(1) : '--'} <span className="text-xl text-white/50 font-medium">m</span></div>
               </div>
               <div className="text-7xl opacity-20 drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]">🌊</div>
             </div>
             <div className="bg-surface-2 border border-white/5 rounded-2xl p-5">
               <div className="text-white/50 text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-2">{t.wavePeriod}</div>
-              <div className="text-2xl font-bold text-white">{data.wave_period ? data.wave_period.toFixed(1) : '0'}s</div>
+              <div className="text-2xl font-bold text-white">{data.wave_period ? data.wave_period.toFixed(1) : '--'}s</div>
             </div>
             <div className="bg-surface-2 border border-white/5 rounded-2xl p-5">
               <div className="text-white/50 text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-2">{t.surfaceWind}</div>
@@ -359,16 +403,11 @@ export default function ProfessionModal({ profile, lat, lng, locationName, weath
     }
 
     // --- AVIATION ---
-    if (profile === 'aviation') {
+    if (displayProfile === 'aviation') {
       const isBadVis = data.visibility < 3000 || data.cloudcover_low > 80;
       return (
         <div className="space-y-4">
-          <div className={`p-5 rounded-2xl border ${isBadVis ? 'bg-amber-500/10 border-amber-500/30' : 'bg-blue-500/10 border-blue-500/30'}`}>
-            <h3 className={`text-lg font-bold ${isBadVis ? 'text-amber-400' : 'text-blue-400'}`}>
-              {isBadVis ? t.badFlight : t.clearFlight}
-            </h3>
-            <p className="text-white/70 text-sm mt-1">{isBadVis ? t.badFlightDesc : t.clearFlightDesc}</p>
-          </div>
+          <AdvisoryCard />
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-surface-2 border border-white/5 rounded-2xl p-5 shadow-lg">
               <div className="text-white/50 text-xs font-bold uppercase tracking-wider mb-1">{t.visibility}</div>
@@ -392,19 +431,12 @@ export default function ProfessionModal({ profile, lat, lng, locationName, weath
     }
 
     // --- URBAN PLANNING ---
-    if (profile === 'urbanPlanning') {
+    if (displayProfile === 'urbanPlanning') {
       const isSevereHeat = data.feels_like > 38;
       const isPolluted = data.pm2_5 > 50;
       return (
         <div className="space-y-4">
-          <div className={`p-5 rounded-2xl border ${(isSevereHeat || isPolluted) ? 'bg-red-500/10 border-red-500/30' : 'bg-emerald-500/10 border-emerald-500/30'}`}>
-            <h3 className={`text-lg font-bold ${(isSevereHeat || isPolluted) ? 'text-red-400' : 'text-emerald-400'}`}>
-              {(isSevereHeat || isPolluted) ? t.cityWarning : t.cityNormal}
-            </h3>
-            <p className="text-white/70 text-sm mt-1">
-              {(isSevereHeat || isPolluted) ? t.cityWarningDesc : t.cityNormalDesc}
-            </p>
-          </div>
+          <AdvisoryCard />
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-surface-2 border border-white/5 rounded-2xl p-4 shadow-lg">
               <div className="text-white/50 text-xs font-bold uppercase tracking-wider mb-1">{t.pm25}</div>
@@ -429,10 +461,10 @@ export default function ProfessionModal({ profile, lat, lng, locationName, weath
   };
 
   const getProfileTitle = (t) => {
-    if (profile === 'farmer') return t.farmerTitle;
-    if (profile === 'fisherman') return t.fishTitle;
-    if (profile === 'aviation') return t.avTitle;
-    if (profile === 'urbanPlanning') return t.urbanTitle;
+    if (displayProfile === 'farmer') return t.farmerTitle;
+    if (displayProfile === 'fisherman') return t.fishTitle;
+    if (displayProfile === 'aviation') return t.avTitle;
+    if (displayProfile === 'urbanPlanning') return t.urbanTitle;
     return '';
   };
 
@@ -442,13 +474,17 @@ export default function ProfessionModal({ profile, lat, lng, locationName, weath
     aviation: () => <AviationIcon className="w-8 h-8 text-indigo-400 drop-shadow-[0_0_10px_rgba(129,140,248,0.8)]" />,
     urbanPlanning: () => <UrbanIcon className="w-8 h-8 text-purple-400 drop-shadow-[0_0_10px_rgba(192,132,252,0.8)]" />
   };
-  const ProfileIcon = IconMap[profile] || (() => null);
+  const ProfileIcon = IconMap[displayProfile] || (() => null);
+
+  const switchProfile = (newProfile) => {
+    dispatch({ type: 'SET_PROFILE', payload: newProfile });
+  };
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-[#030712]/80 backdrop-blur-md animate-fade-in">
       <div className="w-full max-w-xl bg-gradient-to-b from-surface-0 to-surface-0 border border-white/10 rounded-[2rem] shadow-[0_0_80px_rgba(0,0,0,0.8)] overflow-hidden animate-slide-up flex flex-col max-h-full">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 sm:p-8 border-b border-white/5 bg-white/[0.01]">
+        <div className="flex items-center justify-between p-6 sm:p-8 pb-4 border-b border-white/5 bg-white/[0.01]">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-white/5 rounded-2xl border border-white/10 shadow-inner">
               <ProfileIcon />
@@ -467,6 +503,28 @@ export default function ProfessionModal({ profile, lat, lng, locationName, weath
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
+        </div>
+
+        {/* Tab Switcher */}
+        <div className="px-6 sm:px-8 py-3 bg-white/[0.02] border-b border-white/5 flex gap-2 overflow-x-auto hide-scrollbar">
+          {[
+            { id: 'farmer', icon: <FarmerIcon className="w-4 h-4"/>, label: lang === 'hi' ? 'कृषि' : 'Agriculture' },
+            { id: 'aviation', icon: <AviationIcon className="w-4 h-4"/>, label: lang === 'hi' ? 'उड़ान' : 'Aviation' },
+            { id: 'fisherman', icon: <FishermanIcon className="w-4 h-4"/>, label: lang === 'hi' ? 'समुद्री' : 'Marine' },
+            { id: 'urbanPlanning', icon: <UrbanIcon className="w-4 h-4"/>, label: lang === 'hi' ? 'शहर' : 'Urban' }
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => switchProfile(tab.id)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all whitespace-nowrap shrink-0 ${
+                displayProfile === tab.id
+                  ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30'
+                  : 'bg-white/5 text-white/50 border border-transparent hover:bg-white/10 hover:text-white'
+              }`}
+            >
+              {tab.icon} {tab.label}
+            </button>
+          ))}
         </div>
         
         {/* Content */}

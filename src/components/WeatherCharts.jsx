@@ -1,9 +1,126 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { getWeatherInfo } from '../utils/weatherConditions';
 import { UI_TRANSLATIONS } from '../utils/translations';
 import { SPEECH_LANG_CODES as CONST_LANG_CODES } from '../utils/constants';
 import RadarMap from './RadarMap';
+
+const SunMoonTracker = ({ weather, t, locale }) => {
+  const [now, setNow] = useState(new Date());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 60000); // update every minute
+    return () => clearInterval(timer);
+  }, []);
+
+  if (!weather || !weather.daily || !Array.isArray(weather.daily.sunrise) || !weather.daily.sunrise[0] || !Array.isArray(weather.daily.sunset) || !weather.daily.sunset[0]) return null;
+
+  const sr0 = new Date(weather.daily.sunrise[0]);
+  const ss0 = new Date(weather.daily.sunset[0]);
+  
+  let isDaytime = true;
+  let start = sr0;
+  let end = ss0;
+  let leftLabel = t.sunrise;
+  let rightLabel = t.sunset;
+  let leftTime = sr0;
+  let rightTime = ss0;
+  let icon = '☀️';
+  let iconColor = 'text-yellow-400';
+  let glowColor = 'rgba(250, 204, 21, 0.4)';
+
+  if (now > ss0) {
+    // Night (after today's sunset)
+    isDaytime = false;
+    start = ss0;
+    end = new Date(weather.daily.sunrise[1] || sr0.getTime() + 86400000);
+    leftLabel = t.sunset;
+    rightLabel = t.sunrise;
+    leftTime = ss0;
+    rightTime = end;
+    icon = '🌙';
+    iconColor = 'text-blue-200';
+    glowColor = 'rgba(191, 219, 254, 0.4)';
+  } else if (now < sr0) {
+    // Night (before today's sunrise)
+    isDaytime = false;
+    start = new Date(sr0.getTime() - Math.abs(ss0.getTime() - sr0.getTime())); // approximation of yesterday's sunset
+    end = sr0;
+    leftLabel = t.sunset;
+    rightLabel = t.sunrise;
+    leftTime = start;
+    rightTime = end;
+    icon = '🌙';
+    iconColor = 'text-blue-200';
+    glowColor = 'rgba(191, 219, 254, 0.4)';
+  }
+
+  let progress = (now - start) / (end - start);
+  progress = Math.max(0, Math.min(1, progress));
+
+  // Bezier curve points
+  const p0 = { x: 20, y: 70 };
+  const p1 = { x: 100, y: 10 };
+  const p2 = { x: 180, y: 70 };
+  
+  const px = Math.pow(1 - progress, 2) * p0.x + 2 * (1 - progress) * progress * p1.x + Math.pow(progress, 2) * p2.x;
+  const py = Math.pow(1 - progress, 2) * p0.y + 2 * (1 - progress) * progress * p1.y + Math.pow(progress, 2) * p2.y;
+
+  return (
+    <div className="bg-white/5 hover:bg-white/10 transition-all duration-300 rounded-2xl p-5 border border-white/10 col-span-2 shadow-sm hover:shadow-md relative overflow-hidden flex flex-col justify-between">
+      <div className="text-white/50 text-xs font-medium uppercase tracking-wider mb-2 flex items-center gap-1.5 z-10">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v6"/><path d="M12 22v-6"/><path d="M4.93 4.93l4.24 4.24"/><path d="M19.07 19.07l-4.24-4.24"/><path d="M2 12h6"/><path d="M22 12h-6"/><path d="M4.93 19.07l4.24-4.24"/><path d="M19.07 4.93l-4.24 4.24"/></svg>
+        {isDaytime ? 'Sun Path' : 'Moon Path'}
+      </div>
+      
+      <div className="relative w-full h-[80px] mt-2 mb-2 z-10">
+        <svg viewBox="0 0 200 80" className="w-full h-full overflow-visible">
+          {/* Dashed track */}
+          <path 
+            d={`M ${p0.x} ${p0.y} Q ${p1.x} ${p1.y} ${p2.x} ${p2.y}`} 
+            fill="none" 
+            stroke={isDaytime ? "rgba(250, 204, 21, 0.5)" : "rgba(96, 165, 250, 0.5)"}
+            strokeWidth="2.5" 
+            strokeDasharray="6 4" 
+            strokeLinecap="round"
+          />
+          {/* Active track (progress) - optional, maybe just the icon is enough */}
+          
+          {/* Sun/Moon Icon */}
+          <g transform={`translate(${px}, ${py})`}>
+            <circle cx="0" cy="0" r="8" fill="currentColor" className={iconColor} style={{ filter: `drop-shadow(0 0 8px ${glowColor})` }} />
+            <text x="0" y="1" textAnchor="middle" dominantBaseline="middle" fontSize="10">{icon}</text>
+          </g>
+        </svg>
+      </div>
+      
+      <div className="flex justify-between items-end z-10 relative">
+        <div className="flex flex-col">
+          <div className="text-white/40 text-[10px] font-bold uppercase tracking-wider mb-0.5">{leftLabel}</div>
+          <div className="text-sm font-semibold text-white drop-shadow-sm">
+            {leftTime.toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit', hour12: true })}
+          </div>
+        </div>
+        <div className="flex flex-col text-right items-end">
+          <div className="text-white/40 text-[10px] font-bold uppercase tracking-wider mb-0.5">{rightLabel}</div>
+          <div className="text-sm font-semibold text-white drop-shadow-sm">
+            {rightTime.toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit', hour12: true })}
+          </div>
+        </div>
+      </div>
+      
+      {/* Background soft glow based on progress */}
+      <div 
+        className="absolute bottom-0 w-32 h-32 blur-3xl rounded-full opacity-20 pointer-events-none transition-all duration-1000"
+        style={{ 
+          left: `calc(${progress * 100}% - 4rem)`,
+          background: isDaytime ? '#FACC15' : '#93C5FD'
+        }}
+      />
+    </div>
+  );
+};
+
+
 
 export default function WeatherCharts({ weather, lat, lng }) {
   const { state } = useApp();
@@ -15,60 +132,64 @@ export default function WeatherCharts({ weather, lat, lng }) {
 
   if (!weather || !weather.hourly) return null;
 
-  // Extract next 8 hours for the chart
-  const now = new Date();
-  const currentHourIdx = weather.hourly.time.findIndex(time => new Date(time) > now) - 1 || 0;
-  const safeIdx = Math.max(0, currentHourIdx);
+  let chartData = [];
+  let dailyData = [];
   
-  const chartData = [];
-  for (let i = 0; i < 8; i++) {
-    const idx = safeIdx + (i * 3);
-    if (idx < weather.hourly.time.length) {
-      const timeObj = new Date(weather.hourly.time[idx]);
-      // Use localized time string (e.g. '3 pm' in English, '3 अपराह्न' in Hindi)
-      const timeLabel = timeObj.toLocaleTimeString(locale, { hour: 'numeric', hour12: true });
+  try {
+    const now = new Date();
+    const currentHourIdx = weather.hourly.time.findIndex(time => new Date(time) > now) - 1 || 0;
+    const safeIdx = Math.max(0, currentHourIdx);
+    
+    for (let i = 0; i < 8; i++) {
+      const idx = safeIdx + (i * 3);
+      if (idx < weather.hourly.time.length) {
+        const timeObj = new Date(weather.hourly.time[idx]);
+        const timeLabel = timeObj.toLocaleTimeString(locale, { hour: 'numeric', hour12: true });
+        
+        chartData.push({
+          timeLabel,
+          temp: weather.hourly.temperature && weather.hourly.temperature[idx] !== undefined ? Math.round(weather.hourly.temperature[idx]) : 0,
+          precip: weather.hourly.precipProb ? weather.hourly.precipProb[idx] : 0,
+          wind: weather.hourly.windSpeed && weather.hourly.windSpeed[idx] !== undefined ? Math.round(weather.hourly.windSpeed[idx]) : 0,
+          windDir: weather.hourly.windDirection ? weather.hourly.windDirection[idx] : 0,
+        });
+      }
+    }
+
+    for (let i = 0; i < 7; i++) {
+      if (!weather.daily.time || !weather.daily.time[i]) continue;
+      const dateObj = new Date(weather.daily.time[i]);
+      const dayStr = dateObj.toLocaleDateString(locale, { weekday: 'short' });
+      const code = weather.daily.weatherCode ? weather.daily.weatherCode[i] : 0;
+      const info = getWeatherInfo(code, lang);
       
-      chartData.push({
-        timeLabel,
-        temp: Math.round(weather.hourly.temperature[idx]),
-        precip: weather.hourly.precipProb[idx],
-        wind: Math.round(weather.hourly.windSpeed[idx]),
-        windDir: weather.hourly.windDirection[idx],
+      dailyData.push({
+        day: dayStr,
+        max: weather.daily.maxTemp && weather.daily.maxTemp[i] !== undefined ? Math.round(weather.daily.maxTemp[i]) : 0,
+        min: weather.daily.minTemp && weather.daily.minTemp[i] !== undefined ? Math.round(weather.daily.minTemp[i]) : 0,
+        icon: info.icon,
       });
     }
+  } catch (err) {
+    console.error("WeatherCharts data parsing error:", err);
   }
 
-  // 7-day forecast data
-  const dailyData = [];
-  for (let i = 0; i < 7; i++) {
-    const dateObj = new Date(weather.daily.time[i]);
-    const dayStr = dateObj.toLocaleDateString(locale, { weekday: 'short' });
-    const info = getWeatherInfo(weather.daily.weatherCode[i], lang);
-    
-    dailyData.push({
-      day: dayStr,
-      max: Math.round(weather.daily.maxTemp[i]),
-      min: Math.round(weather.daily.minTemp[i]),
-      icon: info.icon,
-    });
-  }
-
-  // SVG Chart Dimensions
-  const width = 600;
   const height = 120;
   
   // Temp Chart Path
-  const minTemp = Math.min(...chartData.map(d => d.temp)) - 2;
-  const maxTemp = Math.max(...chartData.map(d => d.temp)) + 2;
+  const minTemp = chartData.length > 0 ? Math.min(...chartData.map(d => d.temp || 0)) - 2 : 0;
+  const maxTemp = chartData.length > 0 ? Math.max(...chartData.map(d => d.temp || 0)) + 2 : 30;
   const tempRange = maxTemp - minTemp || 1;
   
-  const getTempY = (temp) => height - ((temp - minTemp) / tempRange) * (height - 40) - 20;
-  const getX = (index) => (width / (chartData.length * 2)) * (index * 2 + 1);
+  const getTempY = (temp) => height - (((temp || 0) - minTemp) / tempRange) * (height - 40) - 20;
+  const getX = (index) => chartData.length > 0 ? (width / (chartData.length * 2)) * (index * 2 + 1) : 0;
 
   const tempPoints = chartData.map((d, i) => `${getX(i)},${getTempY(d.temp)}`).join(' ');
-  const tempFillPath = `M0,${height} L0,${getTempY(chartData[0].temp)} L${tempPoints} L${width},${getTempY(chartData[chartData.length-1].temp)} L${width},${height} Z`;
+  const tempFillPath = chartData.length > 0 
+    ? `M0,${height} L0,${getTempY(chartData[0].temp)} L${tempPoints} L${width},${getTempY(chartData[chartData.length-1].temp)} L${width},${height} Z`
+    : `M0,${height} Z`;
 
-  const getPrecipHeight = (precip) => (precip / 100) * (height - 30);
+  const getPrecipHeight = (precip) => ((precip || 0) / 100) * (height - 30);
 
   return (
     <div className="bg-dusk/90 rounded-t-3xl text-white pt-6 pb-8 shadow-2xl relative z-30 mt-[-20px] backdrop-blur-md">
@@ -216,30 +337,8 @@ export default function WeatherCharts({ weather, lat, lng }) {
             <div className="text-2xl font-semibold text-white drop-shadow-sm">{weather.uvIndex}</div>
           </div>
 
-          {/* Sunrise & Sunset (Full width row) */}
-          <div className="bg-white/5 hover:bg-white/10 transition-all duration-300 rounded-2xl p-5 border border-white/10 col-span-2 flex items-center justify-between shadow-sm hover:shadow-md cursor-default">
-            <div className="flex flex-col">
-              <div className="text-white/50 text-xs font-medium uppercase tracking-wider mb-1 flex items-center gap-1.5">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v6"/><path d="M12 22v-6"/><path d="M4.93 4.93l4.24 4.24"/><path d="M19.07 19.07l-4.24-4.24"/><path d="M2 12h6"/><path d="M22 12h-6"/><path d="M4.93 19.07l4.24-4.24"/><path d="M19.07 4.93l-4.24 4.24"/></svg>
-                {t.sunrise}
-              </div>
-              <div className="text-xl font-semibold text-white drop-shadow-sm">
-                {new Date(weather.daily.sunrise[0]).toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit', hour12: true })}
-              </div>
-            </div>
-            
-            <div className="h-10 w-px bg-white/20 mx-4"></div>
-            
-            <div className="flex flex-col text-right items-end">
-              <div className="text-white/50 text-xs font-medium uppercase tracking-wider mb-1 flex items-center gap-1.5">
-                {t.sunset}
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22v-6"/><path d="M4.93 19.07l4.24-4.24"/><path d="M2 12h6"/><path d="M22 12h-6"/><path d="M19.07 19.07l-4.24-4.24"/><path d="M12 10a4 4 0 1 0-8 0"/></svg>
-              </div>
-              <div className="text-xl font-semibold text-white drop-shadow-sm">
-                {new Date(weather.daily.sunset[0]).toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit', hour12: true })}
-              </div>
-            </div>
-          </div>
+          {/* Sunrise & Sunset 24h Tracker (Full width row) */}
+          <SunMoonTracker weather={weather} t={t} locale={locale} />
 
         </div>
       </div>

@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import { LANGUAGES } from '../utils/constants';
-import AccessibilityPanel from './AccessibilityPanel';
 import ProfessionModal from './ProfessionModal';
 import { FarmerIcon, FishermanIcon, AviationIcon, UrbanIcon } from './HubIcons';
 import { UI_TRANSLATIONS } from '../utils/translations';
@@ -181,7 +180,7 @@ export default function Header() {
           
           {/* Left: App name & Logo */}
           <div className="flex items-center gap-2">
-            <img src="/logo.png" alt="SIH Code Matrix Logo" className="w-9 h-9 object-contain rounded-md flex-shrink-0 shadow-[0_0_10px_rgba(255,255,255,0.2)] bg-white" />
+            <img src="/logo_new.jpg" alt="SIH Code Matrix Logo" className="w-10 h-10 object-cover rounded-md flex-shrink-0 shadow-[0_0_15px_rgba(255,255,255,0.3)] bg-white" />
             <h1 className="font-heading font-semibold text-base tracking-tight text-white drop-shadow-md hidden sm:block">
               WeatherGPT
             </h1>
@@ -253,13 +252,19 @@ export default function Header() {
                 else if (state.userProfile === 'urbanPlanning') Icon = <UrbanIcon className={`${iconClass} text-purple-300`} />;
                 
                 return (
-                  <button
+                  <div 
                     onClick={() => setIsHubOpen(true)}
-                    className="flex items-center gap-1 sm:gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-indigo-500/80 hover:bg-indigo-400 hover:-translate-y-0.5 text-white shadow-[0_0_15px_rgba(99,102,241,0.4)] hover:shadow-[0_0_20px_rgba(99,102,241,0.6)] transition-smooth animate-pulse"
+                    className="flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-gradient-to-r from-blue-600/30 to-purple-600/30 border border-blue-400/30 rounded-full cursor-pointer hover:bg-white/10 hover:border-blue-400/50 transition-all shadow-[0_0_15px_rgba(59,130,246,0.2)]"
                   >
-                    {Icon}
-                    <span>{currentLang.code === 'hi' ? 'हब खोलें ✨' : currentLang.code === 'bn' ? 'হাব খুলুন ✨' : currentLang.code === 'as' ? 'হাব খোলক ✨' : 'Open Hub ✨'}</span>
-                  </button>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-blue-400 animate-pulse sm:w-4 sm:h-4">
+                      <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                      <polyline points="2 17 12 22 22 17"></polyline>
+                      <polyline points="2 12 12 17 22 12"></polyline>
+                    </svg>
+                    <span className="text-white text-[10px] sm:text-xs font-bold tracking-wide uppercase whitespace-nowrap">
+                      {currentLang.code === 'hi' ? 'हब खोलें' : currentLang.code === 'bn' ? 'হাব খুলুন' : currentLang.code === 'as' ? 'হাব খোলক' : 'Open Hub'}
+                    </span>
+                  </div>
                 );
               })()}
 
@@ -280,7 +285,7 @@ export default function Header() {
               </button>
 
               {showSaved && (
-                <div className="absolute right-0 top-full mt-2 rounded-2xl shadow-[0_0_25px_rgba(0,0,0,0.6)] py-3 w-[260px] sm:w-[280px] z-50 border bg-surface-2 border-white/10 text-white">
+                <div className="absolute right-0 top-full mt-2 rounded-2xl py-3 w-[260px] sm:w-[280px] z-[100] bg-surface-1/95 backdrop-blur-xl border border-white/10 text-white shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
                   <div className="px-4 pb-2 mb-2 border-b border-white/10 flex items-center gap-2">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1" className="text-amber-400"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
                     <span className="text-sm font-semibold text-white/90">Saved Locations</span>
@@ -340,7 +345,7 @@ export default function Header() {
               </button>
 
               {showMoreMenu && (
-                <div className="absolute right-0 top-full mt-2 rounded-2xl shadow-[0_0_25px_rgba(0,0,0,0.6)] py-2 w-[220px] z-50 border bg-surface-1 border-white/10 text-white">
+                <div className="absolute right-0 top-full mt-2 rounded-2xl py-2 w-[220px] z-[100] bg-surface-1/95 backdrop-blur-xl border border-white/10 text-white shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
                   
                   <button
                     onClick={() => { dispatch({ type: 'SET_ACTIVE_TAB', payload: 'reviews' }); setShowMoreMenu(false); }}
@@ -365,7 +370,7 @@ export default function Header() {
                   <div className="h-px bg-white/10 my-1 mx-3" />
 
                   <button
-                    onClick={() => { setShowA11y(true); setShowMoreMenu(false); }}
+                    onClick={(e) => { e.stopPropagation(); setShowA11y(!showA11y); }}
                     className="w-full text-left flex items-center gap-3 px-4 py-3 text-sm transition-colors hover:bg-surface-2"
                   >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-300">
@@ -373,6 +378,42 @@ export default function Header() {
                     </svg>
                     <span>Accessibility</span>
                   </button>
+
+                  {/* Inline Accessibility Toggles */}
+                  {showA11y && (
+                    <div className="mx-4 mb-3 p-3 bg-white/5 rounded-lg border border-white/10 space-y-3" onClick={e => e.stopPropagation()}>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-white/80 font-medium">Large text</span>
+                        <button
+                          onClick={() => dispatch({ type: 'TOGGLE_LARGE_TEXT' })}
+                          className={`w-10 h-5 rounded-full transition-all relative ${
+                            state.isLargeText ? 'bg-indigo-500 shadow-[0_0_12px_rgba(99,102,241,0.5)]' : 'bg-white/15'
+                          }`}
+                        >
+                          <span
+                            className={`absolute top-[2px] left-[2px] w-4 h-4 bg-white rounded-full shadow transition-transform ${
+                              state.isLargeText ? 'translate-x-5' : ''
+                            }`}
+                          />
+                        </button>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-white/80 font-medium">High contrast</span>
+                        <button
+                          onClick={() => dispatch({ type: 'TOGGLE_HIGH_CONTRAST' })}
+                          className={`w-10 h-5 rounded-full transition-all relative ${
+                            state.isHighContrast ? 'bg-indigo-500 shadow-[0_0_12px_rgba(99,102,241,0.5)]' : 'bg-white/15'
+                          }`}
+                        >
+                          <span
+                            className={`absolute top-[2px] left-[2px] w-4 h-4 bg-white rounded-full shadow transition-transform ${
+                              state.isHighContrast ? 'translate-x-5' : ''
+                            }`}
+                          />
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
                   <button
                     onClick={() => { setShowGuide(true); setShowMoreMenu(false); }}
@@ -398,7 +439,7 @@ export default function Header() {
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg>
               </button>
               {showLangPicker && (
-                <div className="absolute right-0 top-full mt-2 rounded-xl shadow-[0_0_15px_rgba(0,0,0,0.5)] py-1 min-w-[140px] z-50 border bg-surface-2 border-white/10 text-white">
+                <div className="absolute right-0 top-full mt-2 rounded-xl py-1 min-w-[140px] z-[100] bg-surface-1/95 backdrop-blur-xl border border-white/10 text-white shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
                   {LANGUAGES.map(lang => (
                     <button
                       key={lang.code}
@@ -413,13 +454,9 @@ export default function Header() {
             </div>
           </div>
         </div>
-
-        {/* Accessibility panel */}
-        {showA11y && <AccessibilityPanel onClose={() => setShowA11y(false)} />}
       </header>
 
-      {/* Profession selection modal */}
-      <ProfessionModal isOpen={isHubOpen} onClose={() => setIsHubOpen(false)} />
+      {/* Profession selection modal is rendered at the bottom */}
 
       {/* User Guide Modal */}
       <UserGuideModal isOpen={showGuide} onClose={() => setShowGuide(false)} />

@@ -25,7 +25,7 @@ export default function ModelConfidence({ modelData, selectedDay, language = 'en
   const isDivergent = confidence === 'low' || confidence === 'medium';
 
   return (
-    <div className={`mt-4 mb-4 bg-white/5 backdrop-blur-2xl border ${isLow ? 'border-red-500/30' : isDivergent ? 'border-amber-500/30' : 'border-emerald-500/30'} rounded-3xl p-4 sm:p-5 shadow-xl transition-all`}>
+    <div className={`mt-4 mb-4 bg-white/5 backdrop-blur-md border ${isLow ? 'border-red-500/30' : isDivergent ? 'border-amber-500/30' : 'border-emerald-500/30'} rounded-3xl p-4 sm:p-5 shadow-xl transition-all`}>
       <div 
         className="flex items-center justify-between cursor-pointer"
         onClick={() => setExpanded(!expanded)}

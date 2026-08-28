@@ -11,15 +11,27 @@ export function getFarmerAdvisory(weather, selectedDay = 0, lang = 'en') {
   const temp = selectedDay === 0 ? weather.temperature : Math.round(((weather.daily?.maxTemp?.[selectedDay] || 0) + (weather.daily?.minTemp?.[selectedDay] || 0)) / 2);
   const precipProb = weather.daily?.precipProbMax?.[selectedDay] || weather.daily?.precipProbMax?.[0] || 0;
 
-  if (code >= 95) return { icon: 'storm', title: t.farmTitleStorm, advice: t.farmAdvStorm, type: 'danger' };
-  if (code >= 65 || rain > 10) return { icon: 'rain', title: t.farmTitleRain, advice: t.farmAdvRain(rain), type: 'danger' };
-  if (selectedDay > 0 && precipProb > 75) return { icon: 'rain', title: t.farmTitleRain, advice: t.farmAdvRainProb(precipProb), type: 'danger' };
-  if ((code >= 51 && code <= 67) || precipProb > 40) return { icon: 'drizzle', title: t.farmTitleSpray, advice: t.farmAdvSpray(precipProb), type: 'caution' };
-  if (uv >= 9) return { icon: 'uv', title: t.farmTitleUV, advice: t.farmAdvUV(uv), type: 'danger' };
-  if (wind > 25) return { icon: 'wind', title: t.farmTitleWind, advice: t.farmAdvWind(wind), type: 'caution' };
-  if (humidity > 85 && temp > 25) return { icon: 'fungal', title: t.farmTitleFungal, advice: t.farmAdvFungal(humidity), type: 'caution' };
-  if (code === 45 || code === 48) return { icon: 'fog', title: t.farmTitleFog, advice: t.farmAdvFog, type: 'caution' };
-  if (temp <= 5) return { icon: 'frost', title: t.farmTitleFrost, advice: t.farmAdvFrost(temp), type: 'danger' };
-  if (precipProb < 20 && wind < 15 && uv < 9) return { icon: 'good', title: t.farmTitleIdeal, advice: t.farmAdvIdeal(wind), type: 'good' };
-  return { icon: 'ok', title: t.farmTitleGood, advice: t.farmAdvGood(uv), type: 'good' };
+  const currentMonth = new Date().getMonth(); // 0 = Jan, 11 = Dec
+  let seasonInfo = '';
+  if (currentMonth >= 5 && currentMonth <= 9) {
+    seasonInfo = lang === 'hi' ? 'खरीफ सीजन (धान, मक्का, कपास)।' : 'Kharif Season (Paddy, Maize, Cotton).';
+  } else if (currentMonth >= 10 || currentMonth <= 3) {
+    seasonInfo = lang === 'hi' ? 'रबी सीजन (गेहूं, चना, सरसों)।' : 'Rabi Season (Wheat, Gram, Mustard).';
+  } else {
+    seasonInfo = lang === 'hi' ? 'जायद सीजन (तरबूज, सब्जियां)।' : 'Zaid Season (Vegetables, Melons).';
+  }
+
+  const buildAdvice = (base) => `${base} ${seasonInfo}`;
+
+  if (code >= 95) return { icon: 'storm', title: t.farmTitleStorm, advice: buildAdvice(t.farmAdvStorm), type: 'danger' };
+  if (code >= 65 || rain > 10) return { icon: 'rain', title: t.farmTitleRain, advice: buildAdvice(t.farmAdvRain(rain)), type: 'danger' };
+  if (selectedDay > 0 && precipProb > 75) return { icon: 'rain', title: t.farmTitleRain, advice: buildAdvice(t.farmAdvRainProb(precipProb)), type: 'danger' };
+  if ((code >= 51 && code <= 67) || precipProb > 40) return { icon: 'drizzle', title: t.farmTitleSpray, advice: buildAdvice(t.farmAdvSpray(precipProb)), type: 'caution' };
+  if (uv >= 9) return { icon: 'uv', title: t.farmTitleUV, advice: buildAdvice(t.farmAdvUV(uv)), type: 'danger' };
+  if (wind > 25) return { icon: 'wind', title: t.farmTitleWind, advice: buildAdvice(t.farmAdvWind(wind)), type: 'caution' };
+  if (humidity > 85 && temp > 25) return { icon: 'fungal', title: t.farmTitleFungal, advice: buildAdvice(t.farmAdvFungal(humidity)), type: 'caution' };
+  if (code === 45 || code === 48) return { icon: 'fog', title: t.farmTitleFog, advice: buildAdvice(t.farmAdvFog), type: 'caution' };
+  if (temp <= 5) return { icon: 'frost', title: t.farmTitleFrost, advice: buildAdvice(t.farmAdvFrost(temp)), type: 'danger' };
+  if (precipProb < 20 && wind < 15 && uv < 9) return { icon: 'good', title: t.farmTitleIdeal, advice: buildAdvice(t.farmAdvIdeal(wind)), type: 'good' };
+  return { icon: 'ok', title: t.farmTitleGood, advice: buildAdvice(t.farmAdvGood(uv)), type: 'good' };
 }
