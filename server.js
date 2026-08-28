@@ -748,9 +748,11 @@ app.get('/', (req, res) => {
   res.json({ status: 'active', message: 'WeatherGPT Backend is running!' });
 });
 
-if (process.env.NODE_ENV !== "production") { app.listen(PORT, () => {
-  console.log(`WeatherGPT server running on http://localhost:${PORT}`);
-});
+// Start server on Render or local (Vercel Serverless functions do not need app.listen)
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`WeatherGPT server running on port ${PORT}`);
+  });
+}
 
-} 
 export default app;
