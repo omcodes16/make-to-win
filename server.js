@@ -2,6 +2,7 @@ import express from 'express';
 import fs from 'fs';
 import crypto from 'crypto';
 import * as googleTTS from 'google-tts-api';
+import { XMLParser } from 'fast-xml-parser';
 
 import cors from 'cors';
 import { config } from 'dotenv';
@@ -24,7 +25,8 @@ import {
   get_forecast, 
   get_historical_trend, 
   get_seasonal_comparison, 
-  get_active_alerts 
+  get_active_alerts,
+  get_marine_weather
 } from './server/tools.js';
 
 // System prompt for Groq — PS 26068 enhanced
@@ -40,7 +42,7 @@ Core Rules:
 4. Simple language only. "Heavy rain after 4 PM — plan travel earlier" NOT "Precipitation probability: 78%".
 5. USER PROFILE AWARENESS: You will be provided the user's profile. Tailor your answer's framing and terminology to the user's profile:
    - If Farmer (किसान): Prioritize agricultural concerns (spraying, field work, crops).
-   - If Fisherman (मछुआरा): Prioritize marine/boating safety (wind, waves, storm risk). Use fishing terminology.
+   - If Fisherman (मछुआरा): Prioritize marine/boating safety (wind, waves, storm risk). Use fishing terminology. You MUST call get_marine_weather to get wave height data.
    - If Aviation (उड्डयन): Prioritize flight-relevant conditions (wind, visibility, storms) using general-aviation language.
    - If Urban Planner (शहरी योजनाकार): Prioritize city-infrastructure and public-preparedness framing (flooding, heatwaves, AQI).
    - If General: Answer in plain everyday terms.
@@ -293,9 +295,44 @@ app.get("/api/alerts", async (req, res) => {
     }
 
     const xmlText = await response.text();
-    // In a production scenario with a real XML feed, we would parse the CAP XML here.
-    // Since the feed is currently 404, this gracefully falls back.
-    const alerts = []; 
+
+    // Parse the CAP XML feed using fast-xml-parser
+    const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: '@_' });
+    let parsed;
+    try {
+      parsed = parser.parse(xmlText);
+    } catch (xmlErr) {
+      console.warn('[NDMA API] XML parse error:', xmlErr.message);
+      parsed = null;
+    }
+
+    // CAP feed structure: root > alert (or alerts > alert)
+    let rawAlerts = [];
+    if (parsed) {
+      // Handle both single alert and array of alerts
+      const root = parsed.alerts || parsed.feed || parsed;
+      const alertNode = root?.alert;
+      if (Array.isArray(alertNode)) {
+        rawAlerts = alertNode;
+      } else if (alertNode) {
+        rawAlerts = [alertNode];
+      }
+    }
+
+    const alerts = rawAlerts.map(a => {
+      const info = Array.isArray(a.info) ? a.info[0] : (a.info || {});
+      const area = Array.isArray(info.area) ? info.area[0] : (info.area || {});
+      return {
+        title: info.headline || info.event || a.identifier || 'Weather Alert',
+        description: info.description || info.instruction || '',
+        area: area.areaDesc || info.area?.areaDesc || 'India',
+        severity: (info.severity || 'Moderate').toLowerCase() === 'extreme' ? 'severe'
+                : (info.severity || 'Moderate').toLowerCase() === 'severe'  ? 'severe'
+                : (info.severity || 'Moderate').toLowerCase() === 'moderate' ? 'caution'
+                : 'info',
+        source: 'NDMA Sachet'
+      };
+    });
     
     ALERTS_CACHE.data = alerts;
     ALERTS_CACHE.timestamp = now;
@@ -309,56 +346,96 @@ app.get("/api/alerts", async (req, res) => {
   }
 });
 
-// --- FORECAST ACCURACY TRACKER (PLAN B) ---
-const SNAPSHOT_FILE = join(__dirname, "forecast_snapshots.json");
-const ACCURACY_LOG_FILE = join(__dirname, "accuracy_log.json");
+// --- FORECAST ACCURACY TRACKER (REAL SNAPSHOT SYSTEM) ---
+const SNAPSHOT_FILE = join(__dirname, 'forecast_snapshots.json');
+const ACCURACY_LOG_FILE = join(__dirname, 'accuracy_log.json');
 
-app.get("/api/accuracy", (req, res) => {
+// Load snapshot and log files from disk (persist across restarts)
+let forecastSnapshots = [];
+let accuracyLog = [];
+try { forecastSnapshots = JSON.parse(fs.readFileSync(SNAPSHOT_FILE, 'utf8')); } catch (e) { forecastSnapshots = []; }
+try { accuracyLog = JSON.parse(fs.readFileSync(ACCURACY_LOG_FILE, 'utf8')); } catch (e) { accuracyLog = []; }
+
+const saveSnapshots = () => { try { fs.writeFileSync(SNAPSHOT_FILE, JSON.stringify(forecastSnapshots, null, 2)); } catch (e) {} };
+const saveAccuracyLog = () => { try { fs.writeFileSync(ACCURACY_LOG_FILE, JSON.stringify(accuracyLog, null, 2)); } catch (e) {} };
+
+// Called internally to record today's forecast for a location
+function recordForecastSnapshot(locationName, lat, lng, forecastMaxTemp, forecastPrecipProb) {
+  const today = new Date().toISOString().split('T')[0];
+  const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+  // Avoid duplicate snapshots for same location + date
+  const exists = forecastSnapshots.find(s => s.location === locationName && s.forecastDate === tomorrow);
+  if (!exists && forecastMaxTemp != null) {
+    forecastSnapshots.push({
+      location: locationName,
+      lat, lng,
+      snapshotDate: today,
+      forecastDate: tomorrow,
+      predictedMaxTemp: forecastMaxTemp,
+      predictedPrecipProb: forecastPrecipProb,
+    });
+    // Keep only last 30 snapshots per location
+    if (forecastSnapshots.length > 200) forecastSnapshots = forecastSnapshots.slice(-200);
+    saveSnapshots();
+  }
+}
+
+// Called internally to verify yesterday's snapshots against Open-Meteo archive
+async function verifyPendingSnapshots() {
+  const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+  const pending = forecastSnapshots.filter(s => s.forecastDate === yesterday && !accuracyLog.find(l => l.location === s.location && l.date === yesterday));
+  
+  for (const snap of pending) {
+    try {
+      const archiveUrl = `https://archive-api.open-meteo.com/v1/archive?latitude=${snap.lat}&longitude=${snap.lng}&start_date=${yesterday}&end_date=${yesterday}&daily=temperature_2m_max,precipitation_probability_max&timezone=auto`;
+      const r = await fetch(archiveUrl);
+      if (!r.ok) continue;
+      const j = await r.json();
+      if (!j.daily) continue;
+      const actualTemp = j.daily.temperature_2m_max?.[0];
+      const actualPrecip = j.daily.precipitation_probability_max?.[0];
+      if (actualTemp == null) continue;
+      const tempDiff = Math.abs(snap.predictedMaxTemp - actualTemp);
+      const status = tempDiff < 1.5 ? 'accurate' : tempDiff <= 3 ? 'close' : 'off';
+      accuracyLog.push({
+        location: snap.location,
+        date: yesterday,
+        predictedTemp: snap.predictedMaxTemp,
+        actualTemp: parseFloat(actualTemp.toFixed(1)),
+        predictedRainProb: snap.predictedPrecipProb,
+        actualRainProb: actualPrecip != null ? Math.round(actualPrecip) : null,
+        tempDiff: parseFloat(tempDiff.toFixed(1)),
+        accuracyStatus: status,
+        isSample: false,
+      });
+    } catch (e) { /* archive unavailable for this entry */ }
+  }
+  if (accuracyLog.length > 200) accuracyLog = accuracyLog.slice(-200);
+  saveAccuracyLog();
+}
+
+app.get('/api/accuracy', async (req, res) => {
   const { location } = req.query;
   const now = new Date();
-  
-  // Real tracked data would be loaded from ACCURACY_LOG_FILE.
-  // Since tracking just started today, we generate some plausible historical samples 
-  // to illustrate how the system looks, explicitly labeled as samples.
-  
-  const sampleData = [];
-  for (let i = 1; i <= 5; i++) {
-    const d = new Date(now);
-    d.setDate(d.getDate() - i);
-    
-    // Generate some plausible numbers
-    const actualTemp = 25 + Math.random() * 8;
-    const isAccurate = Math.random() > 0.3; // 70% accurate
-    const tempDiff = isAccurate ? (Math.random() * 1.4) : (1.5 + Math.random() * 2);
-    const predictedTemp = actualTemp + (Math.random() > 0.5 ? tempDiff : -tempDiff);
-    
-    const actualRain = Math.random() > 0.7 ? 80 : 10;
-    const predRain = isAccurate ? (actualRain + (Math.random() * 10 - 5)) : (actualRain > 50 ? 20 : 70);
 
-    let status = "accurate";
-    if (tempDiff >= 1.5 && tempDiff <= 3) status = "close";
-    if (tempDiff > 3) status = "off";
+  // Verify any unverified yesterday snapshots first
+  try { await verifyPendingSnapshots(); } catch (e) {}
 
-    sampleData.push({
-      date: d.toISOString().split('T')[0],
-      predictedTemp: parseFloat(predictedTemp.toFixed(1)),
-      actualTemp: parseFloat(actualTemp.toFixed(1)),
-      predictedRainProb: Math.round(predRain),
-      actualRainProb: Math.round(actualRain),
-      tempDiff: parseFloat(tempDiff.toFixed(1)),
-      accuracyStatus: status,
-      isSample: true // Clearly flag as sample for transparency
-    });
-  }
+  // Filter real log entries by location (if specified)
+  let realData = location
+    ? accuracyLog.filter(l => l.location && l.location.toLowerCase().includes(location.toLowerCase()))
+    : accuracyLog;
 
-  // Sort by date descending
-  sampleData.sort((a, b) => new Date(b.date) - new Date(a.date));
+  // Sort descending
+  realData = [...realData].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 7);
 
-  // In a real system, we'd merge sampleData with actual logged data from ACCURACY_LOG_FILE
   res.json({
-    location: location || "Global",
+    location: location || 'Global',
     trackingStartedAt: now.toISOString(),
-    data: sampleData
+    data: realData,
+    message: realData.length === 0
+      ? 'Accuracy tracking started. Data will appear after the first 24 hours of operation.'
+      : undefined,
   });
 });
 
@@ -409,7 +486,7 @@ app.post('/api/chat', async (req, res) => {
     ];
 
     let loopCount = 0;
-    const MAX_LOOPS = 5; 
+    const MAX_LOOPS = 3; 
     let lastWeatherData = null;
 
     if (req.body.forceLegacy) {
@@ -461,10 +538,20 @@ app.post('/api/chat', async (req, res) => {
                resultData = await get_current_weather(args);
                lastWeatherData = { locationName: args.location, ...resultData };
             }
-            else if (funcName === 'get_forecast') resultData = await get_forecast(args);
+            else if (funcName === 'get_forecast') {
+              resultData = await get_forecast(args);
+              // Record snapshot for accuracy tracking (day 1 = tomorrow)
+              if (args.daysAhead === 1 && resultData && !resultData.error) {
+                try {
+                  const locData = await import('./src/services/weatherApi.js').then(m => m.geocodeLocation(args.location, 'en'));
+                  if (locData) recordForecastSnapshot(args.location, locData.lat, locData.lng, resultData.maxTemp, resultData.precipProbMax);
+                } catch (snapshotErr) { /* non-critical, skip */ }
+              }
+            }
             else if (funcName === 'get_historical_trend') resultData = await get_historical_trend(args);
             else if (funcName === 'get_seasonal_comparison') resultData = await get_seasonal_comparison(args);
             else if (funcName === 'get_active_alerts') resultData = await get_active_alerts(args);
+            else if (funcName === 'get_marine_weather') resultData = await get_marine_weather(args);
             else resultData = { error: 'Unknown function' };
           } catch (err) {
             resultData = { error: err.message };
@@ -743,10 +830,17 @@ app.get('/api/news', async (req, res) => {
   }
 });
 
-// Serve static files in production
-app.get('/', (req, res) => {
-  res.json({ status: 'active', message: 'WeatherGPT Backend is running!' });
-});
+// Serve built React frontend in production (Docker)
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(join(__dirname, 'dist')));
+  app.get('*', (req, res) => {
+    res.sendFile(join(__dirname, 'dist', 'index.html'));
+  });
+} else {
+  app.get('/', (req, res) => {
+    res.json({ status: 'active', message: 'WeatherGPT Backend is running!' });
+  });
+}
 
 // Start server on Render or local (Vercel Serverless functions do not need app.listen)
 if (!process.env.VERCEL) {

@@ -336,6 +336,55 @@ export default function AlertsScreen() {
             )})}
           </div>
 
+          {/* Smart City & Urban Planning Dashboard */}
+          <div className="bg-surface-1 border border-white/5 rounded-xl p-5 shadow-lg flex flex-col mb-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-bold text-white/90 tracking-wide flex items-center gap-2">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                Smart City & Urban Planning
+              </h3>
+              <span className="text-[10px] uppercase font-bold text-blue-400 bg-blue-500/10 px-2 py-1 rounded">Live Data</span>
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {/* AQI Monitor */}
+              <div className="bg-black/20 rounded-lg p-4 border border-white/5 flex flex-col justify-between">
+                <div className="flex justify-between items-start mb-2">
+                  <span className="text-xs font-bold text-white/50 uppercase">Air Quality (AQI)</span>
+                  <svg className={`w-4 h-4 ${weather?.aqi > 150 ? 'text-red-400' : weather?.aqi > 100 ? 'text-orange-400' : 'text-green-400'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"/></svg>
+                </div>
+                <div className="text-2xl font-bold mb-1">{weather?.aqi || '--'}</div>
+                <div className={`text-xs ${weather?.aqi > 150 ? 'text-red-400' : weather?.aqi > 100 ? 'text-orange-400' : 'text-green-400'}`}>
+                  {weather?.aqi > 150 ? 'Unhealthy' : weather?.aqi > 100 ? 'Moderate' : 'Good'} for sensitive groups
+                </div>
+              </div>
+
+              {/* Heatwave / Urban Heat Island */}
+              <div className="bg-black/20 rounded-lg p-4 border border-white/5 flex flex-col justify-between">
+                <div className="flex justify-between items-start mb-2">
+                  <span className="text-xs font-bold text-white/50 uppercase">Heat Index</span>
+                  <svg className={`w-4 h-4 ${weather?.feelsLike > 40 ? 'text-red-400' : weather?.feelsLike > 35 ? 'text-orange-400' : 'text-yellow-400'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="4.22" x2="19.78" y2="5.64"/></svg>
+                </div>
+                <div className="text-2xl font-bold mb-1">{weather?.feelsLike || '--'}°C</div>
+                <div className={`text-xs ${weather?.feelsLike > 40 ? 'text-red-400' : weather?.feelsLike > 35 ? 'text-orange-400' : 'text-white/60'}`}>
+                  {weather?.feelsLike > 40 ? 'Extreme Danger' : weather?.feelsLike > 35 ? 'High Risk' : 'Normal Conditions'}
+                </div>
+              </div>
+
+              {/* Infrastructure Flood Risk */}
+              <div className="bg-black/20 rounded-lg p-4 border border-white/5 flex flex-col justify-between">
+                <div className="flex justify-between items-start mb-2">
+                  <span className="text-xs font-bold text-white/50 uppercase">Waterlogging Risk</span>
+                  <svg className={`w-4 h-4 ${impactStats.flood === 'Severe' ? 'text-red-400' : impactStats.flood === 'High' ? 'text-orange-400' : 'text-blue-400'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                </div>
+                <div className="text-2xl font-bold mb-1">{weather?.rain || weather?.precipitation || '0'} <span className="text-sm font-normal text-white/50">mm</span></div>
+                <div className={`text-xs ${impactStats.flood === 'Severe' ? 'text-red-400' : impactStats.flood === 'High' ? 'text-orange-400' : 'text-blue-400'}`}>
+                  {impactStats.flood === 'Severe' ? 'High risk for underpasses' : impactStats.flood === 'High' ? 'Moderate drainage stress' : 'Normal drainage capacity'}
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-surface-1 border border-white/5 rounded-xl p-5 shadow-lg flex flex-col">
               <div className="flex items-center justify-between mb-4">

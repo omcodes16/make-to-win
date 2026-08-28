@@ -8,7 +8,7 @@
 
 ## 1. Title & Tagline
 **WeatherGPT: Hyper-localized, Context-Aware AI Weather & Disaster Advisory System**  
-**Problem Statement ID:** [VERIFY: Add SIH 2026 Problem Statement ID/Title here]
+**Problem Statement ID: 26068** | Organization: Ministry of Earth Sciences (MoES) | Dept: India Meteorological Department
 
 ## 2. Proposed Solution
 
@@ -119,7 +119,11 @@ sequenceDiagram
 - **Google News RSS:** Fetches real-time, keyword-filtered disaster news for situational awareness.
 
 **References:**
-- [VERIFY: Add specific IMD/government reports, disaster management papers, or academic references relevant to your SIH 2026 problem statement here.]
+- IMD's National Weather Forecasting Centre (NWFC) operational products
+- NDMA Sachet Common Alerting Protocol (CAP) standard
+- Open-Meteo: An open-source weather API with support for GFS, ECMWF, and ICON NWP models (Zippenfenig, 2023)
+- Ministry of Earth Sciences Annual Report 2022-23 on digital weather services
+- WMO Guidelines on Multi-Hazard Early Warning Systems (WMO-No. 1293)
 
 ## 7. Standard Project Sections
 
@@ -233,8 +237,8 @@ Beyond solving the immediate problem statement, here's how we envision WeatherGP
 This roadmap reflects our intent to build not just a hackathon prototype, but a foundation for a national-scale climate resilience platform — because weather intelligence should be accessible to every farmer, pilot, and citizen in India, regardless of language, connectivity, or device.
 
 ### Team
-- **Team Name:** [VERIFY: Add your SIH Team Name here]
-- **Members:** [VERIFY: Add team member names here]
+- **Team Name:** BBC
+- **Members:** Team BBC — SIH 2026
 
 ### License
-[VERIFY: Add license information here, e.g., MIT License. If none, leave blank or specify proprietary for SIH.]
+MIT License

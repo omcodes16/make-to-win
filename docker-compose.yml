@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  weathergpt:
+    build: .
+    ports:
+      - "3001:3001"
+    environment:
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - MANAGER_PASSCODE=${MANAGER_PASSCODE}
+      - MANAGER_SECRET=${MANAGER_SECRET}
+      - NODE_ENV=production
+    volumes:
+      # Persist data files across container restarts
+      - ./manager_alerts.json:/app/manager_alerts.json
+      - ./forecast_snapshots.json:/app/forecast_snapshots.json
+      - ./accuracy_log.json:/app/accuracy_log.json
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3001/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3

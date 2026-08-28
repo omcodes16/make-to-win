@@ -10,3 +10,7 @@ build/
 *.log
 *.patch
 dev-archive/
+
+# Generated Data Files
+accuracy_log.json
+forecast_snapshots.json

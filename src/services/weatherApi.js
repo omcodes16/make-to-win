@@ -107,7 +107,18 @@ export async function getWeather(lat, lng) {
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,rain,weather_code,wind_speed_10m,wind_direction_10m,uv_index,visibility,is_day&hourly=temperature_2m,precipitation_probability,wind_speed_10m,wind_direction_10m,weather_code,is_day&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,uv_index_max,sunrise,sunset,weather_code&timezone=auto&forecast_days=7`;
   const aqiUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lng}&current=us_aqi&timezone=auto`;
 
-  const [res, aqiRes] = await Promise.all([fetch(url), fetch(aqiUrl)]);
+  // NWP Multi-Model URLs — fetching GFS, ICON, ECMWF separately for real model consensus
+  const gfsUrl   = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&daily=temperature_2m_max,precipitation_probability_max&timezone=auto&forecast_days=7&models=gfs_global`;
+  const iconUrl  = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&daily=temperature_2m_max,precipitation_probability_max&timezone=auto&forecast_days=7&models=icon_global`;
+  const ecmwfUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&daily=temperature_2m_max,precipitation_probability_max&timezone=auto&forecast_days=7&models=ecmwf_ifs025`;
+
+  const [res, aqiRes, gfsRes, iconRes, ecmwfRes] = await Promise.all([
+    fetch(url),
+    fetch(aqiUrl),
+    fetch(gfsUrl).catch(() => null),
+    fetch(iconUrl).catch(() => null),
+    fetch(ecmwfUrl).catch(() => null),
+  ]);
   
   if (!res.ok) throw new Error(`Weather API error: ${res.status}`);
   
@@ -120,6 +131,32 @@ export async function getWeather(lat, lng) {
       aqiValue = aqiData.current.us_aqi;
     }
   }
+
+  // Parse real NWP model data — gracefully fall back to null if any model is unavailable
+  let gfsModelData   = { maxTemp: null, precipProbMax: null };
+  let iconModelData  = { maxTemp: null, precipProbMax: null };
+  let ecmwfModelData = { maxTemp: null, precipProbMax: null };
+
+  try {
+    if (gfsRes && gfsRes.ok) {
+      const j = await gfsRes.json();
+      if (j.daily) gfsModelData = { maxTemp: j.daily.temperature_2m_max || null, precipProbMax: j.daily.precipitation_probability_max || null };
+    }
+  } catch (e) { /* GFS unavailable */ }
+
+  try {
+    if (iconRes && iconRes.ok) {
+      const j = await iconRes.json();
+      if (j.daily) iconModelData = { maxTemp: j.daily.temperature_2m_max || null, precipProbMax: j.daily.precipitation_probability_max || null };
+    }
+  } catch (e) { /* ICON unavailable */ }
+
+  try {
+    if (ecmwfRes && ecmwfRes.ok) {
+      const j = await ecmwfRes.json();
+      if (j.daily) ecmwfModelData = { maxTemp: j.daily.temperature_2m_max || null, precipProbMax: j.daily.precipitation_probability_max || null };
+    }
+  } catch (e) { /* ECMWF unavailable */ }
 
   const current = data.current;
 
@@ -162,12 +199,12 @@ export async function getWeather(lat, lng) {
       weatherCode: data.daily.weather_code,
     },
 
-    // NWP Model Transparency Data (not available without multi-model, set to null)
+    // NWP Model Transparency Data — real multi-model consensus (GFS, ICON, ECMWF)
     modelData: {
       daily: {
-        gfs: { maxTemp: null, precipProbMax: null },
-        icon: { maxTemp: null, precipProbMax: null },
-        ecmwf: { maxTemp: null, precipProbMax: null },
+        gfs: gfsModelData,
+        icon: iconModelData,
+        ecmwf: ecmwfModelData,
       }
     },
 
