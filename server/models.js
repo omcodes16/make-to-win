@@ -48,9 +48,7 @@ const accuracyLogSchema = new mongoose.Schema({
 const sosSchema = new mongoose.Schema({
   name: { type: String, default: 'Anonymous' },
   phone: { type: String, default: '' },
-  message: { type: String, default: '' },
-  helpType: { type: String, default: 'General Emergency' },
-  image: { type: String },
+  message: { type: String, default: 'Emergency assistance needed' },
   lat: { type: Number, required: true },
   lng: { type: Number, required: true },
   status: { type: String, enum: ['pending', 'dispatched', 'resolved'], default: 'pending' },
