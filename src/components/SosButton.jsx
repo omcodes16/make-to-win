@@ -18,7 +18,46 @@ export default function SosButton() {
     "Other"
   ];
 
-  const handleSosClick = () => setPhase("form");
+    const playSiren = () => {
+    try {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return;
+      const ctx = new AudioContext();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      
+      osc.type = 'square';
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      
+      // Sweep frequency up and down to mimic an emergency siren
+      osc.frequency.setValueAtTime(400, ctx.currentTime);
+      osc.frequency.linearRampToValueAtTime(800, ctx.currentTime + 0.3);
+      osc.frequency.linearRampToValueAtTime(400, ctx.currentTime + 0.6);
+      osc.frequency.linearRampToValueAtTime(800, ctx.currentTime + 0.9);
+      osc.frequency.linearRampToValueAtTime(400, ctx.currentTime + 1.2);
+      
+      // Fade out
+      gain.gain.setValueAtTime(0.15, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.2);
+      
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 1.2);
+    } catch (e) {
+      console.log('Audio Context not supported');
+    }
+  };
+
+  const handleSosClick = () => {
+    // 1. Haptic Feedback (Intense SOS vibration)
+    if (navigator.vibrate) {
+      navigator.vibrate([300, 100, 300, 100, 300]);
+    }
+    // 2. Play Emergency Siren Sound
+    playSiren();
+    
+    setPhase("form");
+  };
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];

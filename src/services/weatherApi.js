@@ -95,6 +95,59 @@ export async function geocodeLocation(name, lang = 'en') {
 }
 
 /**
+ * Fetch multiple location suggestions for disambiguation.
+ */
+export async function searchLocationSuggestions(name, lang = 'en') {
+  const normalized = name.toLowerCase().trim();
+  const results = [];
+  
+  if (!normalized) return results;
+
+  // Add matching NER cities as initial suggestions if any
+  for (const [key, city] of Object.entries(NER_CITIES)) {
+    if (key.includes(normalized) || normalized.includes(key)) {
+      results.push({
+        lat: city.lat,
+        lng: city.lng,
+        name: city.name,
+        state: city.state,
+        district: city.district,
+        country: 'India'
+      });
+    }
+  }
+
+  try {
+    const res = await fetch(
+      `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(name)}&count=5&language=${lang}`
+    );
+    const data = await res.json();
+    if (data.results && data.results.length > 0) {
+      data.results.forEach(r => {
+        // Avoid exact duplicates with NER cities based on lat/lng roughly
+        const isDuplicate = results.some(
+          existing => Math.abs(existing.lat - r.latitude) < 0.05 && Math.abs(existing.lng - r.longitude) < 0.05
+        );
+        if (!isDuplicate) {
+          results.push({
+            lat: r.latitude,
+            lng: r.longitude,
+            name: r.name,
+            state: r.admin1 || '',
+            district: r.admin2 || '',
+            country: r.country || ''
+          });
+        }
+      });
+    }
+  } catch (err) {
+    console.error('Open-Meteo suggestion error:', err);
+  }
+
+  return results;
+}
+
+/**
  * Fetch current weather + 7-day forecast from Open-Meteo.
  * URL matches the exact spec:
  * current: temperature_2m, relative_humidity_2m, apparent_temperature, precipitation,

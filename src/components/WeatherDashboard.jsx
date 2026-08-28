@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import RadarMap from './RadarMap';
 import HistoricalAnalytics from './HistoricalAnalytics';
 
-import { geocodeLocation, getWeather } from '../services/weatherApi';
+import { geocodeLocation, searchLocationSuggestions, getWeather } from '../services/weatherApi';
 import { getWeatherInfo, checkSeverity } from '../utils/weatherConditions';
 import { UI_TRANSLATIONS } from '../utils/translations';
 import { SPEECH_LANG_CODES } from '../utils/constants';
@@ -22,6 +22,9 @@ import ModelConfidence from './ModelConfidence';
 export default function WeatherDashboard() {
   const { state, dispatch } = useApp();
   const [searchInput, setSearchInput] = useState('');
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const debounceRef = useRef(null);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedDay, setSelectedDay] = useState(0); // 0 = today
 
@@ -30,12 +33,56 @@ export default function WeatherDashboard() {
   const stageData = state.weatherStageData;
   const weather = stageData?.weather;
 
+  const handleSearchChange = (e) => {
+    const val = e.target.value;
+    setSearchInput(val);
+    if (!val.trim()) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+    
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    
+    debounceRef.current = setTimeout(async () => {
+      const results = await searchLocationSuggestions(val, state.language);
+      setSuggestions(results);
+      setShowSuggestions(true);
+    }, 400);
+  };
+
+  const handleSelectLocation = async (loc) => {
+    setSearchInput(loc.name);
+    setShowSuggestions(false);
+    setIsLoading(true);
+    try {
+      const data = await getWeather(loc.lat, loc.lng);
+      dispatch({ type: 'SET_WEATHER_STAGE_DATA', payload: { locationName: loc.name, lat: loc.lat, lng: loc.lng, weather: data } });
+      setSelectedDay(0);
+      
+      const severityCheck = checkSeverity(data, loc.name);
+      if (severityCheck && severityCheck.isSevere) {
+        dispatch({ type: 'SET_SEVERE_ALERT', payload: severityCheck });
+      } else {
+        dispatch({ type: 'DISMISS_ALERT' });
+      }
+    } catch (err) {} finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSearch = async (e) => {
     if (e) e.preventDefault();
     if (!searchInput.trim()) return;
+    
+    // If they press enter, just pick the top suggestion or fallback to geocodeLocation
     setIsLoading(true);
+    setShowSuggestions(false);
     try {
-      const loc = await geocodeLocation(searchInput, state.language);
+      let loc = suggestions.length > 0 ? suggestions[0] : null;
+      if (!loc) {
+        loc = await geocodeLocation(searchInput, state.language);
+      }
       if (loc) {
         const data = await getWeather(loc.lat, loc.lng);
         dispatch({ type: 'SET_WEATHER_STAGE_DATA', payload: { locationName: loc.name, lat: loc.lat, lng: loc.lng, weather: data } });
@@ -59,18 +106,36 @@ export default function WeatherDashboard() {
       <div className="min-h-[100dvh] flex flex-col">
         
         <div className="relative z-10 flex-1 flex items-center justify-center p-4 sm:p-6 pb-24 md:pb-6 pt-20">
-          <div className="w-full max-w-md glass-card p-6 sm:p-8 rounded-3xl shadow-2xl">
+          <div className="w-full max-w-md glass-card p-6 sm:p-8 rounded-3xl shadow-2xl relative">
             <h2 className="text-xl sm:text-2xl font-semibold text-white mb-6 text-center text-gradient-hero">{t.searchPrompt}</h2>
             <form onSubmit={handleSearch} className="flex gap-2">
               <input
                 type="text"
                 placeholder={t.searchPlaceholder}
                 value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
+                onChange={handleSearchChange}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                onFocus={() => { if (suggestions.length > 0) setShowSuggestions(true); }}
                 className="flex-1 glass-input rounded-xl px-4 py-3 text-white focus:outline-none transition-colors text-sm sm:text-base glow-focus"
               />
               <button type="submit" className="px-4 sm:px-6 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-medium transition-all shadow-[0_0_15px_rgba(99,102,241,0.3)] hover:shadow-[0_0_25px_rgba(99,102,241,0.5)] text-sm sm:text-base">Go</button>
             </form>
+            {showSuggestions && suggestions.length > 0 && (
+              <ul className="absolute z-50 w-full left-0 mt-2 bg-slate-900/95 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl overflow-hidden">
+                {suggestions.map((loc, idx) => (
+                  <li 
+                    key={idx} 
+                    onMouseDown={() => handleSelectLocation(loc)}
+                    className="px-4 py-3 hover:bg-white/10 cursor-pointer border-b border-white/5 last:border-0 transition-colors text-left"
+                  >
+                    <div className="text-white font-medium text-sm">{loc.name}</div>
+                    <div className="text-white/60 text-xs">
+                      {[loc.district, loc.state, loc.country].filter(Boolean).join(', ')}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         
       
@@ -173,18 +238,36 @@ export default function WeatherDashboard() {
       <div className="relative z-10 max-w-[1400px] mx-auto px-3 sm:px-6 pt-20 sm:pt-28 md:pt-32">
         
         {/* Search Bar */}
-        <div className="flex justify-center mb-6 sm:mb-12">
+        <div className="flex justify-center mb-6 sm:mb-12 relative z-50">
           <form onSubmit={handleSearch} className="w-full max-w-2xl relative">
             <input
               type="text"
               placeholder={t.searchPlaceholder}
               value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
+              onChange={handleSearchChange}
+              onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+              onFocus={() => { if (suggestions.length > 0) setShowSuggestions(true); }}
               className="w-full glass-input rounded-full px-5 sm:px-6 py-3 sm:py-3.5 text-sm text-white focus:outline-none shadow-[0_0_20px_rgba(99,102,241,0.15)] transition-all placeholder:text-white/40 text-center glow-focus"
             />
             <button type="submit" className="absolute right-4 sm:right-6 top-1/2 -translate-y-1/2 text-white/50 hover:text-white transition-colors">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
             </button>
+            {showSuggestions && suggestions.length > 0 && (
+              <ul className="absolute z-50 w-full left-0 mt-2 bg-slate-900/95 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl overflow-hidden max-h-64 overflow-y-auto">
+                {suggestions.map((loc, idx) => (
+                  <li 
+                    key={idx} 
+                    onMouseDown={() => handleSelectLocation(loc)}
+                    className="px-5 py-3.5 hover:bg-white/10 cursor-pointer border-b border-white/5 last:border-0 transition-colors text-left flex flex-col sm:flex-row sm:items-center justify-between gap-1"
+                  >
+                    <div className="text-white font-medium text-sm sm:text-base">{loc.name}</div>
+                    <div className="text-white/50 text-[10px] sm:text-xs">
+                      {[loc.district, loc.state, loc.country].filter(Boolean).join(', ')}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
           </form>
         </div>
 

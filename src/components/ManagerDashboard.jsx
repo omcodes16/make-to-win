@@ -25,8 +25,77 @@ export default function ManagerDashboard() {
   });
   
   const [msg, setMsg] = useState("");
-  const [isSearchingLoc, setIsSearchingLoc] = useState(false);
+    const [isSearchingLoc, setIsSearchingLoc] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  // --- CONTINUOUS SIREN LOGIC FOR AUTHORITY PORTAL ---
+  const audioCtxRef = React.useRef(null);
+  const oscRef = React.useRef(null);
+  const gainRef = React.useRef(null);
+  const lfoRef = React.useRef(null);
+
+  useEffect(() => {
+    const hasPending = sosRequests.some(sos => sos.status === 'pending');
+    
+    if (hasPending && !oscRef.current) {
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (AudioContext) {
+          audioCtxRef.current = new AudioContext();
+          const ctx = audioCtxRef.current;
+          
+          oscRef.current = ctx.createOscillator();
+          gainRef.current = ctx.createGain();
+          lfoRef.current = ctx.createOscillator();
+          
+          oscRef.current.type = 'square';
+          lfoRef.current.type = 'sine';
+          
+          // Sweep up and down every 1.5 seconds
+          lfoRef.current.frequency.value = 0.75; 
+          
+          const lfoGain = ctx.createGain();
+          lfoGain.gain.value = 300; 
+          
+          lfoRef.current.connect(lfoGain);
+          lfoGain.connect(oscRef.current.frequency);
+          
+          oscRef.current.frequency.value = 700; // Base frequency 700Hz
+          gainRef.current.gain.value = 0.1; // Volume
+          
+          oscRef.current.connect(gainRef.current);
+          gainRef.current.connect(ctx.destination);
+          
+          lfoRef.current.start();
+          oscRef.current.start();
+        }
+      } catch (e) {
+        console.log("Audio prevented by browser policy", e);
+      }
+    } else if (!hasPending && oscRef.current) {
+      // Stop the siren once all requests are attended to
+      try {
+        oscRef.current.stop();
+        lfoRef.current.stop();
+        audioCtxRef.current.close();
+      } catch (e) {}
+      oscRef.current = null;
+      gainRef.current = null;
+      lfoRef.current = null;
+      audioCtxRef.current = null;
+    }
+
+    return () => {
+      if (oscRef.current) {
+        try {
+          oscRef.current.stop();
+          lfoRef.current.stop();
+          if (audioCtxRef.current?.state !== 'closed') audioCtxRef.current.close();
+        } catch(e) {}
+      }
+    };
+  }, [sosRequests]);
+  // ----------------------------------------------------
 
   const STATES = ["Assam", "Meghalaya", "Manipur", "Tripura", "Nagaland", "Mizoram", "Arunachal Pradesh", "Sikkim", "Maharashtra", "Tamil Nadu", "Gujarat", "West Bengal", "Uttar Pradesh", "Odisha"];
 

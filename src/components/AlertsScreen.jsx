@@ -103,9 +103,9 @@ export default function AlertsScreen() {
     if (hasThunderstorm) {
       alerts.push({
         id: 'thunder',
-        title: `Thunderstorm Warning in ${locName}`,
-        desc: `Thunderstorms are expected. Risk of lightning strikes and strong sudden gusts.`,
-        precaution: `Stay indoors, avoid using electrical equipment, and stay away from windows.`,
+        title: ex.alertThunderTitle ? ex.alertThunderTitle(locName) : `Thunderstorm Warning in ${locName}`,
+        desc: ex.alertThunderDesc || `Thunderstorms are expected. Risk of lightning strikes and strong sudden gusts.`,
+        precaution: ex.alertThunderPrec || `Stay indoors, avoid using electrical equipment, and stay away from windows.`,
         level: 'Severe', prob: `${Math.max(probValue, 80)}%`, rain: rainRange, window: 'Next 24 hrs', impact: 'High'
       });
     }
@@ -114,17 +114,17 @@ export default function AlertsScreen() {
     if (maxRain > severeThreshold || hasHeavyRainCode) {
       alerts.push({
         id: 'rain',
-        title: `Heavy Rain & Flood Risk in ${locName}`,
-        desc: isProb ? `High probability (${maxRain}%) of severe rain.` : `Heavy precipitation or showers expected. Low-lying areas may face waterlogging.`,
-        precaution: `Avoid unnecessary travel. Move livestock to higher ground and secure outdoor equipment.`,
+        title: ex.alertHeavyRainTitle ? ex.alertHeavyRainTitle(locName) : `Heavy Rain & Flood Risk in ${locName}`,
+        desc: ex.alertHeavyRainDesc ? ex.alertHeavyRainDesc(isProb, maxRain) : (isProb ? `High probability (${maxRain}%) of severe rain.` : `Heavy precipitation or showers expected. Low-lying areas may face waterlogging.`),
+        precaution: ex.alertHeavyRainPrec || `Avoid unnecessary travel. Move livestock to higher ground and secure outdoor equipment.`,
         level: 'Severe', prob: `${Math.max(probValue, 70)}%`, rain: rainRange, window: 'Next 12 hrs', impact: 'High'
       });
     } else if (maxRain > cautionThreshold) {
       alerts.push({
         id: 'rain-mod',
-        title: `Moderate Rain in ${locName}`,
-        desc: isProb ? `Moderate chance (${maxRain}%) of rain.` : `Steady rainfall expected (${maxRain}mm).`,
-        precaution: `Roads may be slippery. If spraying crops, consider delaying until the rain clears.`,
+        title: ex.alertModRainTitle ? ex.alertModRainTitle(locName) : `Moderate Rain in ${locName}`,
+        desc: ex.alertModRainDesc ? ex.alertModRainDesc(isProb, maxRain) : (isProb ? `Moderate chance (${maxRain}%) of rain.` : `Steady rainfall expected (${maxRain}mm).`),
+        precaution: ex.alertModRainPrec || `Roads may be slippery. If spraying crops, consider delaying until the rain clears.`,
         level: 'Caution', prob: `${probValue}%`, rain: rainRange, window: 'Next 24 hrs', impact: 'Moderate'
       });
     }
@@ -133,9 +133,9 @@ export default function AlertsScreen() {
     if (weather.windSpeed > 45) {
       alerts.push({
         id: 'wind',
-        title: `High Wind Warning for ${locName}`,
-        desc: `Dangerous wind gusts up to ${weather.windSpeed} km/h detected.`,
-        precaution: `Secure loose objects, close all windows, and avoid parking or walking under large trees.`,
+        title: ex.alertWindTitle ? ex.alertWindTitle(locName) : `High Wind Warning for ${locName}`,
+        desc: ex.alertWindDesc ? ex.alertWindDesc(weather.windSpeed) : `Dangerous wind gusts up to ${weather.windSpeed} km/h detected.`,
+        precaution: ex.alertWindPrec || `Secure loose objects, close all windows, and avoid parking or walking under large trees.`,
         level: 'Severe', prob: '85%', rain: actualRainDisplay, window: 'Next 6 hrs', impact: 'High'
       });
     }
@@ -144,9 +144,9 @@ export default function AlertsScreen() {
     if (weather.visibility < 2000) {
       alerts.push({
         id: 'vis',
-        title: `Poor Visibility in ${locName}`,
-        desc: `Visibility is severely reduced to ${(weather.visibility/1000).toFixed(1)}km.`,
-        precaution: `If driving, maintain a safe distance and use your fog lights or low beams.`,
+        title: ex.alertVisTitle ? ex.alertVisTitle(locName) : `Poor Visibility in ${locName}`,
+        desc: ex.alertVisDesc ? ex.alertVisDesc((weather.visibility/1000).toFixed(1)) : `Visibility is severely reduced to ${(weather.visibility/1000).toFixed(1)}km.`,
+        precaution: ex.alertVisPrec || `If driving, maintain a safe distance and use your fog lights or low beams.`,
         level: 'Caution', prob: '95%', rain: actualRainDisplay, window: 'Next 3 hrs', impact: 'Moderate'
       });
     }
@@ -155,9 +155,9 @@ export default function AlertsScreen() {
     if (weather.uvIndex > 8) {
       alerts.push({
         id: 'uv',
-        title: `Extreme UV Index in ${locName}`,
-        desc: `UV Index is dangerously high at level ${weather.uvIndex}.`,
-        precaution: `Avoid direct sun exposure between 10 AM and 4 PM. Wear protective clothing and stay hydrated.`,
+        title: ex.alertUvTitle ? ex.alertUvTitle(locName) : `Extreme UV Index in ${locName}`,
+        desc: ex.alertUvDesc ? ex.alertUvDesc(weather.uvIndex) : `UV Index is dangerously high at level ${weather.uvIndex}.`,
+        precaution: ex.alertUvPrec || `Avoid direct sun exposure between 10 AM and 4 PM. Wear protective clothing and stay hydrated.`,
         level: 'Caution', prob: '100%', rain: actualRainDisplay, window: '10 AM - 4 PM', impact: 'Moderate'
       });
     }
@@ -284,30 +284,30 @@ export default function AlertsScreen() {
                   <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-1.5 text-white/50 text-[10px] sm:text-xs uppercase tracking-wide">
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
-                      Probability
+                      {ex.probLbl}
                     </div>
                     <div className="text-base sm:text-lg font-bold">{alert.prob}</div>
                   </div>
                   <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-1.5 text-white/50 text-xs uppercase tracking-wide">
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-                        Expected
+                        {ex.expectedLbl}
                     </div>
                     <div className="text-lg font-bold">{alert.rain} <span className="text-xs font-normal text-white/50">{alert.rain !== 'Unknown' ? 'mm' : ''}</span></div>
                   </div>
                   <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-1.5 text-white/50 text-xs uppercase tracking-wide">
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                      Risk Window
+                      {ex.riskWindowLbl}
                     </div>
                     <div className="text-lg font-bold">{alert.window}</div>
                   </div>
                   <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-1.5 text-white/50 text-xs uppercase tracking-wide">
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-                        Impact Level
+                        {ex.impactLevelLbl}
                     </div>
-                    <div className={`text-lg font-bold ${styles.impactText}`}>{alert.impact}</div>
+                    <div className={`text-lg font-bold ${styles.impactText}`}>{alert.impact === 'Severe' ? ex.impactSevere : alert.impact === 'High' ? ex.impactHigh : alert.impact === 'Moderate' ? ex.impactMod : ex.impactLow}</div>
                   </div>
                 </div>
                 
@@ -319,7 +319,7 @@ export default function AlertsScreen() {
                       <svg className={`w-5 h-5 shrink-0 mt-0.5 ${styles.precautionIcon}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                     )}
                     <div>
-                      <div className={`text-[10px] font-bold uppercase tracking-widest mb-0.5 ${styles.precautionTitle}`}>Precaution / Action</div>
+                      <div className={`text-[10px] font-bold uppercase tracking-widest mb-0.5 ${styles.precautionTitle}`}>{ex.precautionLbl}</div>
                       <div className={`text-sm ${styles.precautionText}`}>{alert.precaution}</div>
                     </div>
                   </div>
@@ -328,7 +328,7 @@ export default function AlertsScreen() {
                       onClick={() => setActiveModal('warnings')}
                       className={`text-xs border px-3 py-1.5 rounded-md transition-colors flex items-center justify-center gap-1 shrink-0 ${styles.btn}`}
                     >
-                      View Details <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                      {ex.viewDetails} <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                     </button>
                   )}
                 </div>
@@ -341,7 +341,7 @@ export default function AlertsScreen() {
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-bold text-white/90 tracking-wide flex items-center gap-2">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                Smart City & Urban Planning
+                {ex.smartCityTitle}
               </h3>
               <span className="text-[10px] uppercase font-bold text-blue-400 bg-blue-500/10 px-2 py-1 rounded">Live Data</span>
             </div>
@@ -350,7 +350,7 @@ export default function AlertsScreen() {
               {/* AQI Monitor */}
               <div className="bg-black/20 rounded-lg p-4 border border-white/5 flex flex-col justify-between">
                 <div className="flex justify-between items-start mb-2">
-                  <span className="text-xs font-bold text-white/50 uppercase">Air Quality (AQI)</span>
+                  <span className="text-xs font-bold text-white/50 uppercase">{ex.aqiLbl}</span>
                   <svg className={`w-4 h-4 ${weather?.aqi > 150 ? 'text-red-400' : weather?.aqi > 100 ? 'text-orange-400' : 'text-green-400'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"/></svg>
                 </div>
                 <div className="text-2xl font-bold mb-1">{weather?.aqi || '--'}</div>
@@ -362,7 +362,7 @@ export default function AlertsScreen() {
               {/* Heatwave / Urban Heat Island */}
               <div className="bg-black/20 rounded-lg p-4 border border-white/5 flex flex-col justify-between">
                 <div className="flex justify-between items-start mb-2">
-                  <span className="text-xs font-bold text-white/50 uppercase">Heat Index</span>
+                  <span className="text-xs font-bold text-white/50 uppercase">{ex.heatIndexLbl}</span>
                   <svg className={`w-4 h-4 ${weather?.feelsLike > 40 ? 'text-red-400' : weather?.feelsLike > 35 ? 'text-orange-400' : 'text-yellow-400'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="4.22" x2="19.78" y2="5.64"/></svg>
                 </div>
                 <div className="text-2xl font-bold mb-1">{weather?.feelsLike || '--'}°C</div>
@@ -374,7 +374,7 @@ export default function AlertsScreen() {
               {/* Infrastructure Flood Risk */}
               <div className="bg-black/20 rounded-lg p-4 border border-white/5 flex flex-col justify-between">
                 <div className="flex justify-between items-start mb-2">
-                  <span className="text-xs font-bold text-white/50 uppercase">Waterlogging Risk</span>
+                  <span className="text-xs font-bold text-white/50 uppercase">{ex.waterRiskLbl}</span>
                   <svg className={`w-4 h-4 ${impactStats.flood === 'Severe' ? 'text-red-400' : impactStats.flood === 'High' ? 'text-orange-400' : 'text-blue-400'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
                 </div>
                 <div className="text-2xl font-bold mb-1">{weather?.rain || weather?.precipitation || '0'} <span className="text-sm font-normal text-white/50">mm</span></div>
@@ -419,35 +419,35 @@ export default function AlertsScreen() {
             </div>
 
             <div className="bg-surface-1 border border-white/5 rounded-xl p-5 shadow-lg flex flex-col">
-              <h3 className="text-sm font-bold text-white/90 tracking-wide mb-5">Alert Impact Areas</h3>
+              <h3 className="text-sm font-bold text-white/90 tracking-wide mb-5">{ex.alertImpactAreas}</h3>
               <div className="flex flex-col gap-3 flex-1">
                 <div className="flex items-center justify-between p-2.5 rounded bg-white/5 border border-white/5">
                   <div className="flex items-center gap-3">
                     <svg className="w-4 h-4 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-                    <span className="text-xs font-medium text-white/80">Flooding</span>
+                    <span className="text-xs font-medium text-white/80">{ex.flooding}</span>
                   </div>
-                  <span className={`text-[10px] font-bold uppercase ${impactStats.flood === 'Severe' ? 'text-red-500' : impactStats.flood === 'High' ? 'text-red-400' : impactStats.flood === 'Moderate' ? 'text-yellow-400 border border-yellow-500/30 px-1.5 rounded' : 'text-green-400'}`}>{impactStats.flood}</span>
+                  <span className={`text-[10px] font-bold uppercase ${impactStats.flood === 'Severe' ? 'text-red-500' : impactStats.flood === 'High' ? 'text-red-400' : impactStats.flood === 'Moderate' ? 'text-yellow-400 border border-yellow-500/30 px-1.5 rounded' : 'text-green-400'}`}>{impactStats.flood === 'Severe' ? ex.impactSevere : impactStats.flood === 'High' ? ex.impactHigh : impactStats.flood === 'Moderate' ? ex.impactMod : ex.impactLow}</span>
                 </div>
                 <div className="flex items-center justify-between p-2.5 rounded bg-white/5 border border-white/5">
                   <div className="flex items-center gap-3">
                     <svg className="w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
-                    <span className="text-xs font-medium text-white/80">Road Disruption</span>
+                    <span className="text-xs font-medium text-white/80">{ex.roadDisruption}</span>
                   </div>
-                  <span className={`text-[10px] font-bold uppercase ${impactStats.road === 'Severe' ? 'text-red-500' : impactStats.road === 'High' ? 'text-red-400' : impactStats.road === 'Moderate' ? 'text-yellow-400 border border-yellow-500/30 px-1.5 rounded' : 'text-green-400'}`}>{impactStats.road}</span>
+                  <span className={`text-[10px] font-bold uppercase ${impactStats.road === 'Severe' ? 'text-red-500' : impactStats.road === 'High' ? 'text-red-400' : impactStats.road === 'Moderate' ? 'text-yellow-400 border border-yellow-500/30 px-1.5 rounded' : 'text-green-400'}`}>{impactStats.road === 'Severe' ? ex.impactSevere : impactStats.road === 'High' ? ex.impactHigh : impactStats.road === 'Moderate' ? ex.impactMod : ex.impactLow}</span>
                 </div>
                 <div className="flex items-center justify-between p-2.5 rounded bg-white/5 border border-white/5">
                   <div className="flex items-center gap-3">
                     <svg className="w-4 h-4 text-green-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                    <span className="text-xs font-medium text-white/80">Crop Damage Risk</span>
+                    <span className="text-xs font-medium text-white/80">{ex.cropDamage}</span>
                   </div>
-                  <span className={`text-[10px] font-bold uppercase ${impactStats.crop === 'Severe' ? 'text-red-500' : impactStats.crop === 'High' ? 'text-red-400' : impactStats.crop === 'Moderate' ? 'text-yellow-400 border border-yellow-500/30 px-1.5 rounded' : 'text-green-400'}`}>{impactStats.crop}</span>
+                  <span className={`text-[10px] font-bold uppercase ${impactStats.crop === 'Severe' ? 'text-red-500' : impactStats.crop === 'High' ? 'text-red-400' : impactStats.crop === 'Moderate' ? 'text-yellow-400 border border-yellow-500/30 px-1.5 rounded' : 'text-green-400'}`}>{impactStats.crop === 'Severe' ? ex.impactSevere : impactStats.crop === 'High' ? ex.impactHigh : impactStats.crop === 'Moderate' ? ex.impactMod : ex.impactLow}</span>
                 </div>
                 <div className="flex items-center justify-between p-2.5 rounded bg-white/5 border border-white/5">
                   <div className="flex items-center gap-3">
                     <svg className="w-4 h-4 text-yellow-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                    <span className="text-xs font-medium text-white/80">Power Outage</span>
+                    <span className="text-xs font-medium text-white/80">{ex.powerOutage}</span>
                   </div>
-                  <span className={`text-[10px] font-bold uppercase ${impactStats.power === 'Severe' ? 'text-red-500' : impactStats.power === 'High' ? 'text-red-400' : impactStats.power === 'Moderate' ? 'text-yellow-400 border border-yellow-500/30 px-1.5 rounded' : 'text-green-400'}`}>{impactStats.power}</span>
+                  <span className={`text-[10px] font-bold uppercase ${impactStats.power === 'Severe' ? 'text-red-500' : impactStats.power === 'High' ? 'text-red-400' : impactStats.power === 'Moderate' ? 'text-yellow-400 border border-yellow-500/30 px-1.5 rounded' : 'text-green-400'}`}>{impactStats.power === 'Severe' ? ex.impactSevere : impactStats.power === 'High' ? ex.impactHigh : impactStats.power === 'Moderate' ? ex.impactMod : ex.impactLow}</span>
                 </div>
               </div>
             </div>
@@ -550,7 +550,7 @@ export default function AlertsScreen() {
                   }`}
                 >
                   {filter === 'all' && <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>}
-                  {filter}
+                  {ex.filters ? ex.filters[filter] || filter : filter}
                 </button>
               ))}
             </div>
