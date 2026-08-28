@@ -275,7 +275,7 @@ export default function WeatherDashboard() {
 
         {/* 7-Day Forecast */}
         <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-4 sm:p-6 mb-6 sm:mb-8 shadow-xl">
-          <div className="text-white/80 font-medium mb-4 sm:mb-6 text-xs sm:text-sm tracking-wide">7-Day Forecast</div>
+          <div className="text-white/80 font-medium mb-4 sm:mb-6 text-xs sm:text-sm tracking-wide">{t.forecast7Day || '7-Day Forecast'}</div>
           <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-7 gap-2 sm:gap-4">
             {dailyData.map((day, i) => (
               <button
@@ -299,9 +299,9 @@ export default function WeatherDashboard() {
           
           {/* Detailed Info */}
           <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-4 sm:p-6 shadow-xl flex flex-col gap-4 sm:gap-6">
-            <div className="text-white/80 font-medium text-xs sm:text-sm tracking-wide">Detailed Conditions</div>
+            <div className="text-white/80 font-medium text-xs sm:text-sm tracking-wide">{t.detailedConditions || 'Detailed Conditions'}</div>
             <div className="flex justify-between items-center text-sm border-b border-white/10 pb-3 sm:pb-4">
-              <span className="text-white/60 flex items-center gap-2 sm:gap-3 text-xs sm:text-sm"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Rain Probability</span>
+              <span className="text-white/60 flex items-center gap-2 sm:gap-3 text-xs sm:text-sm"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> {t.rainProb || 'Rain Probability'}</span>
               <span className="font-semibold text-sm sm:text-base">{weather.daily.precipProbMax[selectedDay]}%</span>
             </div>
             {isToday && (
@@ -312,12 +312,12 @@ export default function WeatherDashboard() {
             )}
             {isToday && (
               <div className="flex justify-between items-center text-sm border-b border-white/10 pb-3 sm:pb-4">
-                <span className="text-white/60 flex items-center gap-2 sm:gap-3 text-xs sm:text-sm">🍃 Air Quality</span>
-                <span className="font-semibold text-xs sm:text-base">{weather.aqi <= 50 ? 'Good' : weather.aqi <= 100 ? 'Moderate' : weather.aqi <= 150 ? 'Unhealthy (SG)' : 'Unhealthy'} ({weather.aqi})</span>
+                <span className="text-white/60 flex items-center gap-2 sm:gap-3 text-xs sm:text-sm">🍃 {t.airQuality || 'Air Quality'}</span>
+                <span className="font-semibold text-xs sm:text-base">{weather.aqi <= 50 ? (t.aqiGood || 'Good') : weather.aqi <= 100 ? (t.aqiMod || 'Moderate') : weather.aqi <= 150 ? (t.aqiUnhSG || 'Unhealthy (SG)') : (t.aqiUnh || 'Unhealthy')} ({weather.aqi})</span>
               </div>
             )}
             <div className="flex justify-between items-center text-sm pb-2">
-              <span className="text-white/60 flex items-center gap-2 sm:gap-3 text-xs sm:text-sm">☀️ Max UV Index</span>
+              <span className="text-white/60 flex items-center gap-2 sm:gap-3 text-xs sm:text-sm">☀️ {t.maxUv || 'Max UV Index'}</span>
               <span className="font-semibold text-sm sm:text-base">{displayUv}</span>
             </div>
 
@@ -340,8 +340,8 @@ export default function WeatherDashboard() {
           {/* Radar */}
           <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-4 sm:p-6 shadow-xl flex flex-col min-h-[280px] sm:min-h-[320px]">
             <div className="flex justify-between items-center mb-4 sm:mb-5">
-              <span className="text-white/80 font-medium text-xs sm:text-sm tracking-wide">Live Weather Radar</span>
-              <span className="bg-red-500/20 text-red-400 text-[10px] font-bold px-2 py-0.5 rounded uppercase border border-red-500/30 flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span> Live</span>
+              <span className="text-white/80 font-medium text-xs sm:text-sm tracking-wide">{t.radarLive || 'Live Weather Radar'}</span>
+              <span className="bg-red-500/20 text-red-400 text-[10px] font-bold px-2 py-0.5 rounded uppercase border border-red-500/30 flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span> {t.liveBadge || 'Live'}</span>
             </div>
             <div className="flex-1 -mx-4 sm:-mx-6 -mb-4 sm:-mb-6 mt-2 rounded-b-3xl overflow-hidden relative">
               <div className="absolute inset-0">

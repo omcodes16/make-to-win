@@ -300,7 +300,7 @@ export default function WeatherCharts({ weather, lat, lng }) {
 
       {/* Advanced Weather Details Grid */}
       <div className="px-6 pb-4">
-        <h3 className="text-white/70 font-medium mb-3 pl-1 text-sm tracking-wide">Detailed Conditions</h3>
+        <h3 className="text-white/70 font-medium mb-3 pl-1 text-sm tracking-wide">{t.detailedConditions || 'Detailed Conditions'}</h3>
         <div className="grid grid-cols-2 gap-3">
           
           {/* Feels Like & Humidity */}
