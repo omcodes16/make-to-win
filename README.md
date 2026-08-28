@@ -174,6 +174,34 @@ sequenceDiagram
    *(Alternatively, run `node server.js` and `npm run dev` in separate terminals).*  
    Open `http://localhost:5173` in your browser.
 
+## 📊 Problem Statement Coverage & Roadmap
+
+9 of 10 core requirements from the Problem Statement are fully implemented, 1 is partially implemented, and a few architectural enhancements remain for the final submission.
+
+| PS Requirement | Status | Implementation Detail |
+| --- | --- | --- |
+| Real-time weather information retrieval | ✅ Fully Implemented | Fetching live data via `get_current_weather` tool mapped to Open-Meteo API. |
+| Natural language querying for weather forecasts | ✅ Fully Implemented | Groq/Gemini-powered chat engine processing complex conversational queries. |
+| Integration with NWP models (GFS/WRF) | ✅ Fully Implemented | Multi-model consensus approach pulling GFS, ECMWF, and ICON via Open-Meteo. |
+| Extreme weather alerts and early warning | ✅ Fully Implemented | Combines WMO code triggers, NDMA Sachet CAP feeds, and a custom Manager Alert portal. |
+| Location-based forecasting and advisory | ✅ Fully Implemented | Geocoding (Nominatim) combined with Profile-aware (Farmer, Aviation) AI reasoning. |
+| Multilingual support for Indian languages | ✅ Fully Implemented | Natively supports English, Hindi, Bengali, and Assamese via LLM processing. |
+| Climate trend and historical weather analysis | ✅ Fully Implemented | Features `get_historical_trend`, seasonal comparison, and historical forecast accuracy tracking. |
+| Voice-enabled interaction for rural accessibility | ✅ Fully Implemented | Google Text-to-Speech (TTS) integrated directly into the chat response flow. |
+| Mobile-based conversational AI platform | ✅ Fully Implemented | Built as a fully responsive Progressive Web App (PWA) mimicking native mobile behavior. |
+| Scalable architecture supporting real-time ingestion | 🟡 Partially Implemented | Express backend is stateless and scalable, but manager alerts currently use local JSON files instead of a persistent DB. |
+
+### 🚀 Future Upgrades & Roadmap
+
+| Upgrade | Why It Strengthens the Solution | Priority |
+| --- | --- | --- |
+| Migrate local JSON data to PostgreSQL / MongoDB | Moves the Authority Manager portal from local file storage (`manager_alerts.json`) to a production-ready persistent database, fulfilling the suggested tech stack. | High |
+| Real-time WIS 2.0 / MQTT Integration | Replaces REST polling with real-time push events for disaster alerts, directly matching the MoES expected tech stack. | High |
+| Dockerization & Kubernetes Helm Charts | Ensures the Express backend and React frontend can be seamlessly deployed and orchestrated at scale on government cloud infrastructure. | High |
+| SMS / IVR Fallback Alerts | Allows disaster warnings to reach rural users without smartphones or internet access. | Medium |
+| Direct IMD API / Satellite Imagery Integration | Replaces generalized Open-Meteo aggregation with official Indian Meteorological Department (IMD) radar and satellite endpoints for greater local authority. | Medium |
+| Aggressive Redis Caching Layer | Caches geocoding and weather responses to dramatically reduce third-party API costs and improve response latency during traffic spikes. | Low |
+
 ### Team
 - **Team Name:** [VERIFY: Add your SIH Team Name here]
 - **Members:** [VERIFY: Add team member names here]
