@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import SkyBand from './SkyBand';
 import Header from './Header';
-import OfflineBanner from './OfflineBanner';
 import WeatherScene from './WeatherScene';
 import WeatherCharts from './WeatherCharts';
 import RadarMap from './RadarMap';
@@ -51,6 +50,12 @@ export default function WeatherStage() {
         type: 'SET_WEATHER_STAGE_DATA', 
         payload: { locationName: loc.name, lat: loc.lat, lng: loc.lng, weather } 
       });
+      // Fetch manager alerts for this location (radius + state + district matching)
+      const baseUrl = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
+      fetch(`${baseUrl}/api/alerts?state=${encodeURIComponent(loc.state || loc.name)}&district=${encodeURIComponent(loc.district || '')}&lat=${loc.lat}&lng=${loc.lng}`)
+        .then(r => r.ok ? r.json() : [])
+        .then(a => dispatch({ type: 'SET_GOVERNMENT_ALERTS', payload: Array.isArray(a) ? a : [] }))
+        .catch(() => {});
     } catch (err) {
       setErrorMsg(t.fetchFailed);
     } finally {
@@ -138,8 +143,7 @@ export default function WeatherStage() {
     <div className="min-h-[100dvh] bg-base flex flex-col">
       <SkyBand overrideCondition={weatherInfo?.condition || 'clear'} overrideLoading={isLoading} />
       <Header />
-      <OfflineBanner />
-
+      
       <main className="flex-1 pt-[96px] pb-[72px] flex flex-col relative z-10">
         
         {/* Search Bar */}

@@ -81,7 +81,7 @@ export default function AssistantCard({ message, isLatest }) {
               className={`w-8 h-8 flex items-center justify-center rounded-full transition-all flex-shrink-0 mt-0.5 ${
                 isSpeakingThis 
                   ? 'bg-amber-500/20 text-amber-400 animate-pulse border border-amber-500/30' 
-                  : 'bg-white/5 text-white/50 hover:bg-white/10 hover:text-white border border-white/10'
+                  : 'bg-white/10 text-white/50 hover:bg-white/10 hover:text-white border border-white/10'
               }`}
               aria-label={isSpeakingThis ? "Stop speaking" : "Play response"}
             >
@@ -99,7 +99,7 @@ export default function AssistantCard({ message, isLatest }) {
 
           {/* Compact data row */}
           {data && (
-            <div className="px-5 py-3 border-t border-white/10 flex items-center gap-4 text-sm bg-white/5">
+            <div className="px-5 py-3 border-t border-white/10 flex items-center gap-4 text-sm bg-white/10">
               {weatherInfo && (
                 <span className="text-2xl drop-shadow-md" role="img" aria-label={weatherInfo.label}>
                   {weatherInfo.icon}
@@ -176,7 +176,7 @@ export default function AssistantCard({ message, isLatest }) {
                 className={`text-xs px-3.5 py-2 rounded-full border transition-all text-left max-w-full truncate shimmer-hover ${
                   clickedChip === q
                     ? 'bg-indigo-600/50 border-indigo-400 text-white scale-95 shadow-[0_0_15px_rgba(99,102,241,0.4)]'
-                    : 'glass-card border-white/10 text-white/80 hover:bg-white/10 hover:text-white hover:border-indigo-400/30 hover:scale-105'
+                    : 'glass-panel border-white/10 text-white/80 hover:bg-white/10 hover:text-white hover:border-indigo-400/30 hover:scale-105'
                 }`}
               >
                 {q}

@@ -8,7 +8,7 @@ import EmptyState from './EmptyState';
 import SevereAlertBanner from './SevereAlertBanner';
 import { getTheme } from '../utils/themes';
 import { getWeatherInfo } from '../utils/weatherConditions';
-import OfflineBanner from './OfflineBanner';
+
 import MessageList from './MessageList';
 
 export default function ChatScreen() {
@@ -16,7 +16,7 @@ export default function ChatScreen() {
 
   return (
     <div className="flex flex-col h-[100dvh]">
-      <OfflineBanner />
+      
 
       {/* Main chat area — scrollable */}
       <main className="flex-1 overflow-y-auto relative z-10 pt-[60px] sm:pt-[72px] pb-[200px] md:pb-[160px]">
@@ -26,7 +26,7 @@ export default function ChatScreen() {
       </main>
 
       {/* Input pinned at bottom — above mobile nav bar */}
-      <div className="fixed bottom-[56px] md:bottom-0 left-0 right-0 z-30 pb-3 md:pb-4 pt-8 bg-gradient-to-t from-black/80 via-black/40 to-transparent backdrop-blur-sm">
+      <div className="fixed bottom-[56px] md:bottom-0 left-0 right-0 z-30 pb-3 md:pb-4 pt-8 bg-gradient-to-t from-black/80 via-black/40 to-transparent ">
         <div className="max-w-3xl mx-auto px-3 sm:px-4">
           <SevereAlertBanner />
           <ChatInput />

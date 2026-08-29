@@ -33,7 +33,7 @@ export default function EmptyState() {
          state.language === 'as' ? 'আপুনি কি জানিব বিচাৰে?' :
          'আপনি কী জানতে চান?'}
       </h2>
-      <p className="text-white/40 text-center mb-6 sm:mb-10 max-w-md text-xs sm:text-base px-4">
+      <p className="text-white/80 text-center mb-6 sm:mb-10 max-w-md text-xs sm:text-base px-4 drop-shadow-sm">
         {state.language === 'en' ? 'Tap a question below or type your own' :
          state.language === 'hi' ? 'नीचे एक सवाल टैप करें या अपना लिखें' :
          state.language === 'as' ? 'তলৰ প্ৰশ্ন এটা টিপক বা নিজৰ লিখক' :
@@ -48,10 +48,10 @@ export default function EmptyState() {
             <button
               key={idx}
               onClick={() => handleTapQuestion(q)}
-              className={`group glass-card shimmer-hover rounded-2xl p-3 sm:p-5 flex items-center gap-3 sm:gap-4 ${accent.hover} hover:scale-[1.02] transition-all duration-300 text-left active:scale-[0.98]`}
+              className={`group glass-panel shimmer-hover rounded-2xl p-3 sm:p-5 flex items-center gap-3 sm:gap-4 ${accent.hover} hover:scale-[1.02] transition-all duration-300 text-left active:scale-[0.98]`}
             >
               {/* Emoji Icon Circle */}
-              <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/5 flex items-center justify-center flex-shrink-0 ${accent.iconHover} transition-colors border border-white/5 text-base sm:text-xl`}>
+              <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0 ${accent.iconHover} transition-colors border border-white/10 text-base sm:text-xl`}>
                 {accent.emoji}
               </div>
               {/* Text */}

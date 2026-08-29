@@ -17,7 +17,7 @@ export default function Onboarding() {
   const [step, setStep] = useState(1);
   
   return (
-    <div className="min-h-[100dvh] flex flex-col items-center justify-center p-6 bg-surface-0 relative transition-colors duration-1000">
+    <div className="min-h-[100dvh] flex flex-col items-center justify-center p-6 bg-transparent relative transition-colors duration-1000">
       {/* Fixed Background Image */}
       <div className="fixed inset-0 z-0 bg-cover bg-center transition-opacity duration-1000" style={{ backgroundImage: `url(${theme.bgImage})` }}></div>
       
@@ -25,7 +25,7 @@ export default function Onboarding() {
       <div className={`fixed inset-0 z-0 bg-gradient-to-br ${theme.overlay} pointer-events-none`}></div>
 
       {step > 2 && (
-        <button onClick={() => dispatch({ type: 'SET_ONBOARDED' })} className="absolute top-6 right-6 text-white/50 hover:text-white transition-colors z-50 font-medium px-4 py-2 bg-black/20 rounded-full border border-white/10 backdrop-blur-sm">
+        <button onClick={() => dispatch({ type: 'SET_ONBOARDED' })} className="absolute top-6 right-6 text-white/50 hover:text-white transition-colors z-50 font-medium px-4 py-2 bg-black/20 rounded-full border border-white/10 ">
           Skip
         </button>
       )}
@@ -57,7 +57,7 @@ export default function Onboarding() {
                   dispatch({ type: 'SET_PROFILE', payload: profile.code });
                   setStep(2);
                 }}
-                className="bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 hover:border-white/40 text-white font-medium py-4 px-6 rounded-2xl transition-all shadow-[0_8px_30px_rgb(0,0,0,0.12)] flex items-center gap-4 group"
+                className="glass-panel border border-white/10 hover:bg-white/20 hover:border-white/40 text-white font-medium py-4 px-6 rounded-2xl transition-all shadow-[0_8px_30px_rgb(0,0,0,0.12)] flex items-center gap-4 group"
               >
                 <span className="text-2xl">{profile.icon}</span>
                 <span className="text-lg">{profile.label}</span>
@@ -71,7 +71,7 @@ export default function Onboarding() {
                   dispatch({ type: 'SET_LANGUAGE', payload: lang.code });
                   setStep(3);
                 }}
-                className="bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 hover:border-white/40 text-white font-medium py-4 px-6 rounded-2xl transition-all shadow-[0_8px_30px_rgb(0,0,0,0.12)] flex items-center justify-between group"
+                className="glass-panel border border-white/10 hover:bg-white/20 hover:border-white/40 text-white font-medium py-4 px-6 rounded-2xl transition-all shadow-[0_8px_30px_rgb(0,0,0,0.12)] flex items-center justify-between group"
               >
                 <span className="text-lg">{lang.nativeLabel}</span>
                 <span className="text-white/50 text-sm opacity-0 group-hover:opacity-100 transition-opacity">
@@ -82,7 +82,7 @@ export default function Onboarding() {
           )}
 
         {step === 3 && (
-          <div className="bg-white/10 backdrop-blur-md border border-white/20 text-white p-6 rounded-2xl shadow-xl flex flex-col gap-4 text-center animate-fade-in w-full">
+          <div className="glass-panel border border-white/10 text-white p-6 rounded-2xl shadow-xl flex flex-col gap-4 text-center animate-fade-in w-full">
             <span className="text-5xl mb-2">🌍</span>
             <h2 className="text-2xl font-bold">Ask in Your Language</h2>
             <p className="text-white/80 text-[15px] leading-relaxed">
@@ -92,7 +92,7 @@ export default function Onboarding() {
           </div>
         )}
         {step === 4 && (
-          <div className="bg-white/10 backdrop-blur-md border border-white/20 text-white p-6 rounded-2xl shadow-xl flex flex-col gap-4 text-center animate-fade-in w-full">
+          <div className="glass-panel border border-white/10 text-white p-6 rounded-2xl shadow-xl flex flex-col gap-4 text-center animate-fade-in w-full">
             <span className="text-5xl mb-2">🧠</span>
             <h2 className="text-2xl font-bold">Smart Insights</h2>
             <p className="text-white/80 text-[15px] leading-relaxed">

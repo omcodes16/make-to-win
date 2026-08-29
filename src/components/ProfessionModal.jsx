@@ -1,4 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
+
+import { createPortal } from 'react-dom';
 import { getSpecializedData } from '../services/weatherApi';
 import { useApp } from '../context/AppContext';
 import { FarmerIcon, FishermanIcon, AviationIcon, UrbanIcon } from './HubIcons';
@@ -313,7 +315,7 @@ export default function ProfessionModal({ lat, lng, locationName, weather, onClo
           <AdvisoryCard />
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-gradient-to-br from-surface-2 to-surface-0 border border-white/10 rounded-2xl p-5 relative overflow-hidden group hover:border-blue-500/30 transition-all shadow-lg">
+            <div className="glass-panel border border-white/10 rounded-2xl p-5 relative overflow-hidden group hover:border-blue-500/30 transition-all shadow-lg">
               <div className="relative z-10">
                 <div className="text-white/50 text-[10px] sm:text-xs font-bold uppercase tracking-widest mb-2 flex items-center gap-2">
                   <span className="text-blue-400">💧</span> {t.soilMoisture}
@@ -325,7 +327,7 @@ export default function ProfessionModal({ lat, lng, locationName, weather, onClo
               </div>
             </div>
 
-            <div className="bg-gradient-to-br from-surface-2 to-surface-0 border border-white/10 rounded-2xl p-5 hover:border-amber-500/30 transition-all shadow-lg">
+            <div className="glass-panel border border-white/10 rounded-2xl p-5 hover:border-amber-500/30 transition-all shadow-lg">
               <div className="text-white/50 text-[10px] sm:text-xs font-bold uppercase tracking-widest mb-2 flex items-center gap-2">
                 <span className="text-amber-500">🌡️</span> {t.soilTemp}
               </div>
@@ -335,19 +337,19 @@ export default function ProfessionModal({ lat, lng, locationName, weather, onClo
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="bg-surface-2 border border-white/5 rounded-2xl p-4">
+            <div className="glass-panel border border-white/5 rounded-2xl p-4">
               <div className="text-white/50 text-[10px] font-bold uppercase tracking-wider mb-1">{t.evapo}</div>
               <div className="text-lg font-bold text-white">{data.evapotranspiration.toFixed(2)} mm</div>
               <p className="text-white/40 text-[9px] mt-1">{t.waterLoss}</p>
             </div>
             
-            <div className="bg-surface-2 border border-white/5 rounded-2xl p-4">
+            <div className="glass-panel border border-white/5 rounded-2xl p-4">
               <div className="text-white/50 text-[10px] font-bold uppercase tracking-wider mb-1">{t.spraying}</div>
               <div className={`text-sm font-bold mt-1 ${sprayingColor}`}>{sprayingStatus}</div>
               <p className="text-white/40 text-[9px] mt-1">W: {windSpeed}km/h | R: {weather?.rain || 0}mm</p>
             </div>
 
-            <div className={`bg-surface-2 border ${fungalRisk ? 'border-red-500/30' : 'border-white/5'} rounded-2xl p-4`}>
+            <div className={`glass-panel border ${fungalRisk ? 'border-red-500/30' : 'border-white/5'} rounded-2xl p-4`}>
               <div className="text-white/50 text-[10px] font-bold uppercase tracking-wider mb-1">{t.diseaseRisk}</div>
               <div className={`text-sm font-bold mt-1 ${fungalRisk ? 'text-red-400' : 'text-emerald-400'}`}>
                 {fungalRisk ? t.fungalHigh : t.fungalLow}
@@ -385,15 +387,15 @@ export default function ProfessionModal({ lat, lng, locationName, weather, onClo
               </div>
               <div className="text-7xl opacity-20 drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]">🌊</div>
             </div>
-            <div className="bg-surface-2 border border-white/5 rounded-2xl p-5">
+            <div className="glass-panel border border-white/5 rounded-2xl p-5">
               <div className="text-white/50 text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-2">{t.wavePeriod}</div>
               <div className="text-2xl font-bold text-white">{data.wave_period ? data.wave_period.toFixed(1) : '--'}s</div>
             </div>
-            <div className="bg-surface-2 border border-white/5 rounded-2xl p-5">
+            <div className="glass-panel border border-white/5 rounded-2xl p-5">
               <div className="text-white/50 text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-2">{t.surfaceWind}</div>
               <div className="text-2xl font-bold text-white">{windSpeed} km/h</div>
             </div>
-            <div className="bg-surface-2 border border-white/5 rounded-2xl p-5 sm:col-span-1 col-span-2">
+            <div className="glass-panel border border-white/5 rounded-2xl p-5 sm:col-span-1 col-span-2">
               <div className="text-white/50 text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-2">{t.fishActivity}</div>
               <div className={`text-lg font-bold ${activityHigh ? 'text-emerald-400' : 'text-amber-400'}`}>{activityHigh ? t.activityHigh : t.activityLow}</div>
             </div>
@@ -409,19 +411,19 @@ export default function ProfessionModal({ lat, lng, locationName, weather, onClo
         <div className="space-y-4">
           <AdvisoryCard />
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-surface-2 border border-white/5 rounded-2xl p-5 shadow-lg">
+            <div className="glass-panel border border-white/5 rounded-2xl p-5 shadow-lg">
               <div className="text-white/50 text-xs font-bold uppercase tracking-wider mb-1">{t.visibility}</div>
               <div className="text-3xl font-black text-white">{(data.visibility / 1000).toFixed(1)} km</div>
             </div>
-            <div className="bg-surface-2 border border-white/5 rounded-2xl p-5 shadow-lg">
+            <div className="glass-panel border border-white/5 rounded-2xl p-5 shadow-lg">
               <div className="text-white/50 text-xs font-bold uppercase tracking-wider mb-1">{t.lowClouds}</div>
               <div className="text-3xl font-black text-white">{data.cloudcover_low}%</div>
             </div>
-            <div className="bg-surface-2 border border-white/5 rounded-2xl p-4">
+            <div className="glass-panel border border-white/5 rounded-2xl p-4">
               <div className="text-white/50 text-[10px] font-bold uppercase tracking-wider mb-1">{t.windGusts}</div>
               <div className="text-xl font-bold text-white">{data.windgusts.toFixed(1)} km/h</div>
             </div>
-            <div className="bg-surface-2 border border-white/5 rounded-2xl p-4">
+            <div className="glass-panel border border-white/5 rounded-2xl p-4">
               <div className="text-white/50 text-[10px] font-bold uppercase tracking-wider mb-1">{t.droneSafety}</div>
               <div className={`text-sm font-bold mt-1 ${isBadVis ? 'text-red-400' : 'text-emerald-400'}`}>{isBadVis ? t.droneBad : t.droneGood}</div>
             </div>
@@ -438,19 +440,19 @@ export default function ProfessionModal({ lat, lng, locationName, weather, onClo
         <div className="space-y-4">
           <AdvisoryCard />
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-surface-2 border border-white/5 rounded-2xl p-4 shadow-lg">
+            <div className="glass-panel border border-white/5 rounded-2xl p-4 shadow-lg">
               <div className="text-white/50 text-xs font-bold uppercase tracking-wider mb-1">{t.pm25}</div>
               <div className={`text-3xl font-black ${isPolluted ? 'text-red-400' : 'text-white'}`}>{data.pm2_5.toFixed(1)} <span className="text-sm font-normal text-white/40">µg/m³</span></div>
             </div>
-            <div className="bg-surface-2 border border-white/5 rounded-2xl p-4 shadow-lg">
+            <div className="glass-panel border border-white/5 rounded-2xl p-4 shadow-lg">
               <div className="text-white/50 text-xs font-bold uppercase tracking-wider mb-1">{t.heatIndex}</div>
               <div className={`text-3xl font-black ${isSevereHeat ? 'text-red-400' : 'text-white'}`}>{data.feels_like.toFixed(1)}°C</div>
             </div>
-            <div className="bg-surface-2 border border-white/5 rounded-2xl p-4">
+            <div className="glass-panel border border-white/5 rounded-2xl p-4">
               <div className="text-white/50 text-[10px] font-bold uppercase tracking-wider mb-1">{t.uvIndex}</div>
               <div className="text-xl font-bold text-white">{data.uv_index.toFixed(1)}</div>
             </div>
-            <div className="bg-surface-2 border border-white/5 rounded-2xl p-4">
+            <div className="glass-panel border border-white/5 rounded-2xl p-4">
               <div className="text-white/50 text-[10px] font-bold uppercase tracking-wider mb-1">{t.workerSafety}</div>
               <div className={`text-xs font-bold mt-1 ${isSevereHeat ? 'text-red-400' : 'text-emerald-400'}`}>{isSevereHeat ? t.workerDanger : t.workerSafe}</div>
             </div>
@@ -480,9 +482,9 @@ export default function ProfessionModal({ lat, lng, locationName, weather, onClo
     dispatch({ type: 'SET_PROFILE', payload: newProfile });
   };
 
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-[#030712]/80 backdrop-blur-md animate-fade-in">
-      <div className="w-full max-w-xl bg-gradient-to-b from-surface-0 to-surface-0 border border-white/10 rounded-[2rem] shadow-[0_0_80px_rgba(0,0,0,0.8)] overflow-hidden animate-slide-up flex flex-col max-h-full">
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md animate-fade-in" onClick={onClose}>
+      <div className="w-full max-w-xl glass-panel overflow-hidden animate-slide-up flex flex-col max-h-full" onClick={e => e.stopPropagation()}>
         {/* Header */}
         <div className="flex items-center justify-between p-6 sm:p-8 pb-4 border-b border-white/5 bg-white/[0.01]">
           <div className="flex items-center gap-4">
@@ -533,5 +535,5 @@ export default function ProfessionModal({ lat, lng, locationName, weather, onClo
         </div>
       </div>
     </div>
-  );
+  , document.body);
 }

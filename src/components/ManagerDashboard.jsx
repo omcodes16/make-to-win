@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { NE_DISTRICTS } from "../utils/districtData";
-import { geocodeLocation } from "../services/weatherApi";
+import { geocodeLocation, searchLocationSuggestions } from "../services/weatherApi";
 
 const API_URL = import.meta.env.VITE_API_URL || "";
 
@@ -25,8 +25,12 @@ export default function ManagerDashboard() {
   });
   
   const [msg, setMsg] = useState("");
-    const [isSearchingLoc, setIsSearchingLoc] = useState(false);
+  const [isSearchingLoc, setIsSearchingLoc] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [locationSuggestions, setLocationSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const suggestRef = useRef(null);
+  const debounceRef = useRef(null);
 
   // --- CONTINUOUS SIREN LOGIC FOR AUTHORITY PORTAL ---
   const audioCtxRef = React.useRef(null);
@@ -200,6 +204,26 @@ export default function ManagerDashboard() {
     }
   };
 
+  // Use the SAME searchLocationSuggestions as WeatherStage (NER cities + Open-Meteo)
+  const handleLocationInputChange = (val) => {
+    setForm({ ...form, locationName: val, lat: null, lng: null });
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (!val.trim() || val.length < 2) { setLocationSuggestions([]); setShowSuggestions(false); return; }
+    debounceRef.current = setTimeout(async () => {
+      const results = await searchLocationSuggestions(val, 'en');
+      setLocationSuggestions(results);
+      setShowSuggestions(results.length > 0);
+    }, 350);
+  };
+
+  const selectSuggestion = (s) => {
+    setForm({ ...form, locationName: s.name, lat: s.lat, lng: s.lng, state: s.state || form.state, district: s.district || form.district });
+    setShowSuggestions(false);
+    setLocationSuggestions([]);
+    setMsg(`✓ ${[s.name, s.district, s.state, s.country].filter(Boolean).join(', ')} — coordinates locked`);
+    setTimeout(() => setMsg(''), 4000);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -239,33 +263,46 @@ export default function ManagerDashboard() {
 
   if (!token) {
     return (
-      <div className="min-h-screen bg-surface-0 flex items-center justify-center p-4">
-        <form onSubmit={handleLogin} className="bg-white/10 p-8 rounded-2xl backdrop-blur-xl border border-white/20 w-full max-w-sm">
-          <h2 className="text-2xl font-bold text-white mb-6 text-center">Disaster Manager Auth</h2>
+      <div className="min-h-screen bg-transparent flex items-center justify-center p-4">
+        <form onSubmit={handleLogin} className="glass-panel p-8 rounded-2xl w-full max-w-sm flex flex-col items-center shadow-2xl relative overflow-hidden">
+          
+          {/* Lock Icon */}
+          <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mb-6 shadow-inner border border-white/5 backdrop-blur-md">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+          </div>
+          
+          <h2 className="text-2xl font-bold text-white mb-8 text-center tracking-wide">Manager Access</h2>
+          
           <input 
             type="password" 
             value={passcode} 
             onChange={e => setPasscode(e.target.value)} 
-            placeholder="Enter Passcode (weather2026)" 
-            className="w-full bg-black/40 text-white p-3 rounded-lg border border-white/10 mb-4 focus:outline-none focus:border-indigo-500" 
+            placeholder="Passcode (weather2026)" 
+            className="w-full bg-black/40 text-white placeholder-white/50 p-4 rounded-xl border border-white/10 mb-6 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all text-center text-lg tracking-widest" 
             disabled={isLoggingIn}
           />
+          
           <button 
             type="submit" 
             disabled={isLoggingIn}
-            className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white font-bold py-3 rounded-lg transition-colors"
+            className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-60 text-white font-bold py-4 rounded-xl transition-all shadow-[0_0_15px_rgba(79,70,229,0.4)] uppercase tracking-wider text-sm hover:shadow-[0_0_25px_rgba(79,70,229,0.6)]"
           >
             {isLoggingIn ? "Verifying..." : "Access Panel"}
           </button>
-          <button type="button" onClick={() => window.location.href = '/'} className="mt-4 w-full bg-white/5 hover:bg-white/10 text-white py-2 rounded-lg transition-colors border border-white/10 text-sm">← Back to Main App</button>
-          {msg && <p className="text-red-400 mt-4 text-center text-sm">{msg}</p>}
+          
+          <button type="button" onClick={() => window.location.href = '/'} className="mt-6 w-full text-white/50 hover:text-white py-2 transition-colors text-sm flex items-center justify-center gap-2">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+              Return to Dashboard
+          </button>
+          
+          {msg && <p className="text-red-400 mt-4 text-center text-sm w-full bg-red-500/10 py-2 rounded-lg border border-red-500/20">{msg}</p>}
         </form>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-surface-0 text-white p-4 sm:p-8">
+    <div className="min-h-screen bg-transparent text-white p-4 sm:p-8">
       <div className="max-w-5xl mx-auto space-y-8">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-red-400 to-amber-400">Disaster Management Panel</h1>
@@ -279,7 +316,7 @@ export default function ManagerDashboard() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Issue Alert Form */}
-          <div className="bg-white/5 border border-white/10 p-6 rounded-2xl backdrop-blur-lg">
+          <div className="glass-panel border border-white/10 p-6 rounded-2xl ">
             <h2 className="text-xl font-bold mb-4">Broadcast New Alert</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               
@@ -317,11 +354,41 @@ export default function ManagerDashboard() {
                   <p className="text-xs text-amber-400 mb-2">Hint: For a specific village, search its nearest town and set a small radius (e.g. 10km).</p>
                   <div>
                     <label className="block text-sm text-white/70 mb-1">Search Epicenter</label>
-                    <div className="flex gap-2">
-                      <input type="text" value={form.locationName} onChange={e => setForm({...form, locationName: e.target.value})} placeholder="Village / Town name..." className="flex-1 bg-black/40 border border-white/10 p-3 rounded-lg text-white" />
-                      <button type="button" onClick={handleGeocode} disabled={isSearchingLoc} className="bg-blue-600 hover:bg-blue-500 text-white px-4 rounded-lg text-sm font-semibold">{isSearchingLoc ? '...' : 'Find'}</button>
+                    <div className="relative">
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={form.locationName}
+                          onChange={e => handleLocationInputChange(e.target.value)}
+                          onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                          onFocus={() => locationSuggestions.length > 0 && setShowSuggestions(true)}
+                          placeholder="Village / Town / City name..."
+                          className="flex-1 bg-black/40 border border-white/10 p-3 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                          autoComplete="off"
+                        />
+                        <button type="button" onClick={handleGeocode} disabled={isSearchingLoc} className="bg-blue-600 hover:bg-blue-500 text-white px-4 rounded-lg text-sm font-semibold">
+                          {isSearchingLoc ? '...' : 'Find'}
+                        </button>
+                      </div>
+                      {/* Suggestion Dropdown — same style as WeatherStage */}
+                      {showSuggestions && locationSuggestions.length > 0 && (
+                        <ul className="absolute z-50 left-0 right-10 top-full mt-1 bg-gray-900 border border-white/10 rounded-lg shadow-2xl overflow-hidden">
+                          {locationSuggestions.map((s, i) => (
+                            <li key={i}
+                              onMouseDown={() => selectSuggestion(s)}
+                              className="px-4 py-2.5 hover:bg-blue-600/30 cursor-pointer border-b border-white/10 last:border-0 text-sm text-white flex items-center gap-2">
+                              <span className="text-white/40">📍</span>
+                              <span>{[s.name, s.district, s.state, s.country].filter(Boolean).join(', ')}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                     </div>
-                    {form.lat && form.lng && <div className="text-xs text-green-400 mt-2">Coordinates acquired: {form.lat.toFixed(4)}, {form.lng.toFixed(4)}</div>}
+                    {form.lat && form.lng && (
+                      <div className="text-xs text-green-400 mt-2 flex items-center gap-1">
+                        <span>✓</span> Coordinates locked: {form.lat.toFixed(4)}, {form.lng.toFixed(4)}
+                      </div>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm text-white/70 mb-1">Radius (km)</label>
@@ -359,7 +426,7 @@ export default function ManagerDashboard() {
           </div>
 
           {/* Active Alerts List */}
-          <div className="bg-white/5 border border-white/10 p-6 rounded-2xl backdrop-blur-lg">
+          <div className="glass-panel border border-white/10 p-6 rounded-2xl ">
             <h2 className="text-xl font-bold mb-4 flex justify-between">Active Broadcasts <span className="bg-red-500/20 text-red-400 px-3 py-1 rounded-full text-sm">{alerts.length}</span></h2>
             <div className="space-y-4">
               {alerts.length === 0 ? <p className="text-white/40">No active alerts currently broadcasted.</p> : alerts.map(a => (
@@ -382,7 +449,7 @@ export default function ManagerDashboard() {
         </div>
 
         {/* Live SOS Emergency Requests */}
-        <div className="bg-red-950/30 border border-red-500/30 p-6 rounded-2xl backdrop-blur-lg">
+        <div className="bg-red-950/30 border border-red-500/30 p-6 rounded-2xl ">
           <h2 className="text-xl font-bold mb-4 flex justify-between items-center">
             <span className="flex items-center gap-2">🆘 Live SOS Requests</span>
             <span className={`px-3 py-1 rounded-full text-sm font-bold ${sosRequests.length > 0 ? 'bg-red-500 text-white animate-pulse' : 'bg-white/10 text-white/50'}`}>
@@ -415,7 +482,7 @@ export default function ManagerDashboard() {
                   {sos.image && (
                     <div className="mt-2">
                       <p className="text-[10px] text-white/50 mb-1">ATTACHED PHOTO:</p>
-                      <img src={sos.image} alt="Emergency Situation" className="h-32 w-auto object-cover rounded-lg border border-white/20" />
+                      <img src={sos.image} alt="Emergency Situation" className="h-32 w-auto object-cover rounded-lg border border-white/10" />
                     </div>
                   )}
 

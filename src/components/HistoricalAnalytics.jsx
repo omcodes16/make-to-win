@@ -135,7 +135,7 @@ export default function HistoricalAnalytics({ lat, lon }) {
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mt-6">
       
       {/* LEFT PART: Graph */}
-      <div className="bg-surface-1 border border-white/5 rounded-2xl p-5 shadow-xl relative overflow-hidden">
+      <div className="glass-panel border border-white/10 rounded-2xl p-5 shadow-xl relative overflow-hidden">
         <div className="absolute top-0 right-0 p-4 opacity-10 text-6xl">📈</div>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 relative z-10">
           <div>
@@ -217,7 +217,7 @@ export default function HistoricalAnalytics({ lat, lon }) {
       </div>
 
       {/* RIGHT PART: Dynamic AI Insight & Summary */}
-      <div className="bg-gradient-to-br from-surface-1 to-surface-0 border border-indigo-500/20 rounded-2xl p-5 shadow-xl relative overflow-hidden flex flex-col justify-between">
+      <div className="glass-panel border border-indigo-500/20 rounded-2xl p-5 shadow-xl relative overflow-hidden flex flex-col justify-between">
         <div className="absolute top-0 right-0 p-4 opacity-5 text-8xl pointer-events-none">🤖</div>
         
         <div>
@@ -250,13 +250,35 @@ export default function HistoricalAnalytics({ lat, lon }) {
                   {getAgriRisk()}
                 </p>
               </div>
+
+              {/* Drought Monitor (Standardized Precipitation Index - SPI) */}
+              <div className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-xl mt-4 z-10 relative flex items-center justify-between">
+                <div>
+                  <h4 className="text-xs font-bold text-amber-300 uppercase tracking-wider mb-1 flex items-center gap-2">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+                    Drought Monitor
+                  </h4>
+                  <p className="text-[10px] text-white/60">Standardized Precipitation Index</p>
+                </div>
+                <div className="text-right">
+                  {parseFloat(totalRain) < (timeRange === '30d' ? 20 : timeRange === '1y' ? 400 : 2000) ? (
+                    <div className="text-red-400 font-bold text-sm">Severe Drought Stress</div>
+                  ) : parseFloat(totalRain) < (timeRange === '30d' ? 50 : timeRange === '1y' ? 800 : 4000) ? (
+                    <div className="text-amber-400 font-bold text-sm">Moderate Dryness</div>
+                  ) : (
+                    <div className="text-emerald-400 font-bold text-sm">Normal Moisture</div>
+                  )}
+                  <div className="text-[10px] text-white/50 mt-1">Based on {timeRange} rainfall</div>
+                </div>
+              </div>
+
             </div>
           ) : (
             <div className="text-sm text-white/40 mt-4 z-10 relative">{t.noData}</div>
           )}
         </div>
 
-        <div className="mt-6 pt-4 border-t border-white/5 flex gap-4 z-10 relative">
+        <div className="mt-6 pt-4 border-t border-white/10 flex gap-4 z-10 relative">
           <div className="flex-1">
             <div className="text-[10px] text-white/40 uppercase font-semibold tracking-wider">{timeRange === '30d' ? t.thirtyDayRain : 'TOTAL RAINFALL'}</div>
             <div className="text-lg font-bold text-white">{totalRain} <span className="text-xs text-white/50">mm</span></div>

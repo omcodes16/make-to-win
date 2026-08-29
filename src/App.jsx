@@ -11,6 +11,7 @@ import SosButton from './components/SosButton';
 import { getTheme } from './utils/themes';
 import { getWeatherInfo } from './utils/weatherConditions';
 import Header from './components/Header';
+import OfflineBanner from './components/OfflineBanner';
 
 function AppContent() {
   const { state, dispatch } = useApp();
@@ -27,30 +28,51 @@ function AppContent() {
   const theme = getTheme(weather, weatherInfo);
 
   // Profile-based Custom Background (Overriding weather bg with high-quality profile image)
+  const isPortrait = typeof window !== 'undefined' && window.innerHeight > window.innerWidth;
+
   let customBg = theme.bgImage; 
-  if (state.userProfile === 'general') customBg = '/backgrounds/general.jpg';
-  else if (state.userProfile === 'farmer') customBg = '/backgrounds/farmer.jpg';
-  else if (state.userProfile === 'fisherman') customBg = '/backgrounds/fisherman.jpg';
-  else if (state.userProfile === 'aviation') customBg = '/backgrounds/aviation.jpg';
+  if (state.userProfile === 'general') {
+    customBg = isPortrait ? '/backgrounds/general2.jpg' : '/backgrounds/general.jpg';
+  }
+  else if (state.userProfile === 'farmer') {
+    customBg = isPortrait ? '/backgrounds/farmer2.jpg' : '/backgrounds/farmer.jpg';
+  }
+  else if (state.userProfile === 'fisherman') {
+    customBg = isPortrait ? '/backgrounds/fisherman2.jpg' : '/backgrounds/fisherman.jpg';
+  }
+  else if (state.userProfile === 'aviation') {
+    customBg = isPortrait ? '/backgrounds/aviation2.jpg' : '/backgrounds/aviation.jpg';
+  }
   else if (state.userProfile === 'urbanPlanning') customBg = '/backgrounds/urban.jpg';
 
   if (state.activeTab === 'manager') {
-    return <div key="manager" className="animate-fade-in"><ManagerDashboard /></div>;
+    return (
+      <div key="manager" className={`theme-${state.uiTheme} animate-fade-in text-white min-h-[100dvh] relative`}>
+        <div className="fixed inset-0 z-0 bg-cover bg-center transition-all duration-1000" style={{ backgroundImage: `url("${customBg}")` }}></div>
+        <div className="fixed inset-0 z-0 bg-black/40 pointer-events-none transition-colors duration-1000"></div>
+        <div className="relative z-10">
+          <ManagerDashboard />
+        </div>
+      </div>
+    );
   }
 
   if (!state.isOnboarded) {
-    return <div key="onboarding" className="animate-fade-in"><Onboarding /></div>;
+    return <div key="onboarding" className={`theme-${state.uiTheme} animate-fade-in text-white`}><Onboarding /></div>;
   }
 
   return (
-    <div className="relative min-h-[100dvh] bg-surface-0 transition-colors duration-1000 overflow-hidden">
+    <div className="relative min-h-[100dvh] bg-transparent transition-colors duration-1000 overflow-hidden text-white">
       {/* Global Fixed Background Image */}
-      <div className="fixed inset-0 z-0 bg-cover bg-center transition-opacity duration-1000" style={{ backgroundImage: `url("${customBg}")` }}></div>
+      <div className="fixed inset-0 z-0 bg-cover bg-center transition-all duration-1000" style={{ backgroundImage: `url("${customBg}")` }}></div>
+      {/* Text Contrast Layer */}
+      <div className="fixed inset-0 z-0 bg-black/40 pointer-events-none transition-colors duration-1000"></div>
       {/* Global Overlays */}
-      <div className={`fixed inset-0 z-0 bg-gradient-to-b ${theme.overlay} backdrop-blur-md pointer-events-none transition-colors duration-1000`}></div>
-      <div className={`fixed inset-0 z-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] ${theme.accent} via-transparent to-transparent pointer-events-none transition-colors duration-1000`}></div>
+      <div className={`fixed inset-0 z-0 bg-gradient-to-b ${theme.overlay} pointer-events-none transition-colors duration-1000`}></div>
+      <div className={`fixed inset-0 z-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] ${theme.accent} via-transparent to-transparent pointer-events-none transition-colors duration-1000 opacity-70`}></div>
 
       <Header />
+      <OfflineBanner />
       
       <div key={state.activeTab} className="animate-fade-in relative z-10 h-full">
         {state.activeTab === 'alerts' ? <AlertsScreen /> : 

@@ -268,7 +268,7 @@ export default function ChatInput() {
             disabled={state.isLoading}
             className={`w-10 h-10 flex items-center justify-center rounded-full transition-all ${
               isListening ? 'text-red-400 animate-pulse bg-red-500/10' : 
-              isSpeaking ? 'text-amber-400 hover:text-amber-300 bg-amber-500/10' : 'text-white/40 hover:text-white hover:bg-white/5'
+              isSpeaking ? 'text-amber-400 hover:text-amber-300 bg-amber-500/10' : 'text-white/40 hover:text-white hover:bg-white/10'
             }`}
             aria-label={isListening ? 'Stop listening' : isSpeaking ? 'Stop speaking' : 'Voice input'}
           >

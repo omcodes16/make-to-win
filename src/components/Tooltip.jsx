@@ -64,7 +64,7 @@ export default function Tooltip({ text }) {
               }
             }
           }}
-          className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 sm:w-56 bg-gray-900/95 backdrop-blur-md border border-white/20 text-white text-xs p-3 rounded-xl shadow-2xl animate-fade-in pointer-events-auto"
+          className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 sm:w-56 bg-gray-900/95  border border-white/10 text-white text-xs p-3 rounded-xl shadow-2xl animate-fade-in pointer-events-auto"
         >
           <div className="flex justify-between items-start gap-2 mb-1">
             <span className="font-semibold text-white/90">Info</span>

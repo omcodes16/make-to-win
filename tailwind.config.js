@@ -6,12 +6,17 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Deep navy/indigo base system
+        // Deep navy/indigo base system (mapped to CSS variables for theming)
         surface: {
-          0: '#030712', // Background app level
-          1: '#0B1221', // Primary cards
-          2: '#152033', // Secondary cards / inputs
-          3: '#1F2E47', // Hover states / borders
+          0: 'rgb(var(--bg-surface-0) / <alpha-value>)', // Background app level
+          1: 'rgb(var(--bg-surface-1) / <alpha-value>)', // Primary cards
+          2: 'rgb(var(--bg-surface-2) / <alpha-value>)', // Secondary cards / inputs
+          3: 'rgb(var(--bg-surface-3) / <alpha-value>)', // Hover states / borders
+        },
+        theme: {
+          primary: 'var(--text-primary)',
+          muted: 'var(--text-muted)',
+          border: 'var(--theme-border)',
         },
         // Refined accent system
         accent: {

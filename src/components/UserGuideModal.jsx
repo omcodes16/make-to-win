@@ -1,4 +1,5 @@
 import React from "react";
+import { createPortal } from "react-dom";
 import { useApp } from "../context/AppContext";
 
 const GUIDE_CONTENT = {
@@ -218,13 +219,13 @@ export default function UserGuideModal({ isOpen, onClose }) {
 
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-[100] flex items-start justify-center p-2 sm:p-6 overflow-y-auto custom-scrollbar bg-black/80 backdrop-blur-md">
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-start justify-center p-2 sm:p-6 overflow-y-auto custom-scrollbar bg-black/80 ">
       
-      <div className="relative bg-surface-0 border border-white/20 rounded-[2rem] w-full max-w-5xl shadow-[0_0_50px_rgba(0,0,0,0.8)] animate-scale-up my-auto overflow-hidden flex flex-col">
+      <div className="relative bg-transparent border border-white/10 rounded-[2rem] w-full max-w-5xl shadow-[0_0_50px_rgba(0,0,0,0.8)] animate-scale-up my-auto overflow-hidden flex flex-col">
         
         {/* Sticky Header */}
-        <div className="sticky top-0 bg-surface-0/95 backdrop-blur-xl border-b border-white/10 px-6 py-5 flex justify-between items-center z-10">
+        <div className="sticky top-0 bg-transparent/95  border-b border-white/10 px-6 py-5 flex justify-between items-center z-10">
           <div>
             <h2 className="text-2xl sm:text-3xl font-bold text-white flex items-center gap-3">
               <span className="text-blue-500">📖</span>
@@ -234,7 +235,7 @@ export default function UserGuideModal({ isOpen, onClose }) {
           </div>
           <button 
             onClick={onClose}
-            className="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 hover:rotate-90 text-white/70 transition-all"
+            className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/10 hover:rotate-90 text-white/70 transition-all"
             aria-label="Close"
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
@@ -245,7 +246,7 @@ export default function UserGuideModal({ isOpen, onClose }) {
         <div className="p-6 sm:p-8 space-y-10 overflow-y-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
             {content.sections.map((section, idx) => (
-              <div key={idx} className="bg-white/5 border border-white/10 rounded-3xl p-6 hover:bg-white/10 transition-colors">
+              <div key={idx} className="glass-panel border border-white/10 rounded-3xl p-6 hover:bg-white/10 transition-colors">
                 <h3 className="text-xl font-bold text-blue-400 mb-5 pb-3 border-b border-white/10">
                   {section.title}
                 </h3>
@@ -256,7 +257,7 @@ export default function UserGuideModal({ isOpen, onClose }) {
                         <span className="w-1.5 h-1.5 rounded-full bg-blue-500 inline-block"></span>
                         {item.name}
                       </span>
-                      <span className="text-sm text-white/60 leading-relaxed pl-3.5 border-l-2 border-white/5">
+                      <span className="text-sm text-white/60 leading-relaxed pl-3.5 border-l-2 border-white/10">
                         {item.desc}
                       </span>
                     </div>
@@ -268,7 +269,7 @@ export default function UserGuideModal({ isOpen, onClose }) {
         </div>
 
         {/* Sticky Footer */}
-        <div className="sticky bottom-0 bg-gradient-to-t from-surface-0 via-surface-0/95 to-transparent px-6 py-6 border-t border-white/10 mt-auto">
+        <div className="sticky bottom-0 bg-gradient-to-t from-[#0f172a] via-[#0f172a]/95 to-transparent px-6 py-6 border-t border-white/10 mt-auto">
           <button 
             onClick={onClose}
             className="w-full sm:w-auto sm:ml-auto block px-12 py-3 sm:py-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-lg shadow-[0_0_20px_rgba(37,99,235,0.4)] transition-all active:scale-[0.98]"
@@ -279,5 +280,4 @@ export default function UserGuideModal({ isOpen, onClose }) {
 
       </div>
     </div>
-  );
-}
+  , document.body); }

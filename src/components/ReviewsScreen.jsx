@@ -144,7 +144,7 @@ export default function ReviewsScreen() {
         </div>
 
         {/* Top Stats Row */}
-        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 mb-8 shadow-xl flex flex-wrap items-center justify-between gap-6 divide-x-0 sm:divide-x divide-white/10 text-center">
+        <div className="glass-panel border border-white/10 rounded-3xl p-6 mb-8 shadow-xl flex flex-wrap items-center justify-between gap-6 divide-x-0 sm:divide-x divide-white/10 text-center">
           <div className="flex-1 min-w-[120px]">
             <div className="text-4xl font-bold text-white mb-2">{avgRating}</div>
             <div className="flex justify-center text-yellow-400 mb-1 text-sm">
@@ -170,7 +170,7 @@ export default function ReviewsScreen() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
           
           {/* Rating Breakdown */}
-          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 sm:p-8 shadow-xl">
+          <div className="glass-panel border border-white/10 rounded-3xl p-6 sm:p-8 shadow-xl">
             <h2 className="text-lg font-semibold mb-6">Rating Breakdown</h2>
             <div className="flex flex-col gap-4">
               {[5, 4, 3, 2, 1].map(star => {
@@ -190,7 +190,7 @@ export default function ReviewsScreen() {
           </div>
 
           {/* Submit Review */}
-          <div className="bg-gradient-to-br from-blue-900/20 to-purple-900/20 backdrop-blur-xl border border-white/10 rounded-3xl p-6 sm:p-8 shadow-xl">
+          <div className="bg-gradient-to-br from-blue-900/20 to-purple-900/20  border border-white/10 rounded-3xl p-6 sm:p-8 shadow-xl">
             <h2 className="text-lg font-semibold mb-2">You Rate Us</h2>
             <p className="text-sm text-white/50 mb-6">How would you rate your experience?</p>
             
@@ -287,18 +287,18 @@ export default function ReviewsScreen() {
         <div>
           <div className="flex gap-3 mb-6 overflow-x-auto scrollbar-hide pb-2">
             <button className="px-4 py-1.5 rounded-full bg-blue-600 text-white text-sm font-medium whitespace-nowrap">All Reviews ({totalReviews})</button>
-            <button className="px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-white/70 hover:text-white hover:bg-white/10 text-sm font-medium transition-colors whitespace-nowrap">Most Helpful</button>
-            <button className="px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-white/70 hover:text-white hover:bg-white/10 text-sm font-medium transition-colors whitespace-nowrap">Latest</button>
+            <button className="px-4 py-1.5 rounded-full glass-panel border border-white/10 text-white/70 hover:text-white hover:bg-white/10 text-sm font-medium transition-colors whitespace-nowrap">Most Helpful</button>
+            <button className="px-4 py-1.5 rounded-full glass-panel border border-white/10 text-white/70 hover:text-white hover:bg-white/10 text-sm font-medium transition-colors whitespace-nowrap">Latest</button>
           </div>
 
           <div className="flex flex-col gap-4">
             {isLoading ? (
               <div className="text-center py-10 text-white/50">Loading reviews...</div>
             ) : reviews.length === 0 ? (
-              <div className="text-center py-10 text-white/50 bg-white/5 rounded-3xl border border-white/10">Be the first to leave a review!</div>
+              <div className="text-center py-10 text-white/50 bg-white/10 rounded-3xl border border-white/10">Be the first to leave a review!</div>
             ) : (
               reviews.map(review => (
-                <div key={review.id} className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-5 sm:p-6 transition-colors hover:bg-white/10">
+                <div key={review.id} className="glass-panel border border-white/10 rounded-2xl p-5 sm:p-6 transition-colors hover:bg-white/10">
                   <div className="flex justify-between items-start mb-3">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center font-bold text-lg shadow-inner">
@@ -318,7 +318,7 @@ export default function ReviewsScreen() {
                   <div className="flex items-center justify-between">
                     <div className="flex gap-2">
                       {review.tags?.map((tag, i) => (
-                        <span key={i} className="px-2.5 py-1 rounded bg-white/5 border border-white/10 text-[10px] sm:text-xs text-white/60">{tag}</span>
+                        <span key={i} className="px-2.5 py-1 rounded glass-panel border border-white/10 text-[10px] sm:text-xs text-white/60">{tag}</span>
                       ))}
                     </div>
                     <button 

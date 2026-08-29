@@ -5,7 +5,10 @@ import { getWeatherInfo } from '../utils/weatherConditions';
 import { getSeasonalContext } from '../utils/climateSeasonal';
 import { EXTRA_I18N } from '../utils/translationsExtra';
 import { FEATURE_I18N } from '../utils/featureTranslations';
+import { requestPushPermission, notifyIfSevere } from '../utils/pushNotifications';
 import Header from './Header';
+import CycloneTracker from './CycloneTracker';
+
 
 export default function AlertsScreen() {
   const { state } = useApp();
@@ -34,6 +37,12 @@ export default function AlertsScreen() {
   const [isLoadingNews, setIsLoadingNews] = useState(true);
   const [activeModal, setActiveModal] = useState(null);
   const [newsFilter, setNewsFilter] = useState('All');
+  const [pushEnabled, setPushEnabled] = useState(Notification?.permission === 'granted');
+
+  const handleEnablePush = async () => {
+    const result = await requestPushPermission();
+    setPushEnabled(result === 'granted');
+  };
 
   // Fetch real-time news and alerts from backend
   useEffect(() => {
@@ -61,6 +70,22 @@ export default function AlertsScreen() {
             setNationalAlerts(alertsData);
           }
         }
+
+        // Fetch Manager/Government Alerts for current active location
+        if (stageData.lat && stageData.lng) {
+          const govRes = await fetch(`${baseUrl}/api/alerts?state=${encodeURIComponent(stageData.state || locationName)}&district=${encodeURIComponent(stageData.district || '')}&lat=${stageData.lat}&lng=${stageData.lng}`);
+          if (govRes.ok && isMounted) {
+            const govData = await govRes.json();
+            dispatch({ type: 'SET_GOVERNMENT_ALERTS', payload: Array.isArray(govData) ? govData : [] });
+          }
+        } else if (state.currentWeather?.lat && state.currentWeather?.lng) {
+          const govRes = await fetch(`${baseUrl}/api/alerts?state=${encodeURIComponent(state.currentWeather.state || state.currentWeather.locationName)}&district=${encodeURIComponent(state.currentWeather.district || '')}&lat=${state.currentWeather.lat}&lng=${state.currentWeather.lng}`);
+          if (govRes.ok && isMounted) {
+            const govData = await govRes.json();
+            dispatch({ type: 'SET_GOVERNMENT_ALERTS', payload: Array.isArray(govData) ? govData : [] });
+          }
+        }
+
       } catch (err) {
         console.error('Failed to fetch real-time news/alerts:', err);
       } finally {
@@ -71,7 +96,7 @@ export default function AlertsScreen() {
     fetchNewsAndAlerts();
 
     return () => { isMounted = false; };
-  }, []);
+  }, [stageData.lat, stageData.lng, state.currentWeather?.lat, state.currentWeather?.lng]);
 
   // Compute live alerts based on actual location data
   const computeAlerts = () => {
@@ -162,6 +187,78 @@ export default function AlertsScreen() {
       });
     }
 
+    // 6. Heatwave / Severe Heatwave (IMD standard)
+    const maxForecastTemp = Math.max(...(weather.daily?.maxTemp || [weather.temperature || 0]));
+    const hotDays = (weather.daily?.maxTemp || []).filter(t => t >= 40).length;
+    if (maxForecastTemp >= 45) {
+      alerts.push({
+        id: 'severe-heatwave',
+        title: ex.alertSevereHeatwaveTitle ? ex.alertSevereHeatwaveTitle(locName) : `Severe Heatwave Warning for ${locName}`,
+        desc: ex.alertSevereHeatwaveDesc ? ex.alertSevereHeatwaveDesc(Math.round(maxForecastTemp)) : `Extreme temperature of ${Math.round(maxForecastTemp)}°C — Severe Heatwave.`,
+        precaution: ex.alertSevereHeatwavePrec || `Do NOT go outdoors. Visit nearest cooling center.`,
+        level: 'Severe', prob: '100%', rain: actualRainDisplay, window: '11 AM - 4 PM', impact: 'High'
+      });
+    } else if (maxForecastTemp >= 40 && hotDays >= 2) {
+      alerts.push({
+        id: 'heatwave',
+        title: ex.alertHeatwaveTitle ? ex.alertHeatwaveTitle(locName) : `Heatwave Warning for ${locName}`,
+        desc: ex.alertHeatwaveDesc ? ex.alertHeatwaveDesc(Math.round(maxForecastTemp)) : `Maximum temperature ${Math.round(maxForecastTemp)}°C — IMD Heatwave declared.`,
+        precaution: ex.alertHeatwavePrec || `Stay indoors 11 AM–4 PM. Drink water every 30 minutes.`,
+        level: 'Severe', prob: '100%', rain: actualRainDisplay, window: '11 AM - 4 PM', impact: 'High'
+      });
+    }
+
+    // 7. Cold Wave (IMD standard: ≤10°C plains)
+    const minForecastTemp = Math.min(...(weather.daily?.minTemp || [weather.temperature || 20]));
+    if (minForecastTemp <= 10) {
+      alerts.push({
+        id: 'cold-wave',
+        title: ex.alertColdWaveTitle ? ex.alertColdWaveTitle(locName) : `Cold Wave Alert for ${locName}`,
+        desc: ex.alertColdWaveDesc ? ex.alertColdWaveDesc(Math.round(minForecastTemp)) : `Temperature dropped to ${Math.round(minForecastTemp)}°C — Cold Wave conditions.`,
+        precaution: ex.alertColdWavePrec || `Wear multiple layers. Protect livestock. Avoid outdoor exposure at night.`,
+        level: 'Severe', prob: '100%', rain: actualRainDisplay, window: 'Night - Morning', impact: 'High'
+      });
+    }
+
+    // 8. Lightning Danger (when thunderstorm + check CAPE if available)
+    if (hasThunderstorm && !alerts.find(a => a.id === 'thunder')) {
+      alerts.push({
+        id: 'lightning',
+        title: ex.alertLightningTitle ? ex.alertLightningTitle(locName) : `Lightning Danger Alert for ${locName}`,
+        desc: ex.alertLightningDesc || `Severe thunderstorm with high lightning risk. Lightning strikes 2,000+ people annually in India.`,
+        precaution: ex.alertLightningPrec || `Seek shelter in a solid building. Avoid trees, open fields, and water bodies.`,
+        level: 'Severe', prob: `${Math.max(probValue, 85)}%`, rain: rainRange, window: 'Next 6 hrs', impact: 'High'
+      });
+    }
+
+    // 9. GRAP Air Quality Emergency
+    const aqi = weather.aqi || 0;
+    if (aqi > 300) {
+      const grapStage = aqi > 450 ? 4 : aqi > 400 ? 3 : aqi > 350 ? 2 : 1;
+      alerts.push({
+        id: 'grap',
+        title: ex.alertGrapTitle ? ex.alertGrapTitle(locName, grapStage) : `Air Quality Emergency — GRAP Stage ${grapStage} in ${locName}`,
+        desc: ex.alertGrapDesc ? ex.alertGrapDesc(aqi, grapStage) : `AQI ${aqi} — GRAP Stage ${grapStage}. Air is hazardous to breathe.`,
+        precaution: ex.alertGrapPrec || `Wear N95 masks. Keep windows closed. Avoid all outdoor physical activity.`,
+        level: aqi > 400 ? 'Severe' : 'Caution', prob: '100%', rain: actualRainDisplay, window: 'All day', impact: aqi > 400 ? 'High' : 'Moderate'
+      });
+    }
+
+    // 10. Drought Watch (rainfall < 30% of seasonal average over past week)
+    const weekRain = (weather.daily?.precipitationSum || []).slice(0, 7).reduce((a, b) => a + (b || 0), 0);
+    const currentMonth = new Date().getMonth();
+    const isMonsooonSeason = currentMonth >= 5 && currentMonth <= 9;
+    if (isMonsooonSeason && weekRain < 5 && maxRain < 5) {
+      const deficit = Math.round((1 - weekRain / 35) * 100);
+      alerts.push({
+        id: 'drought',
+        title: ex.alertDroughtTitle ? ex.alertDroughtTitle(locName) : `Drought Watch for ${locName}`,
+        desc: ex.alertDroughtDesc ? ex.alertDroughtDesc(Math.min(deficit, 99)) : `Rainfall is ${Math.min(deficit, 99)}% below monsoon normal. Crops face drought stress.`,
+        precaution: ex.alertDroughtPrec || `Initiate emergency irrigation. Conserve water. Consider drought-resistant varieties.`,
+        level: 'Caution', prob: '90%', rain: `${weekRain.toFixed(1)} mm (7-day)`, window: 'Ongoing', impact: 'Moderate'
+      });
+    }
+
     // Fallback: All Clear
     if (alerts.length === 0) {
       alerts.push({
@@ -191,6 +288,8 @@ export default function AlertsScreen() {
   };
 
   const liveAlerts = computeAlerts();
+  // Fire browser push notification for severe alerts (once per session per alert)
+  if (pushEnabled && locationName) notifyIfSevere(liveAlerts, locationName);
   const impactStats = getDynamicImpacts();
 
   const filteredNews = news.filter(item => {
@@ -210,15 +309,30 @@ export default function AlertsScreen() {
         
         {/* Left Column: Alerts & Risk */}
         <div className="flex-1 flex flex-col gap-6">
-          <div className="flex items-center gap-3">
-            <span className="relative flex h-3 w-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
-            </span>
-            <h2 className="text-2xl font-bold tracking-wide">{ex.liveHighAlerts}</h2>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="relative flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+              </span>
+              <h2 className="text-2xl font-bold tracking-wide">{ex.liveHighAlerts}</h2>
+            </div>
+            
+            {/* Push Notifications Toggle */}
+            <button 
+              onClick={handleEnablePush}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${pushEnabled ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'glass-panel border-border-color text-white/70 hover:text-white'}`}
+              title="Get notifications for severe alerts"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+              {pushEnabled ? 'Alerts On' : 'Enable Alerts'}
+            </button>
           </div>
 
           <div className="flex flex-col gap-4">
+            {/* Live Cyclone Tracker (Only shows active cyclones if detected) */}
+            <CycloneTracker lat={stageData.lat || state.currentWeather?.lat} lon={stageData.lng || state.currentWeather?.lng} locationName={stageData.locationName || state.currentWeather?.locationName || "Unknown Location"} />
+
             {state.governmentAlerts && state.governmentAlerts.length > 0 && state.governmentAlerts.map((govAlert, idx) => (
               <div key={`gov-${idx}`} className="relative bg-red-900/20 border border-red-500 rounded-xl p-5 shadow-[0_0_40px_rgba(239,68,68,0.2)] overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-600 via-red-500 to-transparent"></div>
@@ -258,7 +372,7 @@ export default function AlertsScreen() {
               };
 
               return (
-              <div key={alert.id} className={`relative bg-surface-1 border rounded-xl p-4 sm:p-5 overflow-hidden ${styles.cardBorder}`}>
+              <div key={alert.id} className={`relative glass-panel border rounded-xl p-4 sm:p-5 overflow-hidden ${styles.cardBorder}`}>
                 <div className={`absolute top-0 left-0 w-full h-1 bg-gradient-to-r ${styles.gradient} to-transparent`}></div>
 
                 <div className="flex justify-between items-start mb-4 sm:mb-6">
@@ -280,7 +394,7 @@ export default function AlertsScreen() {
                   </span>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-5 border-t border-white/5 pt-4 sm:pt-5">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-5 border-t border-white/10 pt-4 sm:pt-5">
                   <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-1.5 text-white/50 text-[10px] sm:text-xs uppercase tracking-wide">
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
@@ -337,7 +451,7 @@ export default function AlertsScreen() {
           </div>
 
           {/* Smart City & Urban Planning Dashboard */}
-          <div className="bg-surface-1 border border-white/5 rounded-xl p-5 shadow-lg flex flex-col mb-4">
+          <div className="glass-panel border border-white/10 rounded-xl p-5 shadow-lg flex flex-col mb-4">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-bold text-white/90 tracking-wide flex items-center gap-2">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
@@ -348,7 +462,7 @@ export default function AlertsScreen() {
             
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {/* AQI Monitor */}
-              <div className="bg-black/20 rounded-lg p-4 border border-white/5 flex flex-col justify-between">
+              <div className="bg-black/20 rounded-lg p-4 border border-white/10 flex flex-col justify-between">
                 <div className="flex justify-between items-start mb-2">
                   <span className="text-xs font-bold text-white/50 uppercase">{ex.aqiLbl}</span>
                   <svg className={`w-4 h-4 ${weather?.aqi > 150 ? 'text-red-400' : weather?.aqi > 100 ? 'text-orange-400' : 'text-green-400'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"/></svg>
@@ -360,7 +474,7 @@ export default function AlertsScreen() {
               </div>
 
               {/* Heatwave / Urban Heat Island */}
-              <div className="bg-black/20 rounded-lg p-4 border border-white/5 flex flex-col justify-between">
+              <div className="bg-black/20 rounded-lg p-4 border border-white/10 flex flex-col justify-between">
                 <div className="flex justify-between items-start mb-2">
                   <span className="text-xs font-bold text-white/50 uppercase">{ex.heatIndexLbl}</span>
                   <svg className={`w-4 h-4 ${weather?.feelsLike > 40 ? 'text-red-400' : weather?.feelsLike > 35 ? 'text-orange-400' : 'text-yellow-400'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="4.22" x2="19.78" y2="5.64"/></svg>
@@ -372,7 +486,7 @@ export default function AlertsScreen() {
               </div>
 
               {/* Infrastructure Flood Risk */}
-              <div className="bg-black/20 rounded-lg p-4 border border-white/5 flex flex-col justify-between">
+              <div className="bg-black/20 rounded-lg p-4 border border-white/10 flex flex-col justify-between">
                 <div className="flex justify-between items-start mb-2">
                   <span className="text-xs font-bold text-white/50 uppercase">{ex.waterRiskLbl}</span>
                   <svg className={`w-4 h-4 ${impactStats.flood === 'Severe' ? 'text-red-400' : impactStats.flood === 'High' ? 'text-orange-400' : 'text-blue-400'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
@@ -386,63 +500,33 @@ export default function AlertsScreen() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-surface-1 border border-white/5 rounded-xl p-5 shadow-lg flex flex-col">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-bold text-white/90 tracking-wide">{ex.indiaRiskMap || "India Weather Risk Map"}</h3>
-                <div className="flex gap-2 text-[10px] uppercase font-bold tracking-widest">
-                  <span className="flex items-center gap-1 text-red-400"><span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span> Severe</span>
-                  <span className="flex items-center gap-1 text-amber-400"><span className="w-1.5 h-1.5 bg-amber-500 rounded-full"></span> High</span>
-                </div>
-              </div>
-              <div className="flex-1 flex gap-4 items-center">
-                <div className="w-1/2 flex items-center justify-center opacity-80 p-2">
-                  <img src="/india.svg" alt="India Map" className="w-full h-full drop-shadow-lg" style={{ filter: 'drop-shadow(0 0 10px rgba(239,68,68,0.2))' }} />
-                </div>
-                <div className="w-1/2 flex flex-col justify-center gap-3">
-                  <div className="text-[10px] font-bold text-white/50 uppercase tracking-widest border-b border-white/5 pb-1 mb-1">{ex.topRiskStates}</div>
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="text-white/90 font-bold truncate pr-2" title={locationName}>{locationName || 'Unknown Location'}</span>
-                    <span className={`flex items-center gap-1 shrink-0 ${impactStats.flood === 'Severe' ? 'text-red-500' : impactStats.flood === 'High' ? 'text-red-400' : impactStats.flood === 'Moderate' ? 'text-amber-400' : 'text-green-400'}`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${impactStats.flood === 'Severe' ? 'bg-red-500' : impactStats.flood === 'High' ? 'bg-red-400' : impactStats.flood === 'Moderate' ? 'bg-amber-400' : 'bg-green-400'}`}></span> {impactStats.flood}
-                    </span>
-                  </div>
-                  {nationalAlerts.map((alert, index) => (
-                    <div key={index} className="flex justify-between items-center text-xs">
-                      <span className="text-white/80">{alert.state}</span>
-                      <span className={`flex items-center gap-1 ${alert.level === 'Severe' ? 'text-red-500' : alert.level === 'High' ? 'text-red-400' : 'text-yellow-400'}`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${alert.level === 'Severe' ? 'bg-red-500' : alert.level === 'High' ? 'bg-red-400' : 'bg-yellow-500'}`}></span> {alert.level}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+          
 
-            <div className="bg-surface-1 border border-white/5 rounded-xl p-5 shadow-lg flex flex-col">
+            <div className="glass-panel border border-white/10 rounded-xl p-5 shadow-lg flex flex-col">
               <h3 className="text-sm font-bold text-white/90 tracking-wide mb-5">{ex.alertImpactAreas}</h3>
               <div className="flex flex-col gap-3 flex-1">
-                <div className="flex items-center justify-between p-2.5 rounded bg-white/5 border border-white/5">
+                <div className="flex items-center justify-between p-2.5 rounded glass-panel border border-white/10">
                   <div className="flex items-center gap-3">
                     <svg className="w-4 h-4 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
                     <span className="text-xs font-medium text-white/80">{ex.flooding}</span>
                   </div>
                   <span className={`text-[10px] font-bold uppercase ${impactStats.flood === 'Severe' ? 'text-red-500' : impactStats.flood === 'High' ? 'text-red-400' : impactStats.flood === 'Moderate' ? 'text-yellow-400 border border-yellow-500/30 px-1.5 rounded' : 'text-green-400'}`}>{impactStats.flood === 'Severe' ? ex.impactSevere : impactStats.flood === 'High' ? ex.impactHigh : impactStats.flood === 'Moderate' ? ex.impactMod : ex.impactLow}</span>
                 </div>
-                <div className="flex items-center justify-between p-2.5 rounded bg-white/5 border border-white/5">
+                <div className="flex items-center justify-between p-2.5 rounded glass-panel border border-white/10">
                   <div className="flex items-center gap-3">
-                    <svg className="w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+                    <svg className="w-4 h-4 text-white/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
                     <span className="text-xs font-medium text-white/80">{ex.roadDisruption}</span>
                   </div>
                   <span className={`text-[10px] font-bold uppercase ${impactStats.road === 'Severe' ? 'text-red-500' : impactStats.road === 'High' ? 'text-red-400' : impactStats.road === 'Moderate' ? 'text-yellow-400 border border-yellow-500/30 px-1.5 rounded' : 'text-green-400'}`}>{impactStats.road === 'Severe' ? ex.impactSevere : impactStats.road === 'High' ? ex.impactHigh : impactStats.road === 'Moderate' ? ex.impactMod : ex.impactLow}</span>
                 </div>
-                <div className="flex items-center justify-between p-2.5 rounded bg-white/5 border border-white/5">
+                <div className="flex items-center justify-between p-2.5 rounded glass-panel border border-white/10">
                   <div className="flex items-center gap-3">
                     <svg className="w-4 h-4 text-green-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                     <span className="text-xs font-medium text-white/80">{ex.cropDamage}</span>
                   </div>
                   <span className={`text-[10px] font-bold uppercase ${impactStats.crop === 'Severe' ? 'text-red-500' : impactStats.crop === 'High' ? 'text-red-400' : impactStats.crop === 'Moderate' ? 'text-yellow-400 border border-yellow-500/30 px-1.5 rounded' : 'text-green-400'}`}>{impactStats.crop === 'Severe' ? ex.impactSevere : impactStats.crop === 'High' ? ex.impactHigh : impactStats.crop === 'Moderate' ? ex.impactMod : ex.impactLow}</span>
                 </div>
-                <div className="flex items-center justify-between p-2.5 rounded bg-white/5 border border-white/5">
+                <div className="flex items-center justify-between p-2.5 rounded glass-panel border border-white/10">
                   <div className="flex items-center gap-3">
                     <svg className="w-4 h-4 text-yellow-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
                     <span className="text-xs font-medium text-white/80">{ex.powerOutage}</span>
@@ -453,36 +537,36 @@ export default function AlertsScreen() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-2 md:gap-0 bg-surface-1 border border-white/5 rounded-xl md:divide-x divide-white/5">
-            <button onClick={() => setActiveModal('radar')} className="flex flex-col items-center justify-center gap-2 p-4 hover:bg-white/5 transition-colors rounded-l-xl">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-2 md:gap-0 glass-panel border border-white/10 rounded-xl md:divide-x divide-white/5">
+            <button onClick={() => setActiveModal('radar')} className="flex flex-col items-center justify-center gap-2 p-4 hover:bg-white/10 transition-colors rounded-l-xl">
               <svg className="w-6 h-6 text-purple-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
               <div className="text-center">
                 <div className="text-xs font-bold text-white/90">{ex.liveRadar}</div>
                 <div className="text-[9px] text-white/40 mt-0.5 hidden sm:block">{ex.realTimeRain}</div>
               </div>
             </button>
-            <button onClick={() => setActiveModal('satellite')} className="flex flex-col items-center justify-center gap-2 p-4 hover:bg-white/5 transition-colors">
+            <button onClick={() => setActiveModal('satellite')} className="flex flex-col items-center justify-center gap-2 p-4 hover:bg-white/10 transition-colors">
               <svg className="w-6 h-6 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 12a9 9 0 0 1-9 9m9-9a9 9 0 0 0-9-9m9 9H3m9 9a9 9 0 0 1-9-9m9 9c1.66 0 3-4.03 3-9s-1.34-9-3-9m0 18c-1.66 0-3-4.03-3-9s1.34-9 3-9m-9 9a9 9 0 0 1 9-9"/></svg>
               <div className="text-center">
                 <div className="text-xs font-bold text-white/90">{ex.satelliteView}</div>
                 <div className="text-[9px] text-white/40 mt-0.5 hidden sm:block">{ex.cloudCover}</div>
               </div>
             </button>
-            <button onClick={() => setActiveModal('river')} className="flex flex-col items-center justify-center gap-2 p-4 hover:bg-white/5 transition-colors">
+            <button onClick={() => setActiveModal('river')} className="flex flex-col items-center justify-center gap-2 p-4 hover:bg-white/10 transition-colors">
               <svg className="w-6 h-6 text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
               <div className="text-center">
                 <div className="text-xs font-bold text-white/90">{ex.riverLevels}</div>
                 <div className="text-[9px] text-white/40 mt-0.5 hidden sm:block">{ex.floodMonitoring}</div>
               </div>
             </button>
-            <button onClick={() => setActiveModal('warnings')} className="flex flex-col items-center justify-center gap-2 p-4 hover:bg-white/5 transition-colors">
+            <button onClick={() => setActiveModal('warnings')} className="flex flex-col items-center justify-center gap-2 p-4 hover:bg-white/10 transition-colors">
               <svg className="w-6 h-6 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-14a2 2 0 0 1-2-2v-1h18v1z"/><path d="M12 2v2"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
               <div className="text-center">
                 <div className="text-xs font-bold text-white/90">{ex.earlyWarnings}</div>
                 <div className="text-[9px] text-white/40 mt-0.5 hidden sm:block">{ex.districtAlerts}</div>
               </div>
             </button>
-            <button onClick={() => setActiveModal('safety')} className="col-span-2 md:col-span-1 flex flex-col items-center justify-center gap-2 p-4 hover:bg-white/5 transition-colors rounded-r-xl">
+            <button onClick={() => setActiveModal('safety')} className="col-span-2 md:col-span-1 flex flex-col items-center justify-center gap-2 p-4 hover:bg-white/10 transition-colors rounded-r-xl">
               <svg className="w-6 h-6 text-green-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
               <div className="text-center">
                 <div className="text-xs font-bold text-white/90">{ex.safetyGuide}</div>
@@ -513,7 +597,7 @@ export default function AlertsScreen() {
           {seasonalCtx.found && (
             <div>
               <h2 className="text-lg sm:text-xl font-bold tracking-wide mb-4">{ft.seasonTitle}</h2>
-              <div className="bg-indigo-950/40 backdrop-blur-xl border border-indigo-400/30 rounded-2xl p-5 shadow-xl relative overflow-hidden">
+              <div className="bg-indigo-950/40  border border-indigo-400/30 rounded-2xl p-5 shadow-xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-4 opacity-10 text-6xl">📅</div>
                 <div className="text-xs font-bold uppercase text-indigo-300 tracking-wider mb-3">{ft.seasonNormalFor(seasonalCtx.month, seasonalCtx.city)}</div>
                 <p className="text-sm text-white/90 leading-relaxed relative z-10">{seasonalCtx.summary}</p>
@@ -536,7 +620,7 @@ export default function AlertsScreen() {
             <span className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-red-500/20 text-red-400 text-[9px] font-bold tracking-widest uppercase border border-red-500/20"><span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></span> Live</span>
           </div>
 
-          <div className="bg-surface-1 border border-white/5 rounded-2xl p-4 sm:p-5 shadow-xl flex flex-col h-full">
+          <div className="glass-panel border border-white/10 rounded-2xl p-4 sm:p-5 shadow-xl flex flex-col h-full">
             
             <div className="flex gap-2 mb-4 overflow-x-auto hide-scrollbar pb-1">
               {['all', 'alerts', 'news', 'updates', 'research'].map(filter => (
@@ -546,7 +630,7 @@ export default function AlertsScreen() {
                   className={`px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5 shrink-0 border transition-colors ${
                     newsFilter === filter 
                       ? 'bg-white/10 text-white border-white/10' 
-                      : 'text-white/50 hover:bg-white/5 border-transparent'
+                      : 'text-white/50 hover:bg-white/10 border-transparent'
                   }`}
                 >
                   {filter === 'all' && <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>}
@@ -562,7 +646,7 @@ export default function AlertsScreen() {
                 filteredNews.map(item => (
                   <a key={item.id} href={item.link} target="_blank" rel="noreferrer" className="flex gap-4 py-4 group transition-colors">
                     {item.image && (
-                      <img src={item.image} alt="" className="w-20 h-16 sm:w-24 sm:h-20 rounded-lg object-cover bg-white/10 shrink-0 border border-white/5 group-hover:border-white/20 transition-colors" />
+                      <img src={item.image} alt="" className="w-20 h-16 sm:w-24 sm:h-20 rounded-lg object-cover bg-white/10 shrink-0 border border-white/10 group-hover:border-white/10 transition-colors" />
                     )}
                     <div className="flex flex-col justify-between flex-1 min-w-0">
                       <h4 className="font-medium text-[13px] sm:text-[14px] text-white/90 leading-snug line-clamp-3 group-hover:text-blue-400 transition-colors">{item.title}</h4>
@@ -589,9 +673,9 @@ export default function AlertsScreen() {
 
       {/* Quick Links Modal Overlay */}
       {activeModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={() => setActiveModal(null)}>
-          <div className="bg-surface-1 border border-white/10 rounded-2xl w-full max-w-4xl max-h-[85vh] overflow-hidden flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-4 border-b border-white/10 bg-white/5">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 " onClick={() => setActiveModal(null)}>
+          <div className="glass-panel border border-white/10 rounded-2xl w-full max-w-4xl max-h-[85vh] overflow-hidden flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-4 border-b border-white/10 bg-white/10">
               <h3 className="text-lg font-bold text-white flex items-center gap-2">
                 {activeModal === 'radar' && <><span className="text-purple-400">●</span> {ex.liveRadar}</>}
                 {activeModal === 'satellite' && <><span className="text-blue-400">●</span> {ex.satelliteView}</>}
@@ -609,7 +693,7 @@ export default function AlertsScreen() {
                 <iframe 
                   width="100%" 
                   height="500" 
-                  src={`https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=mm&metricTemp=%C2%B0C&metricWind=km%2Fh&zoom=${weather ? 11 : 5}&overlay=${activeModal === 'radar' ? 'rain' : 'clouds'}&product=ecmwf&level=surface&lat=${weather?.latitude || 20.5937}&lon=${weather?.longitude || 78.9629}`}
+                  src={`https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=mm&metricTemp=%C2%B0C&metricWind=km%2Fh&zoom=${(stageData.lat || state.currentWeather?.lat) ? 13 : 5}&overlay=${activeModal === 'radar' ? 'rain' : 'clouds'}&product=ecmwf&level=surface&lat=${stageData.lat || state.currentWeather?.lat || 20.5937}&lon=${stageData.lng || state.currentWeather?.lng || 78.9629}`}
                   frameBorder="0"
                   title="Weather Map"
                 ></iframe>
@@ -637,7 +721,7 @@ export default function AlertsScreen() {
                   <div className="space-y-4">
                     {liveAlerts.filter(a => a.id !== 'all-clear').length > 0 ? (
                       liveAlerts.filter(a => a.id !== 'all-clear').map(alert => (
-                        <div key={alert.id} className="bg-white/5 border border-white/10 p-4 rounded-lg">
+                        <div key={alert.id} className="glass-panel border border-white/10 p-4 rounded-lg">
                           <div className="flex justify-between items-start mb-2">
                             <h5 className="font-bold text-white/90">{alert.title}</h5>
                             <span className="text-[10px] text-white/40">Issued: Just now</span>

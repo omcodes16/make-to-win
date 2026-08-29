@@ -32,6 +32,7 @@ const initialState = {
   lastCachedResponse: safeLoad('weathergpt-cache', null),
   savedLocations: safeLoad('weathergpt-saved-locations', []),
   userProfile: localStorage.getItem('weathergpt-profile') || 'general',
+  uiTheme: localStorage.getItem('weathergpt-theme') || 'dark',
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -39,6 +40,10 @@ const initialState = {
 // ─────────────────────────────────────────────────────────────────────────────
 function appReducer(state, action) {
   switch (action.type) {
+
+    case 'SET_UI_THEME':
+      localStorage.setItem('weathergpt-theme', action.payload);
+      return { ...state, uiTheme: action.payload };
 
     case 'SET_GOVERNMENT_ALERTS':
       return { ...state, governmentAlerts: action.payload };

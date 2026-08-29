@@ -66,7 +66,7 @@ const SunMoonTracker = ({ weather, t, locale }) => {
   const py = Math.pow(1 - progress, 2) * p0.y + 2 * (1 - progress) * progress * p1.y + Math.pow(progress, 2) * p2.y;
 
   return (
-    <div className="bg-white/5 hover:bg-white/10 transition-all duration-300 rounded-2xl p-5 border border-white/10 col-span-2 shadow-sm hover:shadow-md relative overflow-hidden flex flex-col justify-between">
+    <div className="glass-panel transition-all duration-300 rounded-2xl p-5 border border-white/10 col-span-2 shadow-sm hover:shadow-md relative overflow-hidden flex flex-col justify-between">
       <div className="text-white/50 text-xs font-medium uppercase tracking-wider mb-2 flex items-center gap-1.5 z-10">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v6"/><path d="M12 22v-6"/><path d="M4.93 4.93l4.24 4.24"/><path d="M19.07 19.07l-4.24-4.24"/><path d="M2 12h6"/><path d="M22 12h-6"/><path d="M4.93 19.07l4.24-4.24"/><path d="M19.07 4.93l-4.24 4.24"/></svg>
         {isDaytime ? 'Sun Path' : 'Moon Path'}
@@ -192,7 +192,7 @@ export default function WeatherCharts({ weather, lat, lng }) {
   const getPrecipHeight = (precip) => ((precip || 0) / 100) * (height - 30);
 
   return (
-    <div className="bg-dusk/90 rounded-t-3xl text-white pt-6 pb-8 shadow-2xl relative z-30 mt-[-20px] backdrop-blur-md">
+    <div className="bg-dusk/90 rounded-t-3xl text-white pt-6 pb-8 shadow-2xl relative z-30 mt-[-20px] ">
       
       {/* Tabs */}
       <div className="flex gap-6 px-6 border-b border-white/10 mb-6 font-medium text-sm">
@@ -248,7 +248,7 @@ export default function WeatherCharts({ weather, lat, lng }) {
               )}
 
               {activeTab === 'precipitation' && (
-                <div className="w-full h-full flex justify-between items-end px-[3%] border-b border-white/20">
+                <div className="w-full h-full flex justify-between items-end px-[3%] border-b border-white/10">
                   {chartData.map((d, i) => (
                     <div key={i} className="w-8 bg-blue-500/60 rounded-t-sm" style={{ height: `${Math.max(2, getPrecipHeight(d.precip))}px` }}></div>
                   ))}
@@ -286,7 +286,7 @@ export default function WeatherCharts({ weather, lat, lng }) {
       <div className="px-6 mb-6">
         <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-4">
           {dailyData.map((day, i) => (
-            <div key={i} className={`flex flex-col items-center min-w-[70px] p-3 rounded-2xl ${i === 0 ? 'bg-white/10 shadow-inner' : 'hover:bg-white/5'} transition-colors`}>
+            <div key={i} className={`flex flex-col items-center min-w-[70px] p-3 rounded-2xl ${i === 0 ? 'bg-white/10 shadow-inner' : 'hover:bg-white/10'} transition-colors`}>
               <div className="text-sm font-medium mb-2">{i === 0 ? t.today : day.day}</div>
               <div className="text-2xl mb-2 drop-shadow-md">{day.icon}</div>
               <div className="flex gap-2 text-sm">
@@ -304,7 +304,7 @@ export default function WeatherCharts({ weather, lat, lng }) {
         <div className="grid grid-cols-2 gap-3">
           
           {/* Feels Like & Humidity */}
-          <div className="bg-white/5 hover:bg-white/10 transition-all duration-300 rounded-2xl p-4 border border-white/10 flex flex-col justify-between shadow-sm hover:shadow-md cursor-default">
+          <div className="glass-panel transition-all duration-300 rounded-2xl p-4 border border-white/10 flex flex-col justify-between shadow-sm hover:shadow-md cursor-default">
             <div className="text-white/50 text-xs font-medium uppercase tracking-wider mb-1 flex items-center gap-1.5">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg>
               {t.feelsLike}
@@ -312,7 +312,7 @@ export default function WeatherCharts({ weather, lat, lng }) {
             <div className="text-2xl font-semibold text-white drop-shadow-sm">{weather.feelsLike}°</div>
           </div>
           
-          <div className="bg-white/5 hover:bg-white/10 transition-all duration-300 rounded-2xl p-4 border border-white/10 flex flex-col justify-between shadow-sm hover:shadow-md cursor-default">
+          <div className="glass-panel transition-all duration-300 rounded-2xl p-4 border border-white/10 flex flex-col justify-between shadow-sm hover:shadow-md cursor-default">
             <div className="text-white/50 text-xs font-medium uppercase tracking-wider mb-1 flex items-center gap-1.5">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
               {t.hum}
@@ -321,7 +321,7 @@ export default function WeatherCharts({ weather, lat, lng }) {
           </div>
 
           {/* Visibility & UV Index */}
-          <div className="bg-white/5 hover:bg-white/10 transition-all duration-300 rounded-2xl p-4 border border-white/10 flex flex-col justify-between shadow-sm hover:shadow-md cursor-default">
+          <div className="glass-panel transition-all duration-300 rounded-2xl p-4 border border-white/10 flex flex-col justify-between shadow-sm hover:shadow-md cursor-default">
             <div className="text-white/50 text-xs font-medium uppercase tracking-wider mb-1 flex items-center gap-1.5">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
               {t.vis}
@@ -329,7 +329,7 @@ export default function WeatherCharts({ weather, lat, lng }) {
             <div className="text-2xl font-semibold text-white drop-shadow-sm">{(weather.visibility / 1000).toFixed(1)} km</div>
           </div>
           
-          <div className="bg-white/5 hover:bg-white/10 transition-all duration-300 rounded-2xl p-4 border border-white/10 flex flex-col justify-between shadow-sm hover:shadow-md cursor-default">
+          <div className="glass-panel transition-all duration-300 rounded-2xl p-4 border border-white/10 flex flex-col justify-between shadow-sm hover:shadow-md cursor-default">
             <div className="text-white/50 text-xs font-medium uppercase tracking-wider mb-1 flex items-center gap-1.5">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
               {t.uv}

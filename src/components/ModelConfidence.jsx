@@ -25,7 +25,7 @@ export default function ModelConfidence({ modelData, selectedDay, language = 'en
   const isDivergent = confidence === 'low' || confidence === 'medium';
 
   return (
-    <div className={`mt-4 mb-4 bg-white/5 backdrop-blur-md border ${isLow ? 'border-red-500/30' : isDivergent ? 'border-amber-500/30' : 'border-emerald-500/30'} rounded-3xl p-4 sm:p-5 shadow-xl transition-all`}>
+    <div className={`mt-4 mb-4 glass-panel border ${isLow ? 'border-red-500/30' : isDivergent ? 'border-amber-500/30' : 'border-emerald-500/30'} rounded-3xl p-4 sm:p-5 shadow-xl transition-all`}>
       <div 
         className="flex items-center justify-between cursor-pointer"
         onClick={() => setExpanded(!expanded)}
@@ -60,7 +60,7 @@ export default function ModelConfidence({ modelData, selectedDay, language = 'en
           <div className="text-xs font-medium text-white/50 uppercase tracking-wider mb-3">Model Breakdown</div>
           <div className="grid grid-cols-3 gap-2 sm:gap-4">
             {models.map(m => (
-              <div key={m.name} className="bg-white/5 border border-white/10 rounded-xl p-3 flex flex-col items-center text-center">
+              <div key={m.name} className="glass-panel border border-white/10 rounded-xl p-3 flex flex-col items-center text-center">
                 <span className="text-xs sm:text-sm font-semibold text-white/80 mb-2">{m.name}</span>
                 <div className="text-lg sm:text-xl font-bold text-white mb-1">{Math.round(m.temp)}°C</div>
                 {m.precip !== undefined && m.precip !== null && (

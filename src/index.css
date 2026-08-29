@@ -2,6 +2,41 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  :root {
+    --text-primary: #ffffff;
+    --text-muted: rgba(255, 255, 255, 0.7);
+    --theme-border: rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* Unified Premium Glassmorphism (Replaces bg-surface-1/2 and glass-card) */
+.glass-panel {
+  background: rgba(42, 23, 78, 0.65);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 10px 40px -5px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  border-radius: 1rem;
+  transition: all 0.3s ease;
+  color: #ffffff;
+}
+
+.glass-panel:hover {
+  background: rgba(50, 28, 90, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.glass-input {
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+}
+
 /* JetBrains Mono from Fontsource CDN */
 @font-face {
   font-family: 'JetBrains Mono';
@@ -283,14 +318,7 @@ img, svg {
 
 /* ===== ULTRA PREMIUM — Stitch Aura Design ===== */
 
-/* Glassmorphism Card */
-.glass-card {
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-}
+
 
 /* Glassmorphism Input */
 .glass-input {

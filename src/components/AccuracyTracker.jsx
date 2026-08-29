@@ -40,13 +40,13 @@ export default function AccuracyTracker({ locationName, language }) {
 
   if (loading) {
     return (
-      <div className="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl p-6 shadow-xl mb-6 animate-pulse min-h-[200px]">
+      <div className="bg-white/10 backdrop-blur-2xl border border-white/10 rounded-3xl p-6 shadow-xl mb-6 animate-pulse min-h-[200px]">
         <div className="h-6 bg-white/10 rounded w-1/3 mb-4"></div>
         <div className="h-4 bg-white/10 rounded w-1/2 mb-6"></div>
         <div className="space-y-3">
-          <div className="h-10 bg-white/5 rounded"></div>
-          <div className="h-10 bg-white/5 rounded"></div>
-          <div className="h-10 bg-white/5 rounded"></div>
+          <div className="h-10 bg-white/10 rounded"></div>
+          <div className="h-10 bg-white/10 rounded"></div>
+          <div className="h-10 bg-white/10 rounded"></div>
         </div>
       </div>
     );
@@ -58,7 +58,7 @@ export default function AccuracyTracker({ locationName, language }) {
   const accuracyPercentage = Math.round((accurateCount / data.length) * 100);
 
   return (
-    <div className="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl p-4 sm:p-6 shadow-xl mb-6 sm:mb-8 transition-colors">
+    <div className="bg-white/10 backdrop-blur-2xl border border-white/10 rounded-3xl p-4 sm:p-6 shadow-xl mb-6 sm:mb-8 transition-colors">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 gap-3">
         <div>
           <h2 className="text-white/90 font-bold text-lg tracking-wide flex items-center gap-2">
@@ -86,7 +86,7 @@ export default function AccuracyTracker({ locationName, language }) {
           </thead>
           <tbody className="divide-y divide-white/5">
             {data.map((row, i) => (
-              <tr key={i} className="hover:bg-white/5 transition-colors group">
+              <tr key={i} className="hover:bg-white/10 transition-colors group">
                 <td className="py-4 px-4">
                   <div className="text-sm font-medium text-white/90">{new Date(row.date).toLocaleDateString()}</div>
                   {row.isSample && (
@@ -131,7 +131,7 @@ export default function AccuracyTracker({ locationName, language }) {
         </table>
       </div>
 
-      <div className="mt-4 pt-4 border-t border-white/5 text-center sm:text-left">
+      <div className="mt-4 pt-4 border-t border-white/10 text-center sm:text-left">
         <p className="text-[11px] text-white/40 flex items-center justify-center sm:justify-start gap-1.5">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
           {tl.disclaimer}

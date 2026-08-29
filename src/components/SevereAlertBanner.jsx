@@ -40,7 +40,7 @@ export default function SevereAlertBanner() {
           </button>
           
           {govExpanded && (
-            <div className="px-4 pb-3 space-y-2 border-t border-white/20 pt-2">
+            <div className="px-4 pb-3 space-y-2 border-t border-white/10 pt-2">
               <p className="text-sm text-white/90">{alert.description || "Official government advisory is currently active for this region."}</p>
               <p className="text-xs text-white/70 italic">Source: WeatherGPT Disaster Manager</p>
             </div>
@@ -70,10 +70,10 @@ export default function SevereAlertBanner() {
           </button>
 
           {expanded && (
-            <div className="px-4 pb-3 space-y-2 border-t border-white/20 pt-2">
+            <div className="px-4 pb-3 space-y-2 border-t border-white/10 pt-2">
               <p className="text-sm text-white/90">{state.severeAlert.detail}</p>
               {state.severeAlert.action && (
-                <p className="text-sm font-medium bg-white/10 backdrop-blur-md rounded-xl px-3 py-2 border border-white/10">
+                <p className="text-sm font-medium bg-white/10  rounded-xl px-3 py-2 border border-white/10">
                   🛡️ {state.severeAlert.action}
                 </p>
               )}
