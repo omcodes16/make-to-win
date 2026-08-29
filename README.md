@@ -1,32 +1,32 @@
-﻿# 🌦️ WeatherGPT — SIH 2026
+# ??? WeatherGPT � SIH 2026
 
 > **Smart India Hackathon 2026 | Problem Statement PS-26068**
 > *India's First AI-Powered, Profession-Aware, Multilingual Hyperlocal Weather Intelligence Platform*
 
 ---
 
-## 🏆 Why WeatherGPT Wins
+## ?? Why WeatherGPT Wins
 
 WeatherGPT is **not** just another weather app. It is the first platform in India that combines:
 - **Real-time NWP multi-model forecasts** (GFS + ICON + ECMWF) with transparent confidence scoring
 - **Groq-powered AI** that calls live APIs on demand and answers in the user's own language
 - **Profession-specific intelligence** for Farmers, Fishermen, Aviators, and Urban Planners
 - **Integrated Emergency SOS** with GPS, photo upload, and disaster authority dispatch
-- **4 Indian Languages** — English, Hindi, Assamese, Bengali — covering UI, alerts, and AI chat
+- **4 Indian Languages** � English, Hindi, Assamese, Bengali � covering UI, alerts, and AI chat
 
 | Capability | Other Apps | WeatherGPT |
 |---|---|---|
-| Indian language UI | ❌ | ✅ EN, HI, AS, BN |
-| AI chat with live data | ❌ | ✅ Groq + Tool Calling |
-| Profession-specific advice | ❌ | ✅ 4 professions |
-| 3-model NWP comparison | ❌ | ✅ GFS + ICON + ECMWF |
-| Emergency SOS dispatch | ❌ | ✅ GPS + Photo + Server |
-| Self-verifying accuracy | ❌ | ✅ Automated daily check |
-| Disaster authority portal | ❌ | ✅ Full /manager dashboard |
+| Indian language UI | ? | ? EN, HI, AS, BN |
+| AI chat with live data | ? | ? Groq + Tool Calling |
+| Profession-specific advice | ? | ? 4 professions |
+| 3-model NWP comparison | ? | ? GFS + ICON + ECMWF |
+| Emergency SOS dispatch | ? | ? GPS + Photo + Server |
+| Self-verifying accuracy | ? | ? Automated daily check |
+| Disaster authority portal | ? | ? Full /manager dashboard |
 
 ---
 
-## 📋 Table of Contents
+## ?? Table of Contents
 
 1. [System Architecture Overview](#1-system-architecture-overview)
 2. [Complete Feature List](#2-complete-feature-list)
@@ -39,7 +39,7 @@ WeatherGPT is **not** just another weather app. It is the first platform in Indi
 9. [All Data Sources & APIs](#9-all-data-sources--apis)
 10. [Project Structure](#10-project-structure)
 11. [Setup & Installation](#11-setup--installation)
-12. [SIH Judge Notes — Key Innovations](#12-sih-judge-notes--key-innovations)
+12. [SIH Judge Notes � Key Innovations](#12-sih-judge-notes--key-innovations)
 
 ---
 
@@ -47,7 +47,7 @@ WeatherGPT is **not** just another weather app. It is the first platform in Indi
 
 `mermaid
 graph TB
-    subgraph CLIENT["🖥️ React PWA (Frontend)"]
+    subgraph CLIENT["??? React PWA (Frontend)"]
         CHAT[WeatherGPT AI Chat]
         DASH[Weather Dashboard]
         ALERTS[Live Alerts Screen]
@@ -58,7 +58,7 @@ graph TB
         MGR[Manager Dashboard]
     end
 
-    subgraph SERVER["⚙️ Express.js Backend (Node.js)"]
+    subgraph SERVER["?? Express.js Backend (Node.js)"]
         GROQ_EP[/api/chat\nGroq AI Orchestrator]
         SOS_EP[/api/sos\nEmergency Dispatcher]
         NEWS_EP[/api/news\nGoogle News]
@@ -68,12 +68,12 @@ graph TB
         TOOLS[AI Tool Functions]
     end
 
-    subgraph BRAIN["🤖 AI Layer"]
+    subgraph BRAIN["?? AI Layer"]
         GROQ[Groq LLaMA 70B\nFunction Calling]
         GEMINI[Google Gemini Flash\nFallback + Risk Map]
     end
 
-    subgraph EXTERNAL["🌐 External APIs"]
+    subgraph EXTERNAL["?? External APIs"]
         OM_CORE[Open-Meteo Forecast]
         OM_HIST[Open-Meteo Archive]
         OM_MARINE[Open-Meteo Marine]
@@ -85,7 +85,7 @@ graph TB
         GTTS[Google TTS]
     end
 
-    subgraph DB["🗄️ Storage"]
+    subgraph DB["??? Storage"]
         MONGO[(MongoDB Atlas)]
         JSON[(Local JSON Fallback)]
     end
@@ -109,14 +109,14 @@ graph TB
 
 ## 2. Complete Feature List
 
-### 🌤️ Core Weather Engine
+### ??? Core Weather Engine
 
 | Feature | Details |
 |---|---|
 | **Live Current Conditions** | Temp, feels-like, humidity, wind, UV, AQI, visibility, rain, day/night |
-| **7-Day Interactive Forecast** | Click any day → full dashboard updates for that date |
+| **7-Day Interactive Forecast** | Click any day ? full dashboard updates for that date |
 | **12-Hour Hourly Forecast** | Temperature + precipitation progression |
-| **Heat Index** | Rothfusz formula: humidity × temp for physiological danger level |
+| **Heat Index** | Rothfusz formula: humidity � temp for physiological danger level |
 | **Air Quality (AQI)** | PM2.5, PM10, US-AQI with health classification |
 | **Astronomical Arc** | Dynamic SVG sunrise/sunset + moon trajectory arc |
 | **Live Radar Map** | Windy.com radar + satellite cloud embed via Leaflet |
@@ -125,16 +125,16 @@ graph TB
 | **Offline Banner** | Network status detection and graceful offline mode |
 | **Dynamic Themes** | Background + accent colors auto-change per weather condition |
 
-### 🤖 AI / WeatherGPT Chat
+### ?? AI / WeatherGPT Chat
 
 | Feature | Details |
 |---|---|
 | **Groq LLaMA 70B** | Ultra-fast AI inference via Groq cloud |
 | **Autonomous Tool Calling** | AI decides which real-time weather tools to invoke |
 | **Up to 3 Tool Iterations** | Multi-turn AI reasoning loops before final answer |
-| **Persona-Aware Responses** | Farmer → crop language; Fisherman → marine language |
+| **Persona-Aware Responses** | Farmer ? crop language; Fisherman ? marine language |
 | **Always Matches User Language** | Hindi in = Hindi out; Assamese in = Assamese out |
-| **Follow-Up Suggestions** | 2–3 smart contextual next questions |
+| **Follow-Up Suggestions** | 2�3 smart contextual next questions |
 | **Severity + Confidence** | None / Caution / Severe + High / Medium / Low |
 | **Seasonal Anomaly Note** | Is today's weather unusual for this time of year? |
 | **Heat Index Reasoning** | AI uses feels-like, not raw temp, for activity advice |
@@ -143,24 +143,24 @@ graph TB
 | **Gemini Fallback** | If Groq unavailable, Gemini Flash auto-takes over |
 | **Local Context Injection** | Geo-specific facts injected (rivers, crops, flood zones) |
 
-### 🚨 Alert System
+### ?? Alert System
 
 | Feature | Details |
 |---|---|
-| **Thunderstorm Warning** | WMO codes 95, 96, 99 → SEVERE level |
-| **Heavy Rain & Flood** | >40mm precipitation or heavy rain code → SEVERE |
-| **High Wind Warning** | Wind > 45 km/h → SEVERE |
-| **Poor Visibility** | < 2000m → CAUTION |
-| **Extreme UV** | UV Index > 8 → CAUTION |
+| **Thunderstorm Warning** | WMO codes 95, 96, 99 ? SEVERE level |
+| **Heavy Rain & Flood** | >40mm precipitation or heavy rain code ? SEVERE |
+| **High Wind Warning** | Wind > 45 km/h ? SEVERE |
+| **Poor Visibility** | < 2000m ? CAUTION |
+| **Extreme UV** | UV Index > 8 ? CAUTION |
 | **Smart City Panel** | AQI, heat index, waterlogging risk metrics |
 | **4-Pillar Infrastructure Risk** | Flood / Road / Crop / Power impact scores |
 | **India Risk Map** | Top-risk states ranked by AI |
 | **National NDMA Alerts** | CAP XML from NDMA Sachet, parsed server-side |
 | **IMD Weather News** | Filtered Google News RSS by category |
 | **Disaster Safety SOPs** | Flood, cyclone, lightning, heatwave action guides |
-| **Fully Translated** | Headlines, desc, precautions → EN/HI/AS/BN |
+| **Fully Translated** | Headlines, desc, precautions ? EN/HI/AS/BN |
 
-### 🆘 Emergency SOS
+### ?? Emergency SOS
 
 | Feature | Details |
 |---|---|
@@ -170,38 +170,38 @@ graph TB
 | **6 Emergency Categories** | Medical, Evacuation, Food, Shelter, Fire, Other |
 | **GPS Capture** | Auto-captures precise coords on form submit |
 | **Photo Upload** | Camera or file pick, compressed to 800px/70% JPEG |
-| **Server Dispatch** | POSTed to /api/sos → Disaster Authority dashboard |
+| **Server Dispatch** | POSTed to /api/sos ? Disaster Authority dashboard |
 | **Fallback** | "Call 112" shown if server unreachable |
 
-### 👨‍🌾 Profession-Specific Intelligence
+### ????? Profession-Specific Intelligence
 
 | Profession | Data Used | Unique Advice |
 |---|---|---|
-| **🌾 Farmer** | Rain, UV, wind, humidity, soil moisture, soil temp, ET0 | Kharif/Rabi/Zaid season detection; spray safety; frost/fungal alerts |
-| **🎣 Fisherman** | Wave height, wind, storm code, visibility | Small-craft harbor advisory; fish activity index; fog collision risk |
-| **✈️ Aviation** | Visibility, CAPE, cloud ceiling, wind gusts | VFR minimums check; drone safety rating; crosswind alerts |
-| **🏙️ Urban Planner** | AQI, PM2.5/PM10, temp, rainfall | Drainage stress; heat cooling center advisory; worker safety breaks |
+| **?? Farmer** | Rain, UV, wind, humidity, soil moisture, soil temp, ET0 | Kharif/Rabi/Zaid season detection; spray safety; frost/fungal alerts |
+| **?? Fisherman** | Wave height, wind, storm code, visibility | Small-craft harbor advisory; fish activity index; fog collision risk |
+| **?? Aviation** | Visibility, CAPE, cloud ceiling, wind gusts | VFR minimums check; drone safety rating; crosswind alerts |
+| **??? Urban Planner** | AQI, PM2.5/PM10, temp, rainfall | Drainage stress; heat cooling center advisory; worker safety breaks |
 
-### 📊 Historical Analytics & Accuracy
+### ?? Historical Analytics & Accuracy
 
 | Feature | Details |
 |---|---|
 | **30-Day Rain Chart** | Daily precipitation bar chart via Recharts |
 | **30-Day Temp Chart** | Temperature area chart (gradient) via Recharts |
 | **1-Year & 5-Year Views** | Monthly aggregated data views |
-| **AI Agri-Risk Assessment** | AI reads 30-day data → crop moisture analysis |
+| **AI Agri-Risk Assessment** | AI reads 30-day data ? crop moisture analysis |
 | **Forecast Accuracy Tracker** | Yesterday's prediction vs today's actual, with % badge |
 | **Seasonal Baseline** | 5-year monthly averages for 16 Indian cities |
-| **Anomaly Detection** | Flags rainfall >3x normal or temperature >5°C above average |
+| **Anomaly Detection** | Flags rainfall >3x normal or temperature >5�C above average |
 
-### 🏛️ Disaster Authority Dashboard (/manager)
+### ??? Disaster Authority Dashboard (/manager)
 
 | Feature | Details |
 |---|---|
 | **HMAC-SHA256 Auth** | Secure stateless 24-hour login tokens |
 | **State-Level Broadcast** | Alert entire Indian state |
 | **District-Level Broadcast** | Alert specific district (full NE India dropdown) |
-| **GPS Radius Broadcast** | Haversine distance, 5km–250km slider |
+| **GPS Radius Broadcast** | Haversine distance, 5km�250km slider |
 | **4 Severity Levels** | Minor/Watch, Moderate/Advisory, Severe/Warning, Extreme/Emergency |
 | **Custom Expiry** | 1hr to 7-day validity settings |
 | **SOS Management** | View, navigate to, dispatch, and resolve citizen SOS alerts |
@@ -212,15 +212,53 @@ graph TB
 
 ## 3. Data Flow Diagrams
 
-### 3.1 — AI Chat Query Flow
+### 3.0 - End-to-End Prototype Working Flowchart
+
+```mermaid
+graph TD
+    %% Core Users
+    User([👨‍🌾 Citizen / Farmer / Official]) -->|Opens Web App| UI[📱 React.js Frontend]
+
+    %% Frontend interactions
+    UI -->|1. Searches Location / Grants GPS| Loc[Geocoding & Location State]
+    UI -->|2. Asks Weather Question| Chat[💬 WeatherGPT AI Interface]
+    UI -->|3. Navigates Dashboard| Dash[📊 Weather & Alert Dashboards]
+
+    %% Backend Services
+    Loc -->|Fetch coordinates| BE[⚙️ Node.js Express Backend]
+    Chat -->|Natural Language Prompt| BE
+    Dash -->|Live Data Request| BE
+
+    %% AI & External Processing
+    subgraph Intelligence & Processing Layer
+        BE -->|Sends Context & Tools| Groq[🧠 Groq / LLaMA 70B AI]
+        BE -->|Fetch Forecasts| OM[🌤️ Open-Meteo API]
+        BE -->|Fetch Disaster Feeds| GDACS[🚨 GDACS / NDMA Feeds]
+        BE -->|Fetch News| News[📰 Google News RSS]
+        BE -->|Synthesize Voice| TTS[🗣️ Google TTS API]
+    end
+
+    %% Returns
+    Groq -->|Parsed Intent & Action| BE
+    OM -->|NWP Models GFS/ECMWF| BE
+    GDACS -->|Active Alerts| BE
+
+    %% Display to User
+    BE -->|Aggregated JSON Data| UI
+    UI -->|Renders Real-time Cards & Maps| Dash
+    UI -->|Speaks Response| Audio[🔊 Audio Output]
+    UI -->|Updates Profession Hub| Prof[💼 Sector Advisories]
+```
+
+### 3.1 � AI Chat Query Flow
 
 `mermaid
 sequenceDiagram
-    participant U as 👤 User
-    participant FE as 🖥️ React App
-    participant BE as ⚙️ Express Server
-    participant AI as 🤖 Groq LLaMA
-    participant WX as 🌐 Open-Meteo
+    participant U as ?? User
+    participant FE as ??? React App
+    participant BE as ?? Express Server
+    participant AI as ?? Groq LLaMA
+    participant WX as ?? Open-Meteo
 
     U->>FE: Types question (any language)
     FE->>BE: POST /api/chat<br/>{message, location, profile, lang, history}
@@ -238,31 +276,31 @@ sequenceDiagram
     FE->>U: Rendered reply with severity badge +<br/>audio TTS + follow-up chips
 `
 
-### 3.2 — How Alerts Are Computed
+### 3.2 � How Alerts Are Computed
 
 `mermaid
 flowchart LR
     A[Live Weather\nData Loaded] --> B{WMO Code\nCheck}
-    B -->|95 / 96 / 99| TH["⛈️ THUNDERSTORM\n🔴 SEVERE"]
-    B -->|63,65,81,82\nor rain > 40mm| HR["🌧️ HEAVY RAIN\n🔴 SEVERE"]
-    B -->|rain 15–40mm| MR["🌦️ MODERATE RAIN\n🟡 CAUTION"]
+    B -->|95 / 96 / 99| TH["?? THUNDERSTORM\n?? SEVERE"]
+    B -->|63,65,81,82\nor rain > 40mm| HR["??? HEAVY RAIN\n?? SEVERE"]
+    B -->|rain 15�40mm| MR["??? MODERATE RAIN\n?? CAUTION"]
 
     A --> W{Wind Speed}
-    W -->|> 45 km/h| WD["💨 HIGH WIND\n🔴 SEVERE"]
+    W -->|> 45 km/h| WD["?? HIGH WIND\n?? SEVERE"]
 
     A --> V{Visibility}
-    V -->|< 2000m| FG["🌫️ POOR VISIBILITY\n🟡 CAUTION"]
+    V -->|< 2000m| FG["??? POOR VISIBILITY\n?? CAUTION"]
 
     A --> U{UV Index}
-    U -->|> 8| UV["☀️ EXTREME UV\n🟡 CAUTION"]
+    U -->|> 8| UV["?? EXTREME UV\n?? CAUTION"]
 
-    B -->|No match| AC["✅ ALL CLEAR\n🟢 GOOD"]
+    B -->|No match| AC["? ALL CLEAR\n?? GOOD"]
 
     TH & HR & MR & WD & FG & UV & AC --> T{Translate to\nUser Language}
     T --> CARD[Display Alert Card\nTitle + Desc + Precaution]
 `
 
-### 3.3 — Location Search Flow
+### 3.3 � Location Search Flow
 
 `mermaid
 flowchart TD
@@ -278,32 +316,32 @@ flowchart TD
     I --> J[Update all screens\nwith new data]
 
     B2[Or: GPS button] --> K[browser geolocation]
-    K --> L[Nominatim reverse\ngeocode → city name]
+    K --> L[Nominatim reverse\ngeocode ? city name]
     L --> I
 `
 
-### 3.4 — Emergency SOS Flow
+### 3.4 � Emergency SOS Flow
 
 `mermaid
 flowchart TD
-    A["🆘 SOS Button Tapped"] --> B[Haptic vibration\nEmergency siren sound]
+    A["?? SOS Button Tapped"] --> B[Haptic vibration\nEmergency siren sound]
     B --> C[Open SOS Form]
     C --> D[Select help category\nMedical / Evacuation / etc.]
     D --> E[Optional: Upload\nemergency photo]
     E --> F[Enter name & phone\noptional]
-    F --> G["Submit — Share Location & Send"]
+    F --> G["Submit � Share Location & Send"]
     G --> H[Acquire GPS coordinates]
     H --> I{GPS OK?}
     I -->|Yes| J["POST /api/sos\n{name, phone, type, lat, lng, photo}"]
     J --> K{Server OK?}
-    K -->|✅ Yes| L["Help is Coming!\n✅ Dispatched to authorities"]
-    K -->|❌ No| M["Transmission Failed\n📞 Call 112 immediately!"]
+    K -->|? Yes| L["Help is Coming!\n? Dispatched to authorities"]
+    K -->|? No| M["Transmission Failed\n?? Call 112 immediately!"]
     I -->|No| M
     L --> N[Authority sees SOS\nin /manager dashboard]
     N --> O[Officer dispatches rescue\nvia Google Maps navigation]
 `
 
-### 3.5 — NWP Model Confidence Flow
+### 3.5 � NWP Model Confidence Flow
 
 `mermaid
 flowchart LR
@@ -311,13 +349,13 @@ flowchart LR
     I[ICON Global\nDWD Germany] --> C
     E[ECMWF IFS025\nECMWF UK] --> C
     C{Compare Models\nfor selected day}
-    C -->|tempDiff < 1°C\nprecipDiff < 15%| HC["✅ HIGH CONFIDENCE\nGreen badge — Forecast is reliable"]
-    C -->|tempDiff ≤ 2.5°C\nor precipDiff ≤ 30%| MC["⚠️ MEDIUM CONFIDENCE\nAmber badge — Check again closer to date"]
-    C -->|Large divergence| LC["❌ LOW CONFIDENCE\nRed badge — Models strongly disagree"]
+    C -->|tempDiff < 1�C\nprecipDiff < 15%| HC["? HIGH CONFIDENCE\nGreen badge � Forecast is reliable"]
+    C -->|tempDiff = 2.5�C\nor precipDiff = 30%| MC["?? MEDIUM CONFIDENCE\nAmber badge � Check again closer to date"]
+    C -->|Large divergence| LC["? LOW CONFIDENCE\nRed badge � Models strongly disagree"]
     HC & MC & LC --> SHOW[Display blended best-match\nforecast to user]
 `
 
-### 3.6 — Forecast Accuracy Pipeline
+### 3.6 � Forecast Accuracy Pipeline
 
 `mermaid
 flowchart LR
@@ -326,10 +364,10 @@ flowchart LR
     C --> D[Next day: Load yesterday's snapshot]
     D --> E[Fetch actual weather\nfrom Open-Meteo Archive]
     E --> F[Compare: predicted vs actual\ntemp + rain probability]
-    F --> G{Temp diff ≤ 1.5°C?}
-    G -->|Yes| H["✅ ACCURATE"]
-    G -->|≤ 3°C| I["⚠️ CLOSE"]
-    G -->|> 3°C| J["❌ OFF"]
+    F --> G{Temp diff = 1.5�C?}
+    G -->|Yes| H["? ACCURATE"]
+    G -->|= 3�C| I["?? CLOSE"]
+    G -->|> 3�C| J["? OFF"]
     H & I & J --> K[Display in\nAccuracy Tracker table]
     K --> L[Show % accuracy badge\nto build user trust]
 `
@@ -344,7 +382,7 @@ The AI (Groq LLaMA 70B) operates under a tightly-crafted system prompt for India
 
 | Rule | Implementation |
 |---|---|
-| **Profile awareness** | Farmer → crop framing; Fisherman → marine terms; Aviation → flight terms |
+| **Profile awareness** | Farmer ? crop framing; Fisherman ? marine terms; Aviation ? flight terms |
 | **Language mirroring** | Responds in the EXACT language the user types |
 | **Plain language mandate** | "Heavy rain after 4 PM" NOT "Precipitation probability: 78%" |
 | **Tool discipline** | Only calls the tools actually needed (not all 6 for a simple question) |
@@ -390,22 +428,22 @@ flowchart TD
 ### Farmer Advisory Decision Tree
 
 `
-Thunderstorm (95-99)    → 🔴 DANGER: Evacuate fields, shelter equipment
-Heavy rain (≥65/10mm+)  → 🔴 DANGER: Postpone spraying, check drainage
-Rain prob > 75%          → 🔴 DANGER: Prepare for field waterlogging
-Light rain / drizzle     → 🟡 CAUTION: Delay pesticide application
-UV Index ≥ 9             → 🔴 DANGER: Stop field work 10 AM – 4 PM
-Wind > 25 km/h           → 🟡 CAUTION: Spray drift risk, delay application
-Humidity>85% + Temp>25°C → 🟡 CAUTION: Fungal disease outbreak risk
-Fog (code 45/48)         → 🟡 CAUTION: Delay transport of produce
-Temperature ≤ 5°C        → 🔴 DANGER: Frost risk — cover crops
-Clear + wind<15 + UV<9   → 🟢 GOOD: Ideal conditions for field work
+Thunderstorm (95-99)    ? ?? DANGER: Evacuate fields, shelter equipment
+Heavy rain (=65/10mm+)  ? ?? DANGER: Postpone spraying, check drainage
+Rain prob > 75%          ? ?? DANGER: Prepare for field waterlogging
+Light rain / drizzle     ? ?? CAUTION: Delay pesticide application
+UV Index = 9             ? ?? DANGER: Stop field work 10 AM � 4 PM
+Wind > 25 km/h           ? ?? CAUTION: Spray drift risk, delay application
+Humidity>85% + Temp>25�C ? ?? CAUTION: Fungal disease outbreak risk
+Fog (code 45/48)         ? ?? CAUTION: Delay transport of produce
+Temperature = 5�C        ? ?? DANGER: Frost risk � cover crops
+Clear + wind<15 + UV<9   ? ?? GOOD: Ideal conditions for field work
 `
 
 **Season Detection (auto):**
-- June–October → Kharif (Paddy, Maize, Cotton)
-- November–April → Rabi (Wheat, Gram, Mustard)
-- April–June → Zaid (Vegetables, Melons)
+- June�October ? Kharif (Paddy, Maize, Cotton)
+- November�April ? Rabi (Wheat, Gram, Mustard)
+- April�June ? Zaid (Vegetables, Melons)
 
 ---
 
@@ -415,7 +453,7 @@ Clear + wind<15 + UV<9   → 🟢 GOOD: Ideal conditions for field work
 
 `mermaid
 graph TB
-    subgraph COMPUTED["🔴 Computed from Live Data"]
+    subgraph COMPUTED["?? Computed from Live Data"]
         C1[Thunderstorm Warning\nWMO 95/96/99]
         C2[Heavy Rain & Flood Risk\n>40mm or heavy code]
         C3[High Wind Warning\n>45 km/h]
@@ -424,13 +462,13 @@ graph TB
         C6[All Clear\nNo triggers]
     end
 
-    subgraph AUTHORITY["🟠 Authority Issued"]
+    subgraph AUTHORITY["?? Authority Issued"]
         A1[State-level broadcast]
         A2[District-level broadcast]
         A3[GPS radius broadcast]
     end
 
-    subgraph NATIONAL["🔵 National Feeds"]
+    subgraph NATIONAL["?? National Feeds"]
         N1[NDMA Sachet\nCAP XML alerts]
         N2[Google News RSS\nIndia weather + disaster]
     end
@@ -439,7 +477,7 @@ graph TB
     AUTHORITY --> DISPLAY
     NATIONAL --> DISPLAY
 
-    subgraph DISPLAY["🖥️ AlertsScreen"]
+    subgraph DISPLAY["??? AlertsScreen"]
         D1[Alert Cards\nwith Precautions]
         D2[News Feed\nFiltered by category]
         D3[India Risk Map]
@@ -475,18 +513,18 @@ flowchart TD
 
 | Screen / Feature | EN | HI | AS | BN |
 |---|:---:|:---:|:---:|:---:|
-| Navigation tabs | ✅ | ✅ | ✅ | ✅ |
-| Weather labels | ✅ | ✅ | ✅ | ✅ |
-| Condition names | ✅ | ✅ | ✅ | ✅ |
-| Alert headlines | ✅ | ✅ | ✅ | ✅ |
-| Alert descriptions | ✅ | ✅ | ✅ | ✅ |
-| Alert precautions | ✅ | ✅ | ✅ | ✅ |
-| Filter pills | ✅ | ✅ | ✅ | ✅ |
-| Impact levels | ✅ | ✅ | ✅ | ✅ |
-| Profession advisories | ✅ | ✅ | ✅ | ✅ |
-| Historical insights | ✅ | ✅ | ✅ | ✅ |
-| Smart City panel | ✅ | ✅ | ✅ | ✅ |
-| AI chat responses | ✅ | ✅ | ✅ | ✅ |
+| Navigation tabs | ? | ? | ? | ? |
+| Weather labels | ? | ? | ? | ? |
+| Condition names | ? | ? | ? | ? |
+| Alert headlines | ? | ? | ? | ? |
+| Alert descriptions | ? | ? | ? | ? |
+| Alert precautions | ? | ? | ? | ? |
+| Filter pills | ? | ? | ? | ? |
+| Impact levels | ? | ? | ? | ? |
+| Profession advisories | ? | ? | ? | ? |
+| Historical insights | ? | ? | ? | ? |
+| Smart City panel | ? | ? | ? | ? |
+| AI chat responses | ? | ? | ? | ? |
 
 ---
 
@@ -515,7 +553,7 @@ flowchart TD
 | mongoose | 9.9 | MongoDB Atlas ORM |
 | google-tts-api | 2.0 | Text-to-speech synthesis |
 | fast-xml-parser | 5.11 | NDMA CAP XML parsing |
-| crypto (built-in) | — | HMAC-SHA256 auth tokens |
+| crypto (built-in) | � | HMAC-SHA256 auth tokens |
 
 ### Infrastructure
 
@@ -538,7 +576,7 @@ flowchart TD
 | **Open-Meteo Marine** | Free, no key | Wave height, period, swell direction |
 | **Open-Meteo Agro** | Free, no key | Soil moisture, soil temp, ET0 (FAO-56) |
 | **Open-Meteo Air Quality** | Free, no key | US-AQI, PM2.5, PM10 |
-| **Open-Meteo Geocoding** | Free, no key | City name → lat/lon, state, country |
+| **Open-Meteo Geocoding** | Free, no key | City name ? lat/lon, state, country |
 | **Open-Meteo GFS** | Free, no key | NOAA GFS NWP model forecast |
 | **Open-Meteo ICON** | Free, no key | DWD ICON NWP model forecast |
 | **Open-Meteo ECMWF** | Free, no key | ECMWF IFS025 NWP model forecast |
@@ -557,51 +595,51 @@ flowchart TD
 
 `
 WeatherGPT/
-├── 📁 src/
-│   ├── 📁 components/
-│   │   ├── AlertsScreen.jsx          ← Live alerts + smart city + news
-│   │   ├── WeatherDashboard.jsx      ← 7-day forecast + NWP model panel
-│   │   ├── WeatherStage.jsx          ← Main animated weather view
-│   │   ├── ChatScreen.jsx            ← AI chat interface
-│   │   ├── HistoricalAnalytics.jsx   ← 30-day/1yr/5yr trend charts
-│   │   ├── ProfessionModal.jsx       ← Farming/Marine/Aviation/Urban hub
-│   │   ├── Header.jsx                ← Nav + GPS + saved locations + accessibility
-│   │   ├── SosButton.jsx             ← Emergency SOS with GPS + photo
-│   │   ├── ModelConfidence.jsx       ← GFS vs ICON vs ECMWF comparison
-│   │   ├── AccuracyTracker.jsx       ← Forecast vs actual audit table
-│   │   ├── ManagerDashboard.jsx      ← Disaster authority portal (/manager)
-│   │   ├── ReviewsScreen.jsx         ← Community weather reviews
-│   │   ├── Onboarding.jsx            ← First-launch: language + profession
-│   │   ├── WeatherScene.jsx          ← Animated rain/sun/storm CSS scenes
-│   │   └── SevereAlertBanner.jsx     ← Top-of-screen severe weather banner
-│   ├── 📁 services/
-│   │   ├── weatherApi.js             ← Open-Meteo + geocoding + location search
-│   │   └── chatApi.js                ← AI chat REST call wrapper
-│   ├── 📁 utils/
-│   │   ├── translations.js           ← Core UI labels (EN/HI/AS/BN)
-│   │   ├── translationsExtra.js      ← Alert texts + filters (EN/HI/AS/BN)
-│   │   ├── featureTranslations.js    ← Profession advisories (EN/HI/AS/BN)
-│   │   ├── farmerAdvisory.js         ← Agricultural decision rules
-│   │   ├── fishermanAdvisory.js      ← Marine safety rules
-│   │   ├── aviationAdvisory.js       ← Aviation/drone rules
-│   │   ├── urbanPlanningAdvisory.js  ← Smart city rules
-│   │   ├── climateSeasonal.js        ← 5-year baseline for 16 Indian cities
-│   │   ├── weatherConditions.jsx     ← WMO code → condition name mapping
-│   │   ├── heatIndex.js              ← Rothfusz heat index formula
-│   │   ├── themes.js                 ← Weather-based dynamic theme engine
-│   │   └── tts.js                    ← Google TTS audio stream handler
-│   ├── 📁 context/
-│   │   └── AppContext.jsx            ← Global state (React Context)
-│   └── App.jsx                       ← Root + routing + background engine
-├── 📁 server/
-│   ├── tools.js                      ← AI function tool definitions + logic
-│   ├── models.js                     ← MongoDB: Alert, SosRequest, AccuracyLog
-│   └── validateTools.js             ← Tool schema validation helpers
-├── server.js                         ← Express API + Groq + all REST routes
-├── package.json
-├── vite.config.js
-├── Dockerfile
-└── docker-compose.yml
++-- ?? src/
+�   +-- ?? components/
+�   �   +-- AlertsScreen.jsx          ? Live alerts + smart city + news
+�   �   +-- WeatherDashboard.jsx      ? 7-day forecast + NWP model panel
+�   �   +-- WeatherStage.jsx          ? Main animated weather view
+�   �   +-- ChatScreen.jsx            ? AI chat interface
+�   �   +-- HistoricalAnalytics.jsx   ? 30-day/1yr/5yr trend charts
+�   �   +-- ProfessionModal.jsx       ? Farming/Marine/Aviation/Urban hub
+�   �   +-- Header.jsx                ? Nav + GPS + saved locations + accessibility
+�   �   +-- SosButton.jsx             ? Emergency SOS with GPS + photo
+�   �   +-- ModelConfidence.jsx       ? GFS vs ICON vs ECMWF comparison
+�   �   +-- AccuracyTracker.jsx       ? Forecast vs actual audit table
+�   �   +-- ManagerDashboard.jsx      ? Disaster authority portal (/manager)
+�   �   +-- ReviewsScreen.jsx         ? Community weather reviews
+�   �   +-- Onboarding.jsx            ? First-launch: language + profession
+�   �   +-- WeatherScene.jsx          ? Animated rain/sun/storm CSS scenes
+�   �   +-- SevereAlertBanner.jsx     ? Top-of-screen severe weather banner
+�   +-- ?? services/
+�   �   +-- weatherApi.js             ? Open-Meteo + geocoding + location search
+�   �   +-- chatApi.js                ? AI chat REST call wrapper
+�   +-- ?? utils/
+�   �   +-- translations.js           ? Core UI labels (EN/HI/AS/BN)
+�   �   +-- translationsExtra.js      ? Alert texts + filters (EN/HI/AS/BN)
+�   �   +-- featureTranslations.js    ? Profession advisories (EN/HI/AS/BN)
+�   �   +-- farmerAdvisory.js         ? Agricultural decision rules
+�   �   +-- fishermanAdvisory.js      ? Marine safety rules
+�   �   +-- aviationAdvisory.js       ? Aviation/drone rules
+�   �   +-- urbanPlanningAdvisory.js  ? Smart city rules
+�   �   +-- climateSeasonal.js        ? 5-year baseline for 16 Indian cities
+�   �   +-- weatherConditions.jsx     ? WMO code ? condition name mapping
+�   �   +-- heatIndex.js              ? Rothfusz heat index formula
+�   �   +-- themes.js                 ? Weather-based dynamic theme engine
+�   �   +-- tts.js                    ? Google TTS audio stream handler
+�   +-- ?? context/
+�   �   +-- AppContext.jsx            ? Global state (React Context)
+�   +-- App.jsx                       ? Root + routing + background engine
++-- ?? server/
+�   +-- tools.js                      ? AI function tool definitions + logic
+�   +-- models.js                     ? MongoDB: Alert, SosRequest, AccuracyLog
+�   +-- validateTools.js             ? Tool schema validation helpers
++-- server.js                         ? Express API + Groq + all REST routes
++-- package.json
++-- vite.config.js
++-- Dockerfile
++-- docker-compose.yml
 `
 
 ---
@@ -620,8 +658,8 @@ Create .env in project root:
 GROQ_API_KEY=your_groq_api_key_here
 GNEWS_API_KEY=your_gnews_api_key_here
 VITE_API_URL=http://localhost:3001
-MONGODB_URI=mongodb+srv://...   # Optional — falls back to JSON if not set
-GEMINI_API_KEY=your_gemini_key  # Optional — for fallback and risk map
+MONGODB_URI=mongodb+srv://...   # Optional � falls back to JSON if not set
+GEMINI_API_KEY=your_gemini_key  # Optional � for fallback and risk map
 `
 
 ### Quick Start
@@ -638,7 +676,7 @@ npm run dev:all
 
 ### Access from Any Phone (Public URL)
 `ash
-# Generate public tunnel URL — works on any network
+# Generate public tunnel URL � works on any network
 npx --yes localtunnel --port 5173
 # Opens: https://xxxx.loca.lt
 `
@@ -663,9 +701,9 @@ https://your-domain.com/manager
 
 ---
 
-## 12. SIH Judge Notes — Key Innovations
+## 12. SIH Judge Notes � Key Innovations
 
-### ✅ Problem Statement PS-26068 — Direct Mapping
+### ? Problem Statement PS-26068 � Direct Mapping
 
 | PS Requirement | How WeatherGPT Solves It |
 |---|---|
@@ -675,14 +713,14 @@ https://your-domain.com/manager
 | Disaster response coordination | Emergency SOS with GPS dispatch to authority dashboard |
 | Trust and reliability | 3-model NWP confidence + self-verified accuracy tracker |
 
-### 🔬 Technical Firsts in India
+### ?? Technical Firsts in India
 
-1. **NWP Consensus Transparency** — First Indian weather app to show GFS + ICON + ECMWF model agreement to general public
-2. **Agentic Weather AI** — AI doesn't answer from training data; it calls real APIs autonomously per query
-3. **Seasonal Anomaly Engine** — Tells users if today is unusual for their city based on real 5-year history
-4. **Profession-Agro Intelligence** — FAO-56 Penman-Monteith ET0, soil moisture depth, pesticide spray matrix in one app
-5. **Integrated Disaster Chain** — SOS button → GPS capture → photo → server dispatch → authority dashboard → rescue dispatch — all in one platform
+1. **NWP Consensus Transparency** � First Indian weather app to show GFS + ICON + ECMWF model agreement to general public
+2. **Agentic Weather AI** � AI doesn't answer from training data; it calls real APIs autonomously per query
+3. **Seasonal Anomaly Engine** � Tells users if today is unusual for their city based on real 5-year history
+4. **Profession-Agro Intelligence** � FAO-56 Penman-Monteith ET0, soil moisture depth, pesticide spray matrix in one app
+5. **Integrated Disaster Chain** � SOS button ? GPS capture ? photo ? server dispatch ? authority dashboard ? rescue dispatch � all in one platform
 
 ---
 
-*🏆 Built to win SIH 2026 — Making weather intelligence accessible to every Indian, in their own language.*
+*?? Built to win SIH 2026 � Making weather intelligence accessible to every Indian, in their own language.*
