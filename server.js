@@ -19,6 +19,18 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
+import http from 'http';
+import { WebSocketServer } from 'ws';
+import { logChatPrediction, verifyChatPredictions, getChatAccuracyFeed } from './server/chatAccuracy.js';
+
+const server = http.createServer(app);
+export const wss = new WebSocketServer({ server });
+
+wss.on('connection', (ws) => {
+  console.log('🔌 New WebSocket connection established for Live Alerts');
+  ws.send(JSON.stringify({ type: 'connected', message: 'Connected to WeatherGPT Alert System' }));
+});
+
 import { 
   WEATHER_TOOLS, 
   get_current_weather, 
@@ -75,6 +87,9 @@ FOLLOW-UP SUGGESTIONS:
    - Never repeat a question from the conversation history.
    - Each suggestion must be under 8 words, in the EXACT same language as the user, phrased as the user (first person).
 
+WEATHER WIDGET CONTROL:
+10. You control whether the UI displays a live weather widget. Set "showWeatherWidget" to TRUE *only* if the user's question is about current/live weather conditions or forecasting for their location. Set it to FALSE if they ask about a past event (like yesterday's flood), a general fact, or a different location entirely.
+
 RESPOND ONLY IN THIS EXACT JSON FORMAT, no markdown fences:
 {
   "answer": "Detailed, easy-to-understand, conversational answer with actionable advice.",
@@ -83,6 +98,7 @@ RESPOND ONLY IN THIS EXACT JSON FORMAT, no markdown fences:
   "advisory": "Plain-language advisory with concrete action if conditions warrant caution, or empty string.",
   "severity": "none or caution or severe",
   "confidence": "high | medium | low",
+  "showWeatherWidget": true,
   "suggestedQuestions": ["Question 1?", "Question 2?"]
 }`;
 
@@ -511,6 +527,15 @@ app.get('/api/accuracy', async (req, res) => {
   });
 });
 
+app.get('/api/chat-accuracy', async (req, res) => {
+  try {
+    const feed = await getChatAccuracyFeed(req.query.location);
+    res.json(feed);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch chat accuracy feed' });
+  }
+});
+
 app.post('/api/chat', async (req, res) => {
   const { message, language, weatherData, history = [], profile = 'general' } = req.body;
   const geminiKey = process.env.GEMINI_API_KEY;
@@ -530,6 +555,7 @@ app.post('/api/chat', async (req, res) => {
   const apiModel = useGroq ? 'qwen/qwen3.8-27b' : 'gemini-3.6-flash';
 
   let finalContent = null;
+  let lastWeatherData = null;
 
   try {
     // ---------------------------------------------------------
@@ -559,7 +585,6 @@ app.post('/api/chat', async (req, res) => {
 
     let loopCount = 0;
     const MAX_LOOPS = 3; 
-    let lastWeatherData = null;
 
     if (req.body.forceLegacy) {
       throw new Error('Forced legacy bypass for testing.');
@@ -757,11 +782,18 @@ ${modelNote}`;
       }
     }
 
-    if (lastWeatherData) {
-       finalJson.weatherData = lastWeatherData;
+    if (finalJson.showWeatherWidget === false) {
+      finalJson.weatherData = null; // Explicitly tell frontend NOT to show widget
+    } else if (lastWeatherData) {
+      finalJson.weatherData = lastWeatherData;
     }
+
+    // --- LOG CHAT PREDICTION FOR ACCURACY FEED ---
+    logChatPrediction(contextData, message, finalJson);
+
     return res.json(finalJson);
   } catch (parseErr) {
+    console.error('[DEBUG-CRASH] JSON parsing or logChatPrediction crashed:', parseErr);
     let partialAnswer = finalContent;
     const answerMatch = finalContent.match(/"answer"\s*:\s*"([^"]*)/);
     if (answerMatch && answerMatch[1]) partialAnswer = answerMatch[1];
@@ -1058,6 +1090,34 @@ app.get('/api/extreme-alerts', async (req, res) => {
   res.json({ alerts: unique, fetchedAt: new Date().toISOString() });
 });
 
+// Admin endpoint to push severe alerts via WebSocket
+app.post('/api/alerts/push', (req, res) => {
+  const { title, message, severity, location } = req.body;
+  if (!title || !message) return res.status(400).json({ error: 'title and message required' });
+  
+  const alertPayload = JSON.stringify({
+    type: 'extreme_weather_alert',
+    alert: {
+      title,
+      message,
+      severity: severity || 'severe',
+      location: location || 'All areas',
+      timestamp: new Date().toISOString()
+    }
+  });
+
+  // Broadcast to all connected WebSocket clients
+  let clientCount = 0;
+  wss.clients.forEach((client) => {
+    if (client.readyState === 1) { // WebSocket.OPEN is 1
+      client.send(alertPayload);
+      clientCount++;
+    }
+  });
+
+  res.json({ success: true, clientsNotified: clientCount, message: "Alert disseminated via WebSocket" });
+});
+
 // Serve built React frontend in production (Docker)
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(join(__dirname, 'dist')));
@@ -1072,7 +1132,7 @@ if (process.env.NODE_ENV === 'production') {
 
 // Start server on Render or local (Vercel Serverless functions do not need app.listen)
 if (!process.env.VERCEL) {
-  app.listen(PORT, () => {
+  server.listen(PORT, () => {
     console.log(`WeatherGPT server running on port ${PORT}`);
   });
 }

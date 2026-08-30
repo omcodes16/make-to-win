@@ -106,7 +106,7 @@ export default function AssistantCard({ message, isLatest }) {
                 </span>
               )}
               <span className="font-semibold text-lg text-white">
-                {data.temperature}°C
+                {data.locationName ? `${data.locationName} - ` : ''}{data.temperature}°C
               </span>
               {/* Show AI-picked relevant stat if available, otherwise fall back */}
               {relevantStat ? (

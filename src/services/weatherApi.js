@@ -321,7 +321,6 @@ export { NER_CITIES };
 export async function getSpecializedData(lat, lng, profile) {
   try {
     let url = '';
-    const currentHour = new Date().getHours();
     
     if (profile === 'farmer') {
       url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&hourly=soil_temperature_6cm,soil_moisture_1_to_3cm,et0_fao_evapotranspiration&timezone=auto`;
@@ -340,11 +339,15 @@ export async function getSpecializedData(lat, lng, profile) {
       if (aqiRes.ok && weatherRes.ok) {
         const aqiData = await aqiRes.json();
         const weatherData = await weatherRes.json();
+        
+        const aqiHour = getCurrentHourIndex(aqiData);
+        const weatherHour = getCurrentHourIndex(weatherData);
+
         return {
-          pm2_5: aqiData.hourly?.pm2_5?.[currentHour] ?? 0,
-          pm10: aqiData.hourly?.pm10?.[currentHour] ?? 0,
-          uv_index: weatherData.hourly?.uv_index?.[currentHour] ?? 0,
-          feels_like: weatherData.hourly?.apparent_temperature?.[currentHour] ?? 0,
+          pm2_5: aqiData.hourly?.pm2_5?.[aqiHour] ?? 0,
+          pm10: aqiData.hourly?.pm10?.[aqiHour] ?? 0,
+          uv_index: weatherData.hourly?.uv_index?.[weatherHour] ?? 0,
+          feels_like: weatherData.hourly?.apparent_temperature?.[weatherHour] ?? 0,
         };
       }
       return { pm2_5: 0, pm10: 0, uv_index: 0, feels_like: 0 };
@@ -356,6 +359,8 @@ export async function getSpecializedData(lat, lng, profile) {
     const res = await fetch(url);
     if (!res.ok) throw new Error(`Specialized API error: ${res.status}`);
     const data = await res.json();
+    
+    const currentHour = getCurrentHourIndex(data);
     
     if (profile === 'farmer') {
       return {
@@ -385,4 +390,33 @@ export async function getSpecializedData(lat, lng, profile) {
     if (profile === 'urbanPlanning') return { pm2_5: 0, pm10: 0, uv_index: 0, feels_like: 0 };
     return null;
   }
+}
+
+/**
+ * Gets the correct index for the current hour in the location's local time,
+ * using the utc_offset_seconds and hourly.time array from the Open-Meteo response.
+ */
+export function getCurrentHourIndex(hourlyResponse) {
+  if (!hourlyResponse || !hourlyResponse.hourly || !hourlyResponse.hourly.time || hourlyResponse.utc_offset_seconds === undefined) {
+    return new Date().getHours(); // fallback if data is missing
+  }
+
+  const currentUtcSeconds = Math.floor(Date.now() / 1000);
+  const localSeconds = currentUtcSeconds + hourlyResponse.utc_offset_seconds;
+
+  let bestIndex = 0;
+  let minDiff = Infinity;
+
+  for (let i = 0; i < hourlyResponse.hourly.time.length; i++) {
+    const timeStr = hourlyResponse.hourly.time[i];
+    const hourEpoch = Math.floor(Date.parse(timeStr + "Z") / 1000);
+    const diff = Math.abs(hourEpoch - localSeconds);
+
+    if (diff < minDiff) {
+      minDiff = diff;
+      bestIndex = i;
+    }
+  }
+
+  return bestIndex;
 }

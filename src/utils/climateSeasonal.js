@@ -6,7 +6,13 @@
 export const SEASONAL_DATA = {
   guwahati: { name: "Guwahati", region: "Assam", rainfall: [14,31,71,143,320,465,538,468,244,176,14,10], maxTemp: [23,25,29,30,31,31,32,31,32,30,28,24], minTemp: [12,14,17,20,22,24,25,25,25,22,17,14] },
   shillong: { name: "Shillong", region: "Meghalaya", rainfall: [14,21,39,71,222,263,222,199,151,142,25,16], maxTemp: [17,19,22,24,24,25,25,25,25,23,21,18], minTemp: [6,8,12,15,16,19,19,19,18,15,11,8] },
-  cherrapunji: { name: "Cherrapunji", region: "Meghalaya", rainfall: [12,34,86,242,441,797,739,568,206,232,18,13], maxTemp: [16,17,21,22,22,23,23,23,24,22,20,17], minTemp: [6,7,11,15,16,18,19,19,18,15,10,7] },
+  cherrapunji: { 
+    name: "Cherrapunji", 
+    region: "Meghalaya", 
+    rainfall: [16, 54, 364, 792, 1297, 2608, 2665, 1769, 1090, 461, 49, 10], 
+    maxTemp: [16, 17, 21, 22, 22, 23, 23, 23, 24, 22, 20, 17], 
+    minTemp: [8, 10, 13, 15, 16, 18, 19, 19, 18, 15, 12, 9] 
+  },
   imphal: { name: "Imphal", region: "Manipur", rainfall: [9,15,35,35,160,210,288,213,121,83,27,27], maxTemp: [22,24,27,30,29,29,29,28,29,28,25,22], minTemp: [8,9,13,17,19,22,22,22,21,19,13,10] },
   agartala: { name: "Agartala", region: "Tripura", rainfall: [5,13,79,121,240,228,262,311,275,164,28,38], maxTemp: [25,28,32,34,33,32,32,31,32,31,29,26], minTemp: [13,15,19,23,24,25,26,25,25,23,18,14] },
   itanagar: { name: "Itanagar", region: "Arunachal Pradesh", rainfall: [39,148,295,563,580,671,388,317,235,239,12,22], maxTemp: [21,22,26,27,29,30,31,31,31,28,26,23], minTemp: [10,12,16,18,21,23,24,24,24,20,15,12] },

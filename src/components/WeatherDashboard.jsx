@@ -3,6 +3,7 @@ import { useApp } from '../context/AppContext';
 import RadarMap from './RadarMap';
 import HistoricalAnalytics from './HistoricalAnalytics';
 import CommunityReports from './CommunityReports';
+import AccuracyTracker from './AccuracyTracker';
 
 import { geocodeLocation, searchLocationSuggestions, getWeather } from '../services/weatherApi';
 import { getWeatherInfo, checkSeverity } from '../utils/weatherConditions';
@@ -27,6 +28,60 @@ export default function WeatherDashboard() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const debounceRef = useRef(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Initialize WebSocket and Service Worker for Live Alerts
+  useEffect(() => {
+    // Request Notification permission
+    if ('Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+      Notification.requestPermission();
+    }
+    
+    // Register Service Worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(err => console.error('SW registration failed:', err));
+    }
+
+    // Connect to WebSocket
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.host}`;
+    const ws = new WebSocket(wsUrl);
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === 'extreme_weather_alert') {
+          // Trigger Push Notification if permission granted
+          if ('Notification' in window && Notification.permission === 'granted') {
+            if (navigator.serviceWorker.controller) {
+              navigator.serviceWorker.controller.postMessage({
+                type: 'SHOW_NOTIFICATION',
+                title: `⚠️ ${data.alert.title}`,
+                message: data.alert.message
+              });
+            } else {
+              new Notification(`⚠️ ${data.alert.title}`, { body: data.alert.message, icon: '/logo_new.jpg' });
+            }
+          }
+          // Also dispatch to app state so it shows in the UI ticker
+          dispatch({ 
+            type: 'SET_SEVERE_ALERT', 
+            payload: {
+              isSevere: true,
+              level: data.alert.severity,
+              label: data.alert.title,
+              message: data.alert.message
+            } 
+          });
+        }
+      } catch (e) {
+        console.error('WebSocket parsing error', e);
+      }
+    };
+
+    return () => {
+      if (ws.readyState === 1) ws.close();
+    };
+  }, [dispatch]);
   const [selectedDay, setSelectedDay] = useState(0); // 0 = today
 
   const t = UI_TRANSLATIONS[state.language] || UI_TRANSLATIONS['en'];
@@ -233,7 +288,7 @@ export default function WeatherDashboard() {
 
   // ──────────────────────────────────────────────────────────────────────────
 
-  return (
+return (
     <div className="min-h-[100dvh] text-white overflow-y-auto pb-24 md:pb-20 relative font-body transition-colors duration-1000">
       
       <div className="relative z-10 max-w-[1400px] mx-auto px-3 sm:px-6 pt-20 sm:pt-28 md:pt-32">
@@ -541,6 +596,9 @@ export default function WeatherDashboard() {
 
         {/* Historical Data Section */}
         <HistoricalAnalytics lat={stageData.lat} lon={stageData.lng} />
+
+        {/* Forecast Accuracy Tracker */}
+        <AccuracyTracker locationName={stageData.locationName} language={state.language} />
 
         {/* Crowdsourced Community Weather Reports */}
         <CommunityReports locationName={stageData.locationName} />

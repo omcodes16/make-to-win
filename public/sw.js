@@ -1,39 +1,46 @@
-const CACHE_NAME = 'weathergpt-pwa-cache-v1';
-const URLS_TO_CACHE = [
-  '/',
-  '/index.html',
-  '/logo.png'
-];
+self.addEventListener('push', function(event) {
+  if (event.data) {
+    const data = event.data.json();
+    const options = {
+      body: data.message,
+      icon: '/logo_new.jpg',
+      vibrate: [200, 100, 200, 100, 200, 100, 200],
+      tag: 'weather-alert',
+      requireInteraction: true,
+      data: { url: '/' }
+    };
+    event.waitUntil(
+      self.registration.showNotification(data.title, options)
+    );
+  }
+});
 
-self.addEventListener('install', (event) => {
+self.addEventListener('notificationclick', function(event) {
+  event.notification.close();
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => {
-        return cache.addAll(URLS_TO_CACHE);
-      })
+    clients.matchAll({ type: 'window' }).then( windowClients => {
+      for (var i = 0; i < windowClients.length; i++) {
+        var client = windowClients[i];
+        if (client.url === '/' && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      if (clients.openWindow) {
+        return clients.openWindow('/');
+      }
+    })
   );
 });
 
-// Stale-while-revalidate strategy for the PWA shell
-self.addEventListener('fetch', (event) => {
-  // Only cache GET requests
-  if (event.request.method !== 'GET') return;
-  // Ignore API requests
-  if (event.request.url.includes('/api/')) return;
-
-  event.respondWith(
-    caches.match(event.request)
-      .then((cachedResponse) => {
-        const fetchPromise = fetch(event.request).then((networkResponse) => {
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, networkResponse.clone());
-          });
-          return networkResponse;
-        }).catch(() => {
-          // Do nothing on failure to fetch, just use cache
-        });
-
-        return cachedResponse || fetchPromise;
+// For demonstration, we also allow the page to trigger a notification via message
+self.addEventListener('message', function(event) {
+  if (event.data && event.data.type === 'SHOW_NOTIFICATION') {
+    event.waitUntil(
+      self.registration.showNotification(event.data.title, {
+        body: event.data.message,
+        icon: '/logo_new.jpg',
+        requireInteraction: true
       })
-  );
+    );
+  }
 });

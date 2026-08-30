@@ -8,12 +8,14 @@ import { reverseGeocode, getWeather } from '../services/weatherApi';
 import { getWeatherInfo, checkSeverity } from '../utils/weatherConditions';
 import { sendMessage as sendChatMessage } from '../services/chatApi';
 import UserGuideModal from './UserGuideModal';
+import AccuracyFeedModal from './AccuracyFeedModal';
 
 export default function Header() {
   const { state, dispatch } = useApp();
   const [showLangPicker, setShowLangPicker] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
   const [isHubOpen, setIsHubOpen] = useState(false);
+  const [showAccuracyModal, setShowAccuracyModal] = useState(false);
   const [showA11y, setShowA11y] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
   const [showSaved, setShowSaved] = useState(false);
@@ -262,7 +264,19 @@ export default function Header() {
                 );
               })()}
 
-            {/* Saved Locations bookmark */}
+              {/* AI Trust / Accuracy Modal Button */}
+              <button
+                onClick={() => setShowAccuracyModal(true)}
+                className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full transition-colors border text-white/70 glass-panel border-white/10 hover:bg-white/10 hover:text-green-400"
+                title="AI Trust & Accuracy"
+                aria-label="AI Trust & Accuracy"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+              </button>
+  
+              {/* Saved Locations bookmark */}
             <div className="relative" ref={savedRef}>
               <button
                 onClick={() => { setShowSaved(!showSaved); setShowLangPicker(false); setShowMoreMenu(false); }}
@@ -458,6 +472,14 @@ export default function Header() {
 
       {/* User Guide Modal */}
       <UserGuideModal isOpen={showGuide} onClose={() => setShowGuide(false)} />
+
+      {/* Accuracy Feed Modal */}
+      {showAccuracyModal && (
+        <AccuracyFeedModal 
+          locationName={state.currentWeather?.locationName} 
+          onClose={() => setShowAccuracyModal(false)} 
+        />
+      )}
 
       {/* Mobile Bottom Tab Bar */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-slate-900/60 backdrop-blur-xl border-t border-white/10 flex safe-pb">

@@ -1,4 +1,4 @@
-import { geocodeLocation, getWeather } from '../src/services/weatherApi.js';
+import { geocodeLocation, getWeather, getCurrentHourIndex } from '../src/services/weatherApi.js';
 
 // ------------------------------------------------------------------
 // 1. TOOL DEFINITIONS (OpenAI / Groq Function Calling Schema)
@@ -354,7 +354,7 @@ export async function get_marine_weather({ location }) {
     if (!res.ok) throw new Error('Marine API not available');
     const data = await res.json();
     
-    const currentHour = new Date().getHours();
+    const currentHour = getCurrentHourIndex(data);
     return {
       location: loc.name,
       wave_height_meters: data.hourly?.wave_height?.[currentHour] ?? 'Unknown',
