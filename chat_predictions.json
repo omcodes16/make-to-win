@@ -1,0 +1,18 @@
+[
+  {
+    "id": "test1",
+    "location": "Guwahati",
+    "lat": 26,
+    "lng": 91,
+    "date": "2026-08-28",
+    "question": "Will it rain today?",
+    "claimType": "rain_probability",
+    "claimValue": 80,
+    "severity": "none",
+    "loggedAt": "2026-08-30T06:41:52.891Z",
+    "verified": true,
+    "actualValue": null,
+    "accuracyStatus": "unknown",
+    "claims": []
+  }
+]
