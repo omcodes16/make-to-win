@@ -22,6 +22,9 @@ app.use(express.json({ limit: '10mb' }));
 import http from 'http';
 import { WebSocketServer } from 'ws';
 import { logChatPrediction, verifyChatPredictions, getChatAccuracyFeed } from './server/chatAccuracy.js';
+import { startNdmaPoller } from './server/ndmaPoller.js';
+
+// Scheduled jobs will be started later
 
 const server = http.createServer(app);
 export const wss = new WebSocketServer({ server });
@@ -42,7 +45,7 @@ import {
 } from './server/tools.js';
 
 import mongoose from 'mongoose';
-import { Alert, Snapshot, AccuracyLog, SosRequest } from './server/models.js';
+import { Alert, Snapshot, AccuracyLog, SosRequest, CommunityReport, SmsRecipient, SmsLog } from './server/models.js';
 
 export let USE_MONGODB = false;
 if (process.env.MONGODB_URI) {
@@ -246,6 +249,64 @@ app.delete("/api/manager/alerts/:id", verifyToken, (req, res) => {
 
 // --- SOS EMERGENCY RESPONSE ROUTES ---
 let sosFallback = [];
+let communityReportsFallback = [];
+export let smsRecipientsFallback = [
+  { id: 'sim1', phone: '+919876543210', name: 'Ramesh Kumar', district: 'Kamrup', state: 'Assam', language: 'Assamese', registeredAt: new Date() },
+  { id: 'sim2', phone: '+919123456789', name: 'Priya Singh', district: 'Kamrup', state: 'Assam', language: 'Hindi', registeredAt: new Date() },
+  { id: 'sim3', phone: '+918765432109', name: 'Abdul Rahman', district: 'Mumbai Suburban', state: 'Maharashtra', language: 'Hindi', registeredAt: new Date() },
+  { id: 'sim4', phone: '+917654321098', name: 'Sunita Devi', district: 'Patna', state: 'Bihar', language: 'Hindi', registeredAt: new Date() },
+  { id: 'sim5', phone: '+916543210987', name: 'Tapas Mondal', district: 'South 24 Parganas', state: 'West Bengal', language: 'Bengali', registeredAt: new Date() },
+  { id: 'sim6', phone: '+915432109876', name: 'Kiran Das', district: 'Kamrup', state: 'Assam', language: 'Bengali', registeredAt: new Date() },
+  { id: 'sim7', phone: '+914321098765', name: 'John Doe', district: 'Kamrup', state: 'Assam', language: 'English', registeredAt: new Date() },
+];
+export let smsLogsFallback = [];
+
+// GET /api/community-reports?location=X — returns reports for a location, newest first, capped at 20
+app.get('/api/community-reports', async (req, res) => {
+  const { location } = req.query;
+  if (!location) return res.status(400).json({ error: 'location query param required' });
+  if (USE_MONGODB) {
+    try {
+      const reports = await CommunityReport.find({ location: { $regex: location, $options: 'i' } })
+        .sort({ createdAt: -1 }).limit(20);
+      return res.json(reports);
+    } catch (e) { return res.status(500).json({ error: 'DB error' }); }
+  } else {
+    const filtered = communityReportsFallback
+      .filter(r => r.location.toLowerCase().includes(location.toLowerCase()))
+      .slice(0, 20);
+    return res.json(filtered);
+  }
+});
+
+// POST /api/community-reports — save a new report, return the saved document
+app.post('/api/community-reports', async (req, res) => {
+  const { location, lat, lng, condition, intensity, desc, userName } = req.body;
+  if (!location || !condition || !intensity) {
+    return res.status(400).json({ error: 'location, condition, and intensity are required' });
+  }
+  const entry = {
+    location,
+    lat: lat || null,
+    lng: lng || null,
+    condition,
+    intensity,
+    desc: desc || '',
+    userName: userName || 'Anonymous',
+    verified: false,
+    createdAt: new Date()
+  };
+  if (USE_MONGODB) {
+    try {
+      const saved = await CommunityReport.create(entry);
+      return res.json(saved);
+    } catch (e) { return res.status(500).json({ error: 'Failed to save report' }); }
+  } else {
+    entry.id = 'cr-' + Date.now();
+    communityReportsFallback.unshift(entry);
+    return res.json(entry);
+  }
+});
 
 // POST /api/sos — Public: citizen sends GPS + message
 app.post("/api/sos", async (req, res) => {
@@ -294,6 +355,79 @@ app.put("/api/manager/sos/:id", verifyToken, async (req, res) => {
     return res.json({ success: true });
   }
 });
+
+// --- SMS SIMULATOR ROUTES ---
+
+// 1. Get registry (filter by state/district)
+app.get('/api/sms/registry', async (req, res) => {
+  const { state, district } = req.query;
+  try {
+    let users = [];
+    if (USE_MONGODB) {
+      const query = {};
+      if (state) query.state = state;
+      if (district) query.district = district;
+      users = await SmsRecipient.find(query).sort({ registeredAt: -1 });
+    } else {
+      users = smsRecipientsFallback.filter(u => {
+        let match = true;
+        if (state && u.state !== state) match = false;
+        if (district && u.district !== district) match = false;
+        return match;
+      });
+    }
+    res.json(users);
+  } catch (err) { res.status(500).json({ error: 'DB Error' }); }
+});
+
+// 2. Register new number
+app.post('/api/sms/register', async (req, res) => {
+  const { phone, name, district, state, language, category, village, pincode } = req.body;
+  const entry = { id: Date.now().toString(), phone, name, district, state, language, category, village, pincode, registeredAt: new Date() };
+  try {
+    if (USE_MONGODB) {
+      await new SmsRecipient(entry).save();
+    } else {
+      smsRecipientsFallback.unshift(entry);
+    }
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: 'DB Error' }); }
+});
+
+// 3. Send/Simulate SMS Broadcast
+app.post('/api/sms/send', async (req, res) => {
+  const { alertId, title, description, recipients } = req.body;
+  if (!recipients || !Array.isArray(recipients)) return res.status(400).json({ error: 'No recipients provided' });
+
+  // Fallback translated templates (if AI fails or for speed)
+  const templates = {
+    'English': `WEATHERGPT ALERT: ${title}. ${description.substring(0, 80)}... Take precautions.`,
+    'Hindi': `चेतावनी: ${title}. ${description.substring(0, 60)}... सुरक्षित रहें।`,
+    'Bengali': `সতর্কতা: ${title}. ${description.substring(0, 60)}... নিরাপদে থাকুন।`,
+    'Assamese': `সতৰ্কতা: ${title}. ${description.substring(0, 60)}... সাৱধানে থাকক।`
+  };
+  
+  const logs = recipients.map(r => ({
+    id: Math.random().toString(36).substring(7),
+    alertId,
+    phone: r.phone,
+    name: r.name,
+    message: templates[r.language] || templates['English'],
+    language: r.language,
+    status: 'delivered',
+    sentAt: new Date()
+  }));
+
+  try {
+    if (USE_MONGODB) {
+      await SmsLog.insertMany(logs);
+    } else {
+      smsLogsFallback.push(...logs);
+    }
+    res.json({ success: true, logs });
+  } catch (err) { res.status(500).json({ error: 'DB Error' }); }
+});
+
 
 function haversineDistance(lat1, lon1, lat2, lon2) {
   const R = 6371; // Radius of Earth in km
@@ -546,13 +680,14 @@ app.post('/api/chat', async (req, res) => {
   }
 
   // Select the active API — prefer GROQ (no quota limits on free tier), fall back to Gemini
-  const useGroq = !!groqKey;
+  const useGroq = false; // Forcing Gemini permanently because Groq's 8K TPM / 200K TPD limit is being repeatedly hit
   const apiKey = useGroq ? groqKey : geminiKey;
   const apiBase = useGroq
     ? 'https://api.groq.com/openai/v1/chat/completions'
     : 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
-  // qwen3.8-27b supports function/tool calling; groq/compound does not
-  const apiModel = useGroq ? 'qwen/qwen3.8-27b' : 'gemini-3.6-flash';
+  
+  // Use a currently supported Groq model that supports tool calling
+  const apiModel = useGroq ? 'openai/gpt-oss-20b' : 'gemini-3.6-flash';
 
   let finalContent = null;
   let lastWeatherData = null;
@@ -752,7 +887,12 @@ ${modelNote}`;
   // FINAL RESPONSE PARSING
   // ---------------------------------------------------------
   try {
-    const jsonStr = finalContent.replace(/```json\n?|\n?```/g, '').trim();
+    const jsonStr = finalContent
+      .replace(/```json\n?|\n?```/g, '')          // strip markdown code fences
+      .replace(/<tool_call>\s*/gi, '')             // strip <tool_call> opening tag (Qwen/Groq quirk)
+      .replace(/\s*<\/tool_call>/gi, '')           // strip </tool_call> closing tag
+      .replace(/<think>[\s\S]*?<\/think>/gi, '')   // strip <think>...</think> blocks
+      .trim();
     const finalJson = JSON.parse(jsonStr);
 
     // --- SERVER-SIDE CONFIDENCE CALCULATION ---
@@ -813,32 +953,71 @@ ${modelNote}`;
 // Fetches real-time weather & disaster news for India via Google News RSS
 
 // GET /api/national-alerts
-// Uses Gemini to determine current top 3 high-risk states in India realistically
+// Fetches live Open-Meteo forecast for 20 Indian state representative points,
+// scores each using the same thresholds as /api/india-risk-map, and returns top 3.
+const STATE_REPRESENTATIVE_POINTS = [
+  { state: 'Rajasthan',         lat: 26.9124, lon: 75.7873  }, // Jaipur
+  { state: 'Gujarat',           lat: 23.0225, lon: 72.5714  }, // Ahmedabad
+  { state: 'Maharashtra',       lat: 18.9667, lon: 72.8333  }, // Mumbai
+  { state: 'Madhya Pradesh',    lat: 23.2599, lon: 77.4126  }, // Bhopal
+  { state: 'Uttar Pradesh',     lat: 26.8467, lon: 80.9462  }, // Lucknow
+  { state: 'Bihar',             lat: 25.5941, lon: 85.1376  }, // Patna
+  { state: 'West Bengal',       lat: 22.5726, lon: 88.3639  }, // Kolkata
+  { state: 'Odisha',            lat: 20.2961, lon: 85.8245  }, // Bhubaneswar
+  { state: 'Andhra Pradesh',    lat: 15.9129, lon: 79.7400  }, // Amaravati region
+  { state: 'Telangana',         lat: 17.3850, lon: 78.4867  }, // Hyderabad
+  { state: 'Karnataka',         lat: 12.9716, lon: 77.5946  }, // Bengaluru
+  { state: 'Tamil Nadu',        lat: 13.0827, lon: 80.2707  }, // Chennai
+  { state: 'Kerala',            lat: 8.5241,  lon: 76.9366  }, // Thiruvananthapuram
+  { state: 'Delhi',             lat: 28.6139, lon: 77.2090  }, // New Delhi
+  { state: 'Punjab',            lat: 30.7333, lon: 76.7794  }, // Chandigarh
+  { state: 'Haryana',           lat: 29.0588, lon: 76.0856  }, // Chandigarh region
+  { state: 'Jharkhand',         lat: 23.3441, lon: 85.3096  }, // Ranchi
+  { state: 'Assam',             lat: 26.1445, lon: 91.7362  }, // Guwahati
+  { state: 'Chhattisgarh',      lat: 21.2514, lon: 81.6296  }, // Raipur
+  { state: 'Himachal Pradesh',  lat: 31.1048, lon: 77.1734  }, // Shimla
+];
+
+function computeStateRiskLevel(rain, wind, temp, code) {
+  if (rain > 50 || wind > 70 || temp > 45) return 'Severe';
+  if (rain > 20 || wind > 40 || temp > 40 || [95, 96, 99].includes(code)) return 'High';
+  if (rain > 5  || temp > 35)  return 'Moderate';
+  return 'Normal';
+}
+
 app.get('/api/national-alerts', async (req, res) => {
   try {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) return res.json([{ state: "Assam", level: "High" }, { state: "West Bengal", level: "High" }, { state: "Bihar", level: "Moderate" }]);
+    const lats = STATE_REPRESENTATIVE_POINTS.map(s => s.lat).join(',');
+    const lons = STATE_REPRESENTATIVE_POINTS.map(s => s.lon).join(',');
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}&daily=weathercode,temperature_2m_max,precipitation_sum,windspeed_10m_max&timezone=auto&forecast_days=1`;
 
-    const response = await fetchWithRetry('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-      body: JSON.stringify({
-        model: 'gemini-3.6-flash',
-        messages: [{
-          role: 'system',
-          content: 'You are a meteorologist. Output ONLY a valid JSON array of the 3 Indian states with the highest weather risks today based on current season/events. Each object must have: "state" (string), "level" (must be "Severe", "High", or "Moderate"). No markdown, no other text.'
-        }],
-        temperature: 0.1
-      })
-    });
-    
-    if (!response.ok) throw new Error('API failed');
+    const response = await fetch(url, { signal: AbortSignal.timeout(12000) });
+    if (!response.ok) throw new Error(`Open-Meteo error: ${response.status}`);
     const data = await response.json();
-    let content = data.choices[0].message.content.replace(/```json\n?|\n?```/g, '').trim();
-    res.json(JSON.parse(content));
+
+    const results = Array.isArray(data) ? data : [data];
+
+    const SEVERITY_ORDER = { Severe: 3, High: 2, Moderate: 1, Normal: 0 };
+
+    const scored = STATE_REPRESENTATIVE_POINTS
+      .map((s, idx) => {
+        const daily = results[idx]?.daily;
+        if (!daily) return null;
+        const rain = daily.precipitation_sum?.[0] ?? 0;
+        const temp = daily.temperature_2m_max?.[0]  ?? 0;
+        const wind = daily.windspeed_10m_max?.[0]   ?? 0;
+        const code = daily.weathercode?.[0]          ?? 0;
+        const level = computeStateRiskLevel(rain, wind, temp, code);
+        return { state: s.state, level };
+      })
+      .filter(s => s && s.level !== 'Normal')
+      .sort((a, b) => SEVERITY_ORDER[b.level] - SEVERITY_ORDER[a.level])
+      .slice(0, 3);
+
+    res.json(scored);
   } catch (err) {
-    console.error('National alerts error:', err);
-    res.json([{ state: "Assam", level: "High" }, { state: "West Bengal", level: "High" }, { state: "Bihar", level: "Moderate" }]);
+    console.error('[national-alerts] Live fetch failed:', err.message);
+    res.json([]); // Return empty array — no hardcoded fallback
   }
 });
 
@@ -1135,6 +1314,13 @@ if (!process.env.VERCEL) {
   server.listen(PORT, () => {
     console.log(`WeatherGPT server running on port ${PORT}`);
   });
+}
+
+// Start scheduled background jobs
+if (!process.env.VERCEL) {
+  verifyChatPredictions();
+  setInterval(verifyChatPredictions, 12 * 60 * 60 * 1000);
+  startNdmaPoller();
 }
 
 export default app;

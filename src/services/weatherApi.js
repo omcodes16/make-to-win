@@ -73,7 +73,7 @@ export async function geocodeLocation(name, lang = 'en') {
   // If Open-Meteo fails, try Nominatim (OpenStreetMap) which has much better village/district coverage
   try {
     const nominatimRes = await fetch(
-      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(name)}&format=json&limit=1&accept-language=${lang}&addressdetails=1`,
+      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(name)}&format=json&limit=1&countrycodes=in&accept-language=${lang}&addressdetails=1`,
       { headers: { 'User-Agent': 'WeatherGPT' } }
     );
     const nominatimData = await nominatimRes.json();
@@ -144,7 +144,35 @@ export async function searchLocationSuggestions(name, lang = 'en') {
     console.error('Open-Meteo suggestion error:', err);
   }
 
-  return results;
+  // Fallback / Supplement with Nominatim (OpenStreetMap) which has superior coverage of Indian villages and rural areas
+  try {
+    const nominatimRes = await fetch(
+      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(name)}&format=json&limit=3&countrycodes=in&accept-language=${lang}&addressdetails=1`,
+      { headers: { 'User-Agent': 'WeatherGPT' } }
+    );
+    const nominatimData = await nominatimRes.json();
+    if (nominatimData && nominatimData.length > 0) {
+      nominatimData.forEach(r => {
+        const isDuplicate = results.some(
+          existing => Math.abs(existing.lat - parseFloat(r.lat)) < 0.05 && Math.abs(existing.lng - parseFloat(r.lon)) < 0.05
+        );
+        if (!isDuplicate) {
+          results.push({
+            lat: parseFloat(r.lat),
+            lng: parseFloat(r.lon),
+            name: r.name || r.display_name.split(',')[0],
+            state: r.address?.state || '',
+            district: r.address?.state_district || r.address?.county || '',
+            country: r.address?.country || 'India'
+          });
+        }
+      });
+    }
+  } catch (err) {
+    console.error('Nominatim suggestion error:', err);
+  }
+
+  return results.slice(0, 6); // Cap at 6 results total
 }
 
 /**

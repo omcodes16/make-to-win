@@ -52,14 +52,14 @@ graph TB
     end
 
     subgraph BRAIN["🧠 AI Layer"]
-        GROQ[Groq LLaMA 70B Function Calling]
-        GEMINI[Google Gemini Flash Fallback]
+        GEMINI[Google Gemini 3.6 Flash Primary Orchestrator]
     end
 
     subgraph EXTERNAL["🌐 External APIs"]
         OM_CORE[Open-Meteo Forecast]
         OM_HIST[Open-Meteo Archive]
         OM_NWP[GFS + ICON + ECMWF]
+        NOMINATIM[Nominatim OSM Geocoding]
         GNEWS[Google News RSS]
         NDMA[NDMA Sachet CAP XML]
         GTTS[Google TTS]
@@ -73,7 +73,7 @@ graph TB
     CLIENT --> SERVER
     SERVER --> BRAIN
     TOOLS --> OM_CORE & OM_HIST
-    SERVER --> GNEWS & NDMA & GTTS
+    SERVER --> GNEWS & NDMA & GTTS & NOMINATIM
     SERVER --> MONGO
     MONGO -.->|offline fallback| JSON
     DASH --> OM_CORE & OM_NWP
@@ -89,7 +89,7 @@ sequenceDiagram
     participant U as 👤 User
     participant FE as 📱 React App
     participant BE as ⚙️ Express Server
-    participant AI as 🧠 Groq LLaMA
+    participant AI as 🧠 Google Gemini
     participant WX as ☁️ Open-Meteo
 
     U->>FE: Types question (any language)
@@ -186,7 +186,8 @@ flowchart TD
 | **React 18 & Vite** | Lightning-fast frontend UI |
 | **Tailwind CSS** | Responsive styling |
 | **Node.js & Express** | REST API Backend |
-| **Groq LLaMA 70B** | Instantaneous AI Function Calling |
+| **Google Gemini 3.6 Flash** | Primary AI Engine for Function Calling & Orchestration |
+| **Nominatim (OSM)** | Hyperlocal Indian Village & Panchayat Geocoding |
 | **MongoDB Atlas** | Persistent storage for SOS & Accuracy |
 | **Open-Meteo** | Live weather & marine & agro data |
 | **NDMA Sachet** | Official Govt Disaster Alerts |

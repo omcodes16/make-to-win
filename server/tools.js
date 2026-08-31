@@ -229,6 +229,58 @@ export async function get_historical_trend({ location, days }) {
   }
 }
 
+/**
+ * Fetches 5 years of historical archive data for the same calendar month
+ * from Open-Meteo and returns averaged { rainfallMmPerMonth, maxTemp }.
+ * Returns null if fewer than 2 years of data succeed.
+ */
+async function computeLiveSeasonalBaseline(lat, lng) {
+  const now = new Date();
+  const monthIndex = now.getMonth(); // 0-based
+  const currentYear = now.getFullYear();
+
+  // Build start/end strings for each of the past 5 years
+  function monthRange(year, month0) {
+    const start = new Date(year, month0, 1);
+    const end   = new Date(year, month0 + 1, 0); // last day of month
+    const pad = n => String(n).padStart(2, '0');
+    const fmt = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+    return { startStr: fmt(start), endStr: fmt(end) };
+  }
+
+  const years = [1, 2, 3, 4, 5].map(offset => currentYear - offset);
+
+  const fetchYear = async (year) => {
+    const { startStr, endStr } = monthRange(year, monthIndex);
+    const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lng}&start_date=${startStr}&end_date=${endStr}&daily=temperature_2m_max,precipitation_sum&timezone=auto`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data.daily?.precipitation_sum || !data.daily?.temperature_2m_max) return null;
+    const rainTotal = data.daily.precipitation_sum.reduce((s, v) => s + (v || 0), 0);
+    const temps = data.daily.temperature_2m_max.filter(t => t != null);
+    const avgTemp = temps.length ? temps.reduce((s, t) => s + t, 0) / temps.length : null;
+    return { rainTotal, avgTemp };
+  };
+
+  // Run all 5 years in parallel, skip failures
+  const settled = await Promise.allSettled(years.map(fetchYear));
+  const good = settled
+    .filter(r => r.status === 'fulfilled' && r.value !== null)
+    .map(r => r.value);
+
+  if (good.length < 2) return null; // Not enough data
+
+  const rainfallMmPerMonth = good.reduce((s, g) => s + g.rainTotal, 0) / good.length;
+  const maxTemp = good.filter(g => g.avgTemp != null).reduce((s, g) => s + g.avgTemp, 0) /
+    good.filter(g => g.avgTemp != null).length;
+
+  return {
+    rainfallMmPerMonth: Number(rainfallMmPerMonth.toFixed(1)),
+    maxTemp:            Number(maxTemp.toFixed(1))
+  };
+}
+
 export async function get_seasonal_comparison({ location }) {
   try {
     const SEASONAL_SERVER = {
@@ -256,15 +308,26 @@ export async function get_seasonal_comparison({ location }) {
 
     const locName = location.toLowerCase();
     const locKey = Object.keys(SEASONAL_SERVER).find(k => locName.includes(k));
-    
-    if (!locKey) {
-      return { error: 'No seasonal baseline data available for this specific city.' };
-    }
 
-    const norm = SEASONAL_SERVER[locKey];
     const now = new Date();
     const monthIndex = now.getMonth();
     const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+    let norm;
+
+    if (locKey) {
+      // Fast path: known city — use hardcoded table instantly
+      norm = {
+        rainfallMmPerMonth: SEASONAL_SERVER[locKey].rainfall[monthIndex],
+        maxTemp:            SEASONAL_SERVER[locKey].maxTemp[monthIndex]
+      };
+    } else {
+      // Slow path: unknown city — geocode and compute live from archive API
+      const loc = await geocodeLocation(location, 'en');
+      if (!loc) return { error: 'No seasonal baseline data available for this specific city.' };
+      norm = await computeLiveSeasonalBaseline(loc.lat, loc.lng);
+      if (!norm) return { error: 'No seasonal baseline data available for this specific city.' };
+    }
 
     // Get current weather to compare
     const current = await get_current_weather({ location });
@@ -274,11 +337,11 @@ export async function get_seasonal_comparison({ location }) {
       location: location,
       month: monthNames[monthIndex],
       seasonalAverage: {
-        rainfallMmPerMonth: norm.rainfall[monthIndex],
-        maxTemp: norm.maxTemp[monthIndex]
+        rainfallMmPerMonth: norm.rainfallMmPerMonth,
+        maxTemp:            norm.maxTemp
       },
       currentObservation: {
-        temp: current.temperature,
+        temp:      current.temperature,
         rainToday: current.rain
       }
     };

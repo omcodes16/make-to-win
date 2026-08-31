@@ -178,7 +178,7 @@ export default function Header() {
   };
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-50 bg-slate-900/60 backdrop-blur-xl border-b border-white/10 pt-3 pb-3">
+      <header className="fixed top-0 left-0 right-0 z-50 header-bar border-b border-[var(--header-border)] pt-3 pb-3">
         <div className="mx-auto px-3 sm:px-6 flex items-center justify-between max-w-[1400px]">
           
           {/* Left: App name & Logo */}
@@ -293,7 +293,7 @@ export default function Header() {
               </button>
 
               {showSaved && (
-                <div className="absolute right-0 top-full mt-2 rounded-2xl py-3 w-[260px] sm:w-[280px] z-[100] glass-panel !bg-[#1a103c]/95  border border-white/10 text-white shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
+                <div className="absolute right-0 top-full mt-2 rounded-2xl py-3 w-[260px] sm:w-[280px] z-[100] glass-panel theme-modal border border-[var(--modal-border)] text-[var(--text-primary)] shadow-[var(--modal-shadow)]">
                   <div className="px-4 pb-2 mb-2 border-b border-white/10 flex items-center gap-2">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1" className="text-amber-400"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
                     <span className="text-sm font-semibold text-white/90">Saved Locations</span>
@@ -353,8 +353,38 @@ export default function Header() {
               </button>
 
               {showMoreMenu && (
-                <div className="absolute right-0 top-full mt-2 rounded-2xl py-2 w-[220px] z-[100] glass-panel !bg-[#1a103c]/95  border border-white/10 text-white shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
-                  
+                <div className="absolute right-0 top-full mt-2 rounded-2xl py-2 w-[240px] z-[100] glass-panel theme-modal border border-[var(--modal-border)] text-[var(--text-primary)] shadow-[var(--modal-shadow)]">
+
+                  {/* Theme Switcher */}
+                  <div className="px-4 pt-2 pb-3 border-b border-[var(--modal-border)]">
+                    <p className="text-[10px] font-bold uppercase tracking-widest mb-2.5" style={{ color: 'var(--text-secondary)' }}>Theme</p>
+                    <div className="grid grid-cols-3 gap-1.5">
+                      {[
+                        { key: 'dark',  label: 'Dark',  icon: '🌙' },
+                        { key: 'light', label: 'Light', icon: '☀️' },
+                        { key: 'glass', label: 'Glass', icon: '🔮' },
+                      ].map(({ key, label, icon }) => (
+                        <button
+                          key={key}
+                          onClick={(e) => { e.stopPropagation(); dispatch({ type: 'SET_UI_THEME', payload: key }); }}
+                          className={`flex flex-col items-center gap-1 py-2 px-1 rounded-xl text-[10px] font-semibold transition-all duration-200 border ${
+                            state.uiTheme === key
+                              ? 'border-[var(--theme-accent)] shadow-[0_0_12px_var(--focus-glow)]'
+                              : 'border-[var(--modal-border)] hover:border-[var(--glass-border-top)]'
+                          }`}
+                          style={{
+                            background: state.uiTheme === key ? 'var(--glass-bg-hover)' : 'var(--glass-bg)',
+                            color: state.uiTheme === key ? 'var(--theme-accent)' : 'var(--text-muted)',
+                          }}
+                          title={`Switch to ${label} theme`}
+                        >
+                          <span className="text-base">{icon}</span>
+                          <span>{label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
                   <button
                     onClick={() => { dispatch({ type: 'SET_ACTIVE_TAB', payload: 'reviews' }); setShowMoreMenu(false); }}
                     className="w-full text-left flex items-center gap-3 px-4 py-3 text-sm transition-colors hover:glass-panel"
@@ -375,7 +405,7 @@ export default function Header() {
                     <span>Authority Portal</span>
                   </button>
                   
-                  <div className="h-px bg-white/10 my-1 mx-3" />
+                  <div className="h-px bg-[var(--modal-border)] my-1 mx-3" />
 
                   <button
                     onClick={(e) => { e.stopPropagation(); setShowA11y(!showA11y); }}
@@ -389,9 +419,9 @@ export default function Header() {
 
                   {/* Inline Accessibility Toggles */}
                   {showA11y && (
-                    <div className="mx-4 mb-3 p-3 bg-white/10 rounded-lg border border-white/10 space-y-3" onClick={e => e.stopPropagation()}>
+                    <div className="mx-4 mb-3 p-3 rounded-lg border border-[var(--modal-border)] space-y-3" style={{ background: 'var(--glass-bg)' }} onClick={e => e.stopPropagation()}>
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-white/80 font-medium">Large text</span>
+                        <span className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>Large text</span>
                         <button
                           onClick={() => dispatch({ type: 'TOGGLE_LARGE_TEXT' })}
                           className={`w-10 h-5 rounded-full transition-all relative ${
@@ -406,7 +436,7 @@ export default function Header() {
                         </button>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-white/80 font-medium">High contrast</span>
+                        <span className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>High contrast</span>
                         <button
                           onClick={() => dispatch({ type: 'TOGGLE_HIGH_CONTRAST' })}
                           className={`w-10 h-5 rounded-full transition-all relative ${
@@ -425,7 +455,7 @@ export default function Header() {
 
 
 
-                  <div className="h-px bg-white/10 my-1 mx-3" />
+                  <div className="h-px bg-[var(--modal-border)] my-1 mx-3" />
 
                   <button
                     onClick={() => { setShowGuide(true); setShowMoreMenu(false); }}
@@ -451,7 +481,7 @@ export default function Header() {
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg>
               </button>
               {showLangPicker && (
-                <div className="absolute right-0 top-full mt-2 rounded-xl py-1 min-w-[140px] z-[100] glass-panel !bg-[#1a103c]/95  border border-white/10 text-white shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
+                <div className="absolute right-0 top-full mt-2 rounded-xl py-1 min-w-[140px] z-[100] glass-panel theme-modal border border-[var(--modal-border)] text-[var(--text-primary)] shadow-[var(--modal-shadow)]">
                   {LANGUAGES.map(lang => (
                     <button
                       key={lang.code}
@@ -482,7 +512,7 @@ export default function Header() {
       )}
 
       {/* Mobile Bottom Tab Bar */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-slate-900/60 backdrop-blur-xl border-t border-white/10 flex safe-pb">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 header-bar border-t border-[var(--header-border)] flex safe-pb">
         <button
           onClick={() => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'chat' })}
           className={`flex-1 flex flex-col items-center justify-center py-3 gap-1 transition-colors ${state.activeTab === 'chat' ? 'text-blue-400' : 'text-white/40'}`}

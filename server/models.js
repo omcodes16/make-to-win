@@ -57,7 +57,47 @@ const sosSchema = new mongoose.Schema({
   timestamp: { type: Date, default: Date.now }
 });
 
+const communityReportSchema = new mongoose.Schema({
+  id:        { type: String },
+  location:  { type: String, required: true },
+  lat:       { type: Number },
+  lng:       { type: Number },
+  condition: { type: String, required: true },
+  intensity: { type: String, required: true },
+  desc:      { type: String, default: '' },
+  userName:  { type: String, default: 'Anonymous' },
+  verified:  { type: Boolean, default: false },
+  createdAt: { type: Date, default: Date.now }
+});
+
+const smsRecipientSchema = new mongoose.Schema({
+  id: { type: String },
+  phone: { type: String, required: true },
+  name: { type: String, default: 'Citizen' },
+  district: { type: String },
+  state: { type: String },
+  language: { type: String, enum: ['English', 'Hindi', 'Bengali', 'Assamese'], default: 'English' },
+  category: { type: String, default: 'General Public' },
+  village: { type: String },
+  pincode: { type: String },
+  registeredAt: { type: Date, default: Date.now }
+});
+
+const smsLogSchema = new mongoose.Schema({
+  id: { type: String },
+  alertId: { type: String },
+  phone: { type: String },
+  name: { type: String },
+  message: { type: String },
+  language: { type: String },
+  status: { type: String, default: 'delivered' },
+  sentAt: { type: Date, default: Date.now }
+});
+
 export const Alert = mongoose.model('Alert', alertSchema);
 export const Snapshot = mongoose.model('Snapshot', snapshotSchema);
 export const AccuracyLog = mongoose.model('AccuracyLog', accuracyLogSchema);
 export const SosRequest = mongoose.model('SosRequest', sosSchema);
+export const CommunityReport = mongoose.model('CommunityReport', communityReportSchema);
+export const SmsRecipient = mongoose.model('SmsRecipient', smsRecipientSchema);
+export const SmsLog = mongoose.model('SmsLog', smsLogSchema);

@@ -13,35 +13,62 @@ export default function CommunityReports({ locationName }) {
     desc: ''
   });
 
-  // Mock initial reports based on location
+  const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL || '').replace(/\/+$/, '');
+
+  // Fetch real reports from backend when location changes
   useEffect(() => {
     if (!locationName) return;
-    setReports([
-      { id: 1, user: 'Local User', time: '10 mins ago', condition: 'Heavy Rain', intensity: 'Severe', desc: 'Roads starting to flood near main market.', verified: true },
-      { id: 2, user: 'Farmer (Verified)', time: '45 mins ago', condition: 'Strong Wind', intensity: 'High', desc: 'Gusts are damaging standing crops.', verified: true },
-    ]);
+    setReports([]);
+    fetch(`${API_BASE}/api/community-reports?location=${encodeURIComponent(locationName)}`)
+      .then(r => r.ok ? r.json() : [])
+      .then(data => {
+        setReports(data.map(r => ({
+          id:        r._id || r.id,
+          user:      r.userName || 'Anonymous',
+          time:      r.createdAt ? new Date(r.createdAt).toLocaleTimeString() : 'Recently',
+          condition: r.condition,
+          intensity: r.intensity,
+          desc:      r.desc,
+          verified:  r.verified || false
+        })));
+      })
+      .catch(() => setReports([]));
   }, [locationName]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
-    setTimeout(() => {
-      const newReport = {
-        id: Date.now(),
-        user: state.userProfile?.name || 'Anonymous User',
-        time: 'Just now',
-        condition: formData.condition,
-        intensity: formData.intensity,
-        desc: formData.desc,
-        verified: false // Awaits AI verification
-      };
-      
-      setReports([newReport, ...reports]);
-      setIsSubmitting(false);
-      setShowForm(false);
-      setFormData({ condition: 'Heavy Rain', intensity: 'Moderate', desc: '' });
-    }, 1000);
+    try {
+      const res = await fetch(`${API_BASE}/api/community-reports`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          location:  locationName,
+          lat:       state.currentWeather?.lat  || null,
+          lng:       state.currentWeather?.lng  || null,
+          condition: formData.condition,
+          intensity: formData.intensity,
+          desc:      formData.desc,
+          userName:  state.userProfile?.name || 'Anonymous'
+        })
+      });
+      if (res.ok) {
+        const saved = await res.json();
+        const newReport = {
+          id:        saved._id || saved.id,
+          user:      saved.userName || 'Anonymous',
+          time:      'Just now',
+          condition: saved.condition,
+          intensity: saved.intensity,
+          desc:      saved.desc,
+          verified:  saved.verified || false
+        };
+        setReports([newReport, ...reports]);
+      }
+    } catch (_) { /* silently ignore network errors */ }
+    setIsSubmitting(false);
+    setShowForm(false);
+    setFormData({ condition: 'Heavy Rain', intensity: 'Moderate', desc: '' });
   };
 
   if (!locationName) return null;

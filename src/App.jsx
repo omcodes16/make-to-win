@@ -47,9 +47,9 @@ function AppContent() {
 
   if (state.activeTab === 'manager') {
     return (
-      <div key="manager" className={`theme-${state.uiTheme} animate-fade-in text-white min-h-[100dvh] relative`}>
+      <div key="manager" className={`theme-${state.uiTheme} animate-fade-in min-h-[100dvh] relative`} style={{ color: 'var(--text-primary)' }}>
         <div className="fixed inset-0 z-0 bg-cover bg-center transition-all duration-1000" style={{ backgroundImage: `url("${customBg}")` }}></div>
-        <div className="fixed inset-0 z-0 bg-black/40 pointer-events-none transition-colors duration-1000"></div>
+        <div className="fixed inset-0 z-0 pointer-events-none transition-colors duration-1000" style={{ backgroundColor: 'var(--overlay-dark)' }}></div>
         <div className="relative z-10">
           <ManagerDashboard />
         </div>
@@ -58,15 +58,15 @@ function AppContent() {
   }
 
   if (!state.isOnboarded) {
-    return <div key="onboarding" className={`theme-${state.uiTheme} animate-fade-in text-white`}><Onboarding /></div>;
+    return <div key="onboarding" className={`theme-${state.uiTheme} animate-fade-in`} style={{ color: 'var(--text-primary)' }}><Onboarding /></div>;
   }
 
   return (
-    <div className="relative min-h-[100dvh] bg-transparent transition-colors duration-1000 overflow-hidden text-white">
+    <div className="relative min-h-[100dvh] bg-transparent transition-colors duration-1000 overflow-hidden" style={{ color: 'var(--text-primary)' }}>
       {/* Global Fixed Background Image */}
       <div className="fixed inset-0 z-0 bg-cover bg-center transition-all duration-1000" style={{ backgroundImage: `url("${customBg}")` }}></div>
-      {/* Text Contrast Layer */}
-      <div className="fixed inset-0 z-0 bg-black/40 pointer-events-none transition-colors duration-1000"></div>
+      {/* Text Contrast Layer — controlled by CSS theme variable */}
+      <div className="fixed inset-0 z-0 pointer-events-none transition-colors duration-1000" style={{ backgroundColor: 'var(--overlay-dark)' }}></div>
       {/* Global Overlays */}
       <div className={`fixed inset-0 z-0 bg-gradient-to-b ${theme.overlay} pointer-events-none transition-colors duration-1000`}></div>
       <div className={`fixed inset-0 z-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] ${theme.accent} via-transparent to-transparent pointer-events-none transition-colors duration-1000 opacity-70`}></div>

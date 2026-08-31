@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { NE_DISTRICTS } from "../utils/districtData";
 import { geocodeLocation, searchLocationSuggestions } from "../services/weatherApi";
+import SmsSimulatorModal from "./SmsSimulatorModal";
+import SmsRegistryPanel from "./SmsRegistryPanel";
 
 const API_URL = import.meta.env.VITE_API_URL || "";
 
@@ -10,6 +12,9 @@ export default function ManagerDashboard() {
   const [alerts, setAlerts] = useState([]);
   const [sosRequests, setSosRequests] = useState([]);
   
+  const [activeTab, setActiveTab] = useState('alerts');
+  const [simulatingAlert, setSimulatingAlert] = useState(null);
+
   const [form, setForm] = useState({ 
     targetMode: "state", // 'state', 'district', 'radius'
     state: "Assam", 
@@ -302,9 +307,18 @@ export default function ManagerDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-transparent text-white p-4 sm:p-8">
-      <div className="max-w-5xl mx-auto space-y-8">
-        <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-transparent text-white p-4 sm:p-8 relative">
+      {/* SMS Simulator Modal */}
+      <SmsSimulatorModal 
+        isOpen={!!simulatingAlert} 
+        onClose={() => setSimulatingAlert(null)} 
+        alert={simulatingAlert}
+        API_URL={API_URL}
+        token={token}
+      />
+
+      <div className="max-w-6xl mx-auto space-y-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-red-400 to-amber-400">Disaster Management Panel</h1>
           <div className="flex gap-2">
             <button onClick={() => window.location.href = '/'} className="text-sm bg-white/10 px-4 py-2 rounded-lg hover:bg-white/20">Back to App</button>
@@ -312,12 +326,32 @@ export default function ManagerDashboard() {
           </div>
         </div>
 
+        {/* Top Navigation Tabs */}
+        <div className="flex gap-2 bg-black/40 p-1 rounded-xl w-fit">
+          <button 
+            onClick={() => setActiveTab('alerts')} 
+            className={`px-6 py-2 rounded-lg text-sm font-bold transition-colors ${activeTab === 'alerts' ? 'bg-red-600 text-white' : 'text-white/60 hover:text-white'}`}
+          >
+            Broadcasts & SOS
+          </button>
+          <button 
+            onClick={() => setActiveTab('sms')} 
+            className={`px-6 py-2 rounded-lg text-sm font-bold transition-colors ${activeTab === 'sms' ? 'bg-blue-600 text-white' : 'text-white/60 hover:text-white'}`}
+          >
+            SMS Registry
+          </button>
+        </div>
+
         {msg && <div className="bg-green-500/20 text-green-300 border border-green-500 p-3 rounded-lg">{msg}</div>}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Issue Alert Form */}
-          <div className="glass-panel border border-white/10 p-6 rounded-2xl ">
-            <h2 className="text-xl font-bold mb-4">Broadcast New Alert</h2>
+        {activeTab === 'sms' ? (
+          <SmsRegistryPanel API_URL={API_URL} token={token} />
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Issue Alert Form */}
+            <div className="glass-panel border border-white/10 p-6 rounded-2xl ">
+              <h2 className="text-xl font-bold mb-4">Broadcast New Alert</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               
               <div className="flex gap-2 p-1 bg-black/40 rounded-lg border border-white/10">
@@ -372,13 +406,16 @@ export default function ManagerDashboard() {
                       </div>
                       {/* Suggestion Dropdown — same style as WeatherStage */}
                       {showSuggestions && locationSuggestions.length > 0 && (
-                        <ul className="absolute z-50 left-0 right-10 top-full mt-1 bg-gray-900 border border-white/10 rounded-lg shadow-2xl overflow-hidden">
+                        <ul className="absolute z-50 left-0 right-10 top-full mt-1 theme-modal rounded-lg shadow-2xl overflow-hidden">
                           {locationSuggestions.map((s, i) => (
                             <li key={i}
                               onMouseDown={() => selectSuggestion(s)}
-                              className="px-4 py-2.5 hover:bg-blue-600/30 cursor-pointer border-b border-white/10 last:border-0 text-sm text-white flex items-center gap-2">
-                              <span className="text-white/40">📍</span>
-                              <span>{[s.name, s.district, s.state, s.country].filter(Boolean).join(', ')}</span>
+                              className="px-4 py-2.5 hover:bg-[var(--theme-border)] cursor-pointer border-b border-[var(--theme-border)] last:border-0 transition-colors text-left flex justify-between"
+                            >
+                              <span className="font-medium">{s.name}</span>
+                              <span className="text-xs opacity-60">
+                                {[s.district, s.state].filter(Boolean).join(', ')}
+                              </span>
                             </li>
                           ))}
                         </ul>
@@ -439,7 +476,10 @@ export default function ManagerDashboard() {
                         Target: {a.targetMode === 'district' ? `${a.district}, ${a.state}` : a.targetMode === 'radius' ? `${a.radius}km around [${a.lat?.toFixed(2)}, ${a.lng?.toFixed(2)}]` : a.state} &bull; Expires: {new Date(a.expiresAt).toLocaleString()}
                       </p>
                     </div>
-                    <button onClick={() => revokeAlert(a.id)} className="bg-white/10 hover:bg-red-500/20 hover:text-red-400 text-xs px-3 py-1.5 rounded transition-colors">Revoke</button>
+                    <div className="flex flex-col gap-2 items-end">
+                      <button onClick={() => setSimulatingAlert(a)} className="bg-blue-500/20 hover:bg-blue-500/40 text-blue-300 font-bold text-xs px-3 py-1.5 rounded transition-colors whitespace-nowrap border border-blue-500/30 shadow-[0_0_10px_rgba(59,130,246,0.2)]">Simulate SMS</button>
+                      <button onClick={() => revokeAlert(a.id)} className="bg-white/10 hover:bg-red-500/20 hover:text-red-400 text-xs px-3 py-1.5 rounded transition-colors whitespace-nowrap w-full">Revoke</button>
+                    </div>
                   </div>
                   <p className="text-sm text-white/80">{a.description}</p>
                 </div>
@@ -509,7 +549,8 @@ export default function ManagerDashboard() {
             </div>
           )}
         </div>
-
+        </>
+        )}
       </div>
     </div>
   );

@@ -110,11 +110,15 @@ export default function AlertsScreen() {
     // Base rainfall stats
     const precipArr = weather.daily.precipitationSum || weather.daily.precipProbMax || [0];
     const maxRain = Math.max(...precipArr.slice(0, 3));
+    const maxRainIndex = precipArr.slice(0, 3).indexOf(maxRain);
+    const dayWindows = ['Today', 'Tomorrow', 'In 2 Days'];
+    const rainWindow = dayWindows[maxRainIndex] || 'Next 24 hrs';
+    
     const isProb = !weather.daily.precipitationSum;
     const severeThreshold = isProb ? 80 : 40;
     const cautionThreshold = isProb ? 50 : 15;
     
-    const probValue = weather.daily.precipProbMax?.[0] !== undefined ? weather.daily.precipProbMax[0] : (isProb ? maxRain : (maxRain > 10 ? 90 : Math.round((maxRain/40)*100)));
+    const probValue = weather.daily.precipProbMax?.[maxRainIndex] !== undefined ? weather.daily.precipProbMax[maxRainIndex] : (isProb ? maxRain : (maxRain > 10 ? 90 : Math.round((maxRain/40)*100)));
     const rainRange = isProb ? 'Unknown' : `${Math.floor(maxRain * 0.8)}-${Math.ceil(maxRain * 1.2)}`;
     const actualRainDisplay = isProb ? 'N/A' : maxRain.toFixed(1);
 
@@ -131,7 +135,7 @@ export default function AlertsScreen() {
         title: ex.alertThunderTitle ? ex.alertThunderTitle(locName) : `Thunderstorm Warning in ${locName}`,
         desc: ex.alertThunderDesc || `Thunderstorms are expected. Risk of lightning strikes and strong sudden gusts.`,
         precaution: ex.alertThunderPrec || `Stay indoors, avoid using electrical equipment, and stay away from windows.`,
-        level: 'Severe', prob: `${Math.max(probValue, 80)}%`, rain: rainRange, window: 'Next 24 hrs', impact: 'High'
+        level: 'Severe', prob: `${Math.max(probValue, 80)}%`, rain: rainRange, window: rainWindow, impact: 'High'
       });
     }
 
@@ -142,7 +146,7 @@ export default function AlertsScreen() {
         title: ex.alertHeavyRainTitle ? ex.alertHeavyRainTitle(locName) : `Heavy Rain & Flood Risk in ${locName}`,
         desc: ex.alertHeavyRainDesc ? ex.alertHeavyRainDesc(isProb, maxRain) : (isProb ? `High probability (${maxRain}%) of severe rain.` : `Heavy precipitation or showers expected. Low-lying areas may face waterlogging.`),
         precaution: ex.alertHeavyRainPrec || `Avoid unnecessary travel. Move livestock to higher ground and secure outdoor equipment.`,
-        level: 'Severe', prob: `${Math.max(probValue, 70)}%`, rain: rainRange, window: 'Next 12 hrs', impact: 'High'
+        level: 'Severe', prob: `${Math.max(probValue, 70)}%`, rain: rainRange, window: rainWindow, impact: 'High'
       });
     } else if (maxRain > cautionThreshold) {
       alerts.push({
@@ -150,7 +154,7 @@ export default function AlertsScreen() {
         title: ex.alertModRainTitle ? ex.alertModRainTitle(locName) : `Moderate Rain in ${locName}`,
         desc: ex.alertModRainDesc ? ex.alertModRainDesc(isProb, maxRain) : (isProb ? `Moderate chance (${maxRain}%) of rain.` : `Steady rainfall expected (${maxRain}mm).`),
         precaution: ex.alertModRainPrec || `Roads may be slippery. If spraying crops, consider delaying until the rain clears.`,
-        level: 'Caution', prob: `${probValue}%`, rain: rainRange, window: 'Next 24 hrs', impact: 'Moderate'
+        level: 'Caution', prob: `${probValue}%`, rain: rainRange, window: rainWindow, impact: 'Moderate'
       });
     }
 

@@ -74,14 +74,14 @@ export default function AssistantCard({ message, isLatest }) {
           <div className="px-4 py-3 sm:px-5 sm:pt-4 sm:pb-3 flex justify-between items-start gap-3 sm:gap-4">
             <div className="flex-1 flex items-start gap-2">
               <span className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full mt-1.5 sm:mt-2 shrink-0 ${confidence === "low" ? "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]" : confidence === "medium" ? "bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.6)]" : "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]"}`} title={`Forecast Confidence: ${confidence.toUpperCase()}`}></span>
-              <p className="text-sm sm:text-[15px] text-white leading-relaxed">{text}</p>
+              <p className="text-sm sm:text-[15px] text-theme-primary leading-relaxed">{text}</p>
             </div>
             <button 
               onClick={handlePlayToggle}
               className={`w-8 h-8 flex items-center justify-center rounded-full transition-all flex-shrink-0 mt-0.5 ${
                 isSpeakingThis 
                   ? 'bg-amber-500/20 text-amber-400 animate-pulse border border-amber-500/30' 
-                  : 'bg-white/10 text-white/50 hover:bg-white/10 hover:text-white border border-white/10'
+                  : 'bg-white/10 text-theme-muted hover:bg-white/10 hover:text-theme-primary border border-theme-border'
               }`}
               aria-label={isSpeakingThis ? "Stop speaking" : "Play response"}
             >
@@ -99,30 +99,30 @@ export default function AssistantCard({ message, isLatest }) {
 
           {/* Compact data row */}
           {data && (
-            <div className="px-5 py-3 border-t border-white/10 flex items-center gap-4 text-sm bg-white/10">
+            <div className="px-5 py-3 border-t border-theme-border flex items-center gap-4 text-sm bg-black/5 dark:bg-white/10">
               {weatherInfo && (
                 <span className="text-2xl drop-shadow-md" role="img" aria-label={weatherInfo.label}>
                   {weatherInfo.icon}
                 </span>
               )}
-              <span className="font-semibold text-lg text-white">
+              <span className="font-semibold text-lg text-theme-primary">
                 {data.locationName ? `${data.locationName} - ` : ''}{data.temperature}°C
               </span>
               {/* Show AI-picked relevant stat if available, otherwise fall back */}
               {relevantStat ? (
-                <span className="text-white/70 text-xs font-medium uppercase tracking-wide">
+                <span className="text-theme-muted text-xs font-medium uppercase tracking-wide">
                   {relevantStat}
                   {relevantStat.includes('HEAT') && <Tooltip text={t.tooltipHeatIndex} />}
                 </span>
               ) : (
                 <>
                   {data.humidity !== undefined && (
-                    <span className="text-white/70 font-medium">
+                    <span className="text-theme-muted font-medium">
                       💧 {data.humidity}%
                     </span>
                   )}
                   {data.windSpeed !== undefined && data.windSpeed > 0 && (
-                    <span className="text-white/70 font-medium">
+                    <span className="text-theme-muted font-medium">
                       💨 {data.windSpeed} km/h
                     </span>
                   )}
@@ -136,8 +136,8 @@ export default function AssistantCard({ message, isLatest }) {
             <div
               className={`px-5 py-3 text-sm font-medium ${
                 severity === 'severe'
-                  ? 'bg-red-500/20 text-red-400 border-t border-red-500/20'
-                  : 'bg-yellow-500/20 text-yellow-400 border-t border-yellow-500/20'
+                  ? 'bg-red-500/20 text-red-500 dark:text-red-400 border-t border-red-500/20'
+                  : 'bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 border-t border-yellow-500/20'
               }`}
             >
               {severity === 'severe' ? '⚠️' : '🔔'} {advisory}
@@ -147,22 +147,22 @@ export default function AssistantCard({ message, isLatest }) {
 
           {/* NWP Model Consensus Badge */}
           {data?.modelData && (
-            <div className={`px-5 py-2.5 border-t border-white/10 text-[11px] sm:text-xs font-semibold flex items-center gap-2 bg-black/20`}>
+            <div className={`px-5 py-2.5 border-t border-theme-border text-[11px] sm:text-xs font-semibold flex items-center gap-2 bg-black/5 dark:bg-black/20`}>
               <span className={`w-2 h-2 rounded-full ${isDivergent ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`}></span>
-              <span className={isDivergent ? 'text-amber-400' : 'text-emerald-400'}>
+              <span className={isDivergent ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}>
                 {isDivergent 
                   ? `NWP Divergence (Δ ${tempDiff.toFixed(1)}°C, ${precipDiff}%)` 
                   : 'NWP Models Agree (High Confidence)'}
                 <Tooltip text={t.tooltipNwp} />
               </span>
-              <span className="text-white/40 ml-auto hidden sm:inline-block tracking-wider">GFS • ICON • ECMWF</span>
+              <span className="text-theme-muted opacity-60 ml-auto hidden sm:inline-block tracking-wider">GFS • ICON • ECMWF</span>
             </div>
           )}
         </div>
 
         {/* Follow-up text outside the card */}
         {followUp && (
-          <p className="text-sm text-white/60 px-2 leading-relaxed">{followUp}</p>
+          <p className="text-sm text-theme-muted px-2 leading-relaxed">{followUp}</p>
         )}
 
         {/* Suggested Follow-up Questions (Chips) */}
@@ -176,7 +176,7 @@ export default function AssistantCard({ message, isLatest }) {
                 className={`text-xs px-3.5 py-2 rounded-full border transition-all text-left max-w-full truncate shimmer-hover ${
                   clickedChip === q
                     ? 'bg-indigo-600/50 border-indigo-400 text-white scale-95 shadow-[0_0_15px_rgba(99,102,241,0.4)]'
-                    : 'glass-panel border-white/10 text-white/80 hover:bg-white/10 hover:text-white hover:border-indigo-400/30 hover:scale-105'
+                    : 'glass-panel border-theme-border text-theme-muted hover:bg-white/10 hover:text-theme-primary hover:border-indigo-400/30 hover:scale-105'
                 }`}
               >
                 {q}

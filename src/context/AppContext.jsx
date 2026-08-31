@@ -186,6 +186,10 @@ export function AppProvider({ children }) {
     document.body.classList.toggle('high-contrast', state.isHighContrast);
   }, [state.isLargeText, state.isHighContrast]);
 
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', state.uiTheme || 'dark');
+  }, [state.uiTheme]);
+
   return (
     <AppContext.Provider value={{ state, dispatch }}>
       {children}

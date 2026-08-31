@@ -251,11 +251,11 @@ export default function ChatInput() {
     <div className="bg-transparent border-t-0 p-4">
       <div className="max-w-lg mx-auto relative">
         {/* UI States */}
-        <div className="absolute -top-6 left-2 text-xs text-white/70 font-medium">
+        <div className="absolute -top-6 left-2 text-xs text-theme-muted font-medium">
           {ttsMessage ? <span className="text-amber-400">{ttsMessage}</span> :
            isSpeaking ? VOICE_STATES[state.language]?.speaking :
            state.isLoading ? VOICE_STATES[state.language]?.thinking :
-           isListening ? <span className="text-red-400 animate-pulse">{VOICE_STATES[state.language]?.listening}</span> : 
+           isListening ? <span className="text-red-500 dark:text-red-400 animate-pulse">{VOICE_STATES[state.language]?.listening}</span> : 
            (isVoiceModeRef.current && input === '') ? VOICE_STATES[state.language]?.ready : ''}
         </div>
         <form 
@@ -267,8 +267,8 @@ export default function ChatInput() {
             onClick={handleVoiceInput}
             disabled={state.isLoading}
             className={`w-10 h-10 flex items-center justify-center rounded-full transition-all ${
-              isListening ? 'text-red-400 animate-pulse bg-red-500/10' : 
-              isSpeaking ? 'text-amber-400 hover:text-amber-300 bg-amber-500/10' : 'text-white/40 hover:text-white hover:bg-white/10'
+              isListening ? 'text-red-500 dark:text-red-400 animate-pulse bg-red-500/10' : 
+              isSpeaking ? 'text-amber-500 dark:text-amber-400 hover:text-amber-600 dark:hover:text-amber-300 bg-amber-500/10' : 'text-theme-muted hover:text-theme-primary hover:bg-white/10'
             }`}
             aria-label={isListening ? 'Stop listening' : isSpeaking ? 'Stop speaking' : 'Voice input'}
           >
@@ -284,7 +284,7 @@ export default function ChatInput() {
             }}
             placeholder={placeholder}
             disabled={state.isLoading}
-            className="flex-1 bg-transparent px-3 py-2 text-white placeholder-white/30 focus:outline-none text-sm md:text-base focus:ring-0"
+            className="flex-1 bg-transparent px-3 py-2 text-theme-primary placeholder-theme-muted/50 focus:outline-none text-sm md:text-base focus:ring-0"
           />
 
           <button

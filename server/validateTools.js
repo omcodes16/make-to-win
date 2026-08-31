@@ -1,3 +1,4 @@
+// DEV-ONLY: manual E2E test script for the tool-calling architecture. Not used in production and never served to real users. mockWeatherData below is only a location hint for the AI — actual weather data still comes from live tool calls.
 // Removed node-fetch import, using native fetch.
 
 const ENDPOINT = 'http://localhost:3001/api/chat';

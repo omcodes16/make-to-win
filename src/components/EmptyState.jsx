@@ -33,7 +33,7 @@ export default function EmptyState() {
          state.language === 'as' ? 'আপুনি কি জানিব বিচাৰে?' :
          'আপনি কী জানতে চান?'}
       </h2>
-      <p className="text-white/80 text-center mb-6 sm:mb-10 max-w-md text-xs sm:text-base px-4 drop-shadow-sm">
+      <p className="text-theme-muted text-center mb-6 sm:mb-10 max-w-md text-xs sm:text-base px-4 drop-shadow-sm">
         {state.language === 'en' ? 'Tap a question below or type your own' :
          state.language === 'hi' ? 'नीचे एक सवाल टैप करें या अपना लिखें' :
          state.language === 'as' ? 'তলৰ প্ৰশ্ন এটা টিপক বা নিজৰ লিখক' :
@@ -51,15 +51,15 @@ export default function EmptyState() {
               className={`group glass-panel shimmer-hover rounded-2xl p-3 sm:p-5 flex items-center gap-3 sm:gap-4 ${accent.hover} hover:scale-[1.02] transition-all duration-300 text-left active:scale-[0.98]`}
             >
               {/* Emoji Icon Circle */}
-              <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0 ${accent.iconHover} transition-colors border border-white/10 text-base sm:text-xl`}>
+              <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center flex-shrink-0 ${accent.iconHover} transition-colors border border-theme-border text-base sm:text-xl`} style={{ background: 'var(--glass-bg)' }}>
                 {accent.emoji}
               </div>
               {/* Text */}
               <div className="flex-1">
-                <p className="text-white/90 group-hover:text-white transition-colors text-[13px] sm:text-base font-medium">{q}</p>
+                <p className="text-theme-muted group-hover:text-theme-primary transition-colors text-[13px] sm:text-base font-medium">{q}</p>
               </div>
               {/* Arrow */}
-              <svg className={`w-4 h-4 sm:w-5 sm:h-5 text-white/20 ${accent.arrow} transition-all duration-300 transform group-hover:translate-x-1 flex-shrink-0`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg className={`w-4 h-4 sm:w-5 sm:h-5 text-theme-muted opacity-50 group-hover:opacity-100 ${accent.arrow} transition-all duration-300 transform group-hover:translate-x-1 flex-shrink-0`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
               </svg>
             </button>

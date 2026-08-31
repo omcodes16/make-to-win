@@ -177,15 +177,15 @@ export default function WeatherDashboard() {
               <button type="submit" className="px-4 sm:px-6 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-medium transition-all shadow-[0_0_15px_rgba(99,102,241,0.3)] hover:shadow-[0_0_25px_rgba(99,102,241,0.5)] text-sm sm:text-base">Go</button>
             </form>
             {showSuggestions && suggestions.length > 0 && (
-              <ul className="absolute z-50 w-full left-0 mt-2 bg-slate-900/95  border border-white/10 rounded-xl shadow-2xl overflow-hidden">
+              <ul className="absolute z-50 w-full left-0 mt-2 theme-modal rounded-xl overflow-hidden max-h-64 overflow-y-auto">
                 {suggestions.map((loc, idx) => (
                   <li 
                     key={idx} 
                     onMouseDown={() => handleSelectLocation(loc)}
-                    className="px-4 py-3 hover:bg-white/10 cursor-pointer border-b border-white/10 last:border-0 transition-colors text-left"
+                    className="px-4 py-3 hover:bg-[var(--theme-border)] cursor-pointer border-b border-[var(--theme-border)] last:border-0 transition-colors text-left"
                   >
-                    <div className="text-white font-medium text-sm">{loc.name}</div>
-                    <div className="text-white/60 text-xs">
+                    <div className="font-medium text-sm">{loc.name}</div>
+                    <div className="text-xs opacity-60">
                       {[loc.district, loc.state, loc.country].filter(Boolean).join(', ')}
                     </div>
                   </li>
@@ -309,15 +309,15 @@ return (
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
             </button>
             {showSuggestions && suggestions.length > 0 && (
-              <ul className="absolute z-50 w-full left-0 mt-2 bg-slate-900/95  border border-white/10 rounded-2xl shadow-2xl overflow-hidden max-h-64 overflow-y-auto">
+              <ul className="absolute z-50 w-full left-0 mt-2 theme-modal rounded-2xl overflow-hidden max-h-64 overflow-y-auto">
                 {suggestions.map((loc, idx) => (
                   <li 
                     key={idx} 
                     onMouseDown={() => handleSelectLocation(loc)}
-                    className="px-5 py-3.5 hover:bg-white/10 cursor-pointer border-b border-white/10 last:border-0 transition-colors text-left flex flex-col sm:flex-row sm:items-center justify-between gap-1"
+                    className="px-5 py-3.5 hover:bg-[var(--theme-border)] cursor-pointer border-b border-[var(--theme-border)] last:border-0 transition-colors text-left flex flex-col sm:flex-row sm:items-center justify-between gap-1"
                   >
-                    <div className="text-white font-medium text-sm sm:text-base">{loc.name}</div>
-                    <div className="text-white/50 text-[10px] sm:text-xs">
+                    <div className="font-medium text-sm sm:text-base">{loc.name}</div>
+                    <div className="text-[10px] sm:text-xs opacity-60">
                       {[loc.district, loc.state, loc.country].filter(Boolean).join(', ')}
                     </div>
                   </li>
