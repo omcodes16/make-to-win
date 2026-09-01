@@ -341,7 +341,7 @@ export default function AccuracyTracker({ locationName, language }) {
   // ── Loading skeleton ──
   if (loading) {
     return (
-      <div className="bg-white/10 backdrop-blur-2xl border border-white/10 rounded-3xl p-6 shadow-xl mb-6 animate-pulse min-h-[200px]">
+      <div className="glass-panel border border-white/10 rounded-2xl p-6 shadow-xl mt-6 mb-6 animate-pulse min-h-[200px]">
         <div className="h-5 bg-white/10 rounded w-1/3 mb-3" />
         <div className="h-3 bg-white/10 rounded w-1/2 mb-6" />
         <div className="space-y-3">
@@ -355,7 +355,7 @@ export default function AccuracyTracker({ locationName, language }) {
   if (feed.length === 0) return null;
 
   return (
-    <div className="bg-white/10 backdrop-blur-2xl border border-white/10 rounded-3xl p-4 sm:p-6 shadow-xl mb-6 sm:mb-8 transition-colors">
+    <div className="glass-panel border border-white/10 rounded-2xl p-4 sm:p-6 shadow-xl mt-6 mb-6 sm:mb-8 transition-colors">
       {/* ── Header ── */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-5 gap-3">
         <div>
