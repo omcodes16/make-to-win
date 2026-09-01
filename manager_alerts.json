@@ -1,17 +1,1 @@
-[
-  {
-    "id": "mgr-1788209239235",
-    "state": "Assam",
-    "district": "",
-    "lat": null,
-    "lng": null,
-    "radius": 50,
-    "targetMode": "state",
-    "severity": "severe",
-    "title": "Jekek",
-    "description": "Neke",
-    "issuedAt": 1788209239235,
-    "expiresAt": 1788295639235,
-    "source": "Authority Alert"
-  }
-]
+[]
