@@ -1,5 +1,10 @@
 export const EXTRA_I18N = {
   en: {
+
+    onboardingAskLangTitle: 'Ask in Your Language',
+    onboardingAskLangDesc: 'Speak or type freely in English, Hindi, Bengali, or Assamese. Tap the microphone to talk, and the play icon to hear the forecast read aloud.',
+    onboardingInsightsTitle: 'Smart Insights',
+    onboardingInsightsDesc: 'Look for the Heat Index to know how hot it actually feels, and the Models Agree badge to see how reliable the forecast is based on supercomputer consensus.',
     // Alerts Screen
     liveHighAlerts: "Live High Alerts",
     topRiskStates: "Top Risk States",
@@ -112,6 +117,11 @@ export const EXTRA_I18N = {
 
   },
   hi: {
+
+    onboardingAskLangTitle: 'अपनी भाषा में पूछें',
+    onboardingAskLangDesc: 'अंग्रेज़ी, हिंदी, बंगाली या असमिया में बोलें या टाइप करें। बात करने के लिए माइक्रोफ़ोन पर टैप करें, और पूर्वानुमान सुनने के लिए प्ले आइकन पर टैप करें।',
+    onboardingInsightsTitle: 'स्मार्ट इनसाइट्स',
+    onboardingInsightsDesc: 'यह जानने के लिए कि वास्तव में कितनी गर्मी है, हीट इंडेक्स देखें, और यह देखने के लिए कि सुपरकंप्यूटर की सहमति के आधार पर पूर्वानुमान कितना विश्वसनीय है, "मॉडल्स एग्री" बैज देखें।',
     liveHighAlerts: "लाइव हाई अलर्ट (Live Alerts)",
     topRiskStates: "अधिक जोखिम वाले राज्य",
     realTimeNews: "रियल-टाइम इंडिया वेदर न्यूज़",
@@ -215,6 +225,11 @@ export const EXTRA_I18N = {
 
   },
   as: {
+
+    onboardingAskLangTitle: 'আপোনাৰ ভাষাত সোধক',
+    onboardingAskLangDesc: 'ইংৰাজী, হিন্দী, বঙালী বা অসমীয়াত কওক বা টাইপ কৰক। কথা পাতিবলৈ মাইক্ৰফোনত টেপ কৰক, আৰু বতৰৰ আগজাননী শুনিবলৈ প্লে আইকনত টেপ কৰক।',
+    onboardingInsightsTitle: 'স্মাৰ্ট ইনচাইট',
+    onboardingInsightsDesc: 'প্ৰকৃততে কিমান গৰম অনুভৱ হয় জানিবলৈ হিট ইনডেক্স চাওক, আৰু ছুপাৰকম্পিউটাৰৰ সন্মতিৰ ওপৰত ভিত্তি কৰি বতৰৰ আগজাননী কিমান নিৰ্ভৰযোগ্য সেয়া চাবলৈ "মডেলছ এগ্ৰী" বেজ চাওক।',
     liveHighAlerts: "লাইভ হাই এলাৰ্ট (Live Alerts)",
     topRiskStates: "অধিক বিপদসংকুল ৰাজ্য",
     realTimeNews: "ৰিয়েল-টাইম ইণ্ডিয়া বতৰৰ খবৰ",
@@ -317,6 +332,11 @@ export const EXTRA_I18N = {
 
   },
   bn: {
+
+    onboardingAskLangTitle: 'আপনার ভাষায় জিজ্ঞাসা করুন',
+    onboardingAskLangDesc: 'ইংরেজি, হিন্দি, বাংলা বা অসমিয়ায় কথা বলুন বা টাইপ করুন। কথা বলতে মাইক্রোফোনে ট্যাপ করুন এবং পূর্বাভাস শুনতে প্লে আইকনে ট্যাপ করুন।',
+    onboardingInsightsTitle: 'স্মার্ট অন্তর্দৃষ্টি',
+    onboardingInsightsDesc: 'আসলে কতটা গরম অনুভূত হয় তা জানতে হিট ইনডেক্স দেখুন, এবং সুপারকম্পিউটারের মতামতের ভিত্তিতে পূর্বাভাস কতটা নির্ভরযোগ্য তা দেখতে "মডেলস এগ্রি" ব্যাজ দেখুন।',
     liveHighAlerts: "লাইভ হাই অ্যালার্ট (Live Alerts)",
     topRiskStates: "অধিক ঝুঁকিপূর্ণ রাজ্য",
     realTimeNews: "রিয়েল-টাইম ইন্ডিয়া ওয়েদার নিউজ",

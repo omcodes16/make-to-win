@@ -1,215 +1,227 @@
-import React from "react";
-import { createPortal } from "react-dom";
-import { useApp } from "../context/AppContext";
+import React from 'react';
+import { createPortal } from 'react-dom';
+import { useApp } from '../context/AppContext';
 
 const GUIDE_CONTENT = {
   en: {
-    title: "Complete Platform Features Guide",
-    subtitle: "Everything you can do with WeatherGPT",
+    title: "How to Use WeatherGPT",
+    subtitle: "A comprehensive guide to all features and capabilities",
     sections: [
       {
-        title: "🤖 1. Smart AI Chatbot (Core Feature)",
+        title: "🌍 1. Basics & Language Selection",
         items: [
-          { name: "Multilingual Conversations", desc: "Chat in English, Hindi, Bengali, or Assamese. The AI automatically understands your intent and responds contextually." },
-          { name: "Voice Support (Speech-to-Text & TTS)", desc: "Click the microphone to speak your question. Click the speaker icon on any AI response to hear it spoken aloud using Cloud TTS." },
-          { name: "Context-Aware Memory", desc: "The AI remembers your location and previous questions. You can say 'What about tomorrow?' and it knows you are talking about your current city." }
+          { name: "Language Switcher", desc: "Select English, Hindi, Bengali, or Assamese from the top navigation bar. The entire interface, AI chat, and voice will adapt instantly." },
+          { name: "Dynamic Themes", desc: "The background and UI colors automatically change based on the live weather conditions (e.g., Rain, Clear, Thunderstorm)." },
+          { name: "Offline Mode", desc: "If you lose internet, WeatherGPT securely loads your last known data so you are never left without information." }
         ]
       },
       {
-        title: "📊 2. Advanced Weather Dashboard",
+        title: "👨‍🌾 2. Profession Profiles",
         items: [
-          { name: "Live Hyper-Local Data", desc: "Fetches real-time temperature, humidity, wind speed, UV index, and 'Feels Like' metrics instantly based on your GPS or searched city." },
-          { name: "Hourly & 7-Day Forecasting", desc: "Visual interactive sliders and grids showing precise weather breakdowns for the upcoming week." },
-          { name: "Interactive Radar Maps", desc: "View live precipitation, temperature, and wind flow directly on the map layer." }
+          { name: "Switching Profiles", desc: "Click the profile icon at the top right to switch between General, Farmer, Fisherman, Aviation, and Urban Planner." },
+          { name: "Tailored Data", desc: "Depending on your profile, the AI will prioritize relevant data (e.g., wave height for Fishermen, soil moisture for Farmers, AQI for Urban Planners)." },
+          { name: "Actionable Advisories", desc: "Get real-time advice based on specific triggers, like avoiding pesticide spray if rain is >10mm or delaying transport in heavy fog." }
         ]
       },
       {
-        title: "🎯 3. Specialized Hubs (Our Addition)",
+        title: "🤖 3. AI Chat & Voice Features",
         items: [
-          { name: "Farmer Profile", desc: "Gives crop-specific calendars, soil moisture tips, and pesticide/fertilizer spraying advice based on upcoming rain." },
-          { name: "Fisherman Profile", desc: "Shows live marine conditions, wave heights, tide charts, and safe fishing zones." },
-          { name: "Aviation & Urban Profiles", desc: "Visibility, wind shear alerts for pilots; AQI and infrastructure alerts for city planners." }
+          { name: "Ask Anything", desc: "Type or use the microphone to ask the AI complex weather questions. It understands context and acts as a specialized meteorologist." },
+          { name: "Voice Output (TTS)", desc: "Click the play button next to any AI response to hear it read aloud in your selected language (via Google TTS)." },
+          { name: "Live Data Integration", desc: "The AI automatically fetches real-time Open-Meteo data, NDMA alerts, and marine forecasts before answering." }
         ]
       },
       {
-        title: "🧠 4. NWP Model Divergence (Advanced)",
+        title: "📊 4. Dashboard & Confidence Scoring",
         items: [
-          { name: "Supercomputer Comparison", desc: "We pull data from the world's top 3 models (GFS, ICON, ECMWF)." },
-          { name: "Divergence Warning", desc: "If the models strongly disagree (e.g., one predicts heavy rain, another predicts clear skies), we show a Yellow 'Divergence' badge to warn you of low forecast confidence." }
+          { name: "Multi-Model NWP", desc: "We fetch data from 3 global models (GFS, ICON, ECMWF). The 'Models Agree' badge shows High/Medium/Low confidence based on their consensus." },
+          { name: "Radar & Maps", desc: "Toggle to the Map View to see real-time radar overlays for precipitation, temperature, and wind." },
+          { name: "Heat Index", desc: "When temperatures exceed 27°C, we automatically calculate the 'Feels Like' temperature using the advanced NWS Rothfusz equation." }
         ]
       },
       {
-        title: "🚨 5. Disaster Alerts & Offline Mode",
+        title: "🚨 5. Disaster Alerts & SOS",
         items: [
-          { name: "Severity Detection", desc: "The AI automatically scans forecasts for heatwaves, cyclones, or floods and generates Red/Yellow alerts." },
-          { name: "SMS Broadcast Simulation", desc: "If internet goes down during a disaster, authorities can trigger offline SMS warnings directly to rural feature phones." }
+          { name: "NDMA Sachet Alerts", desc: "We poll government NDMA XML feeds every 5 minutes. Extreme alerts trigger a red banner and push notification." },
+          { name: "Emergency SOS", desc: "Tap the red SOS button to instantly send your GPS coordinates and a photo to the disaster management portal." },
+          { name: "SMS Registry", desc: "Register your phone number in the Alerts tab to receive offline SMS warnings based on your district." }
         ]
       },
       {
-        title: "🌍 6. Community & Extra Features",
+        title: "🛡️ 6. Accountability & Analytics",
         items: [
-          { name: "Crowdsource Reporting", desc: "Users can report local ground-truth weather (e.g., 'It is flooding here') to help validate the AI's data." },
-          { name: "Historical Analytics", desc: "Compare today's weather with 10-year historical averages to track climate change trends." },
-          { name: "Progressive Web App (PWA)", desc: "Install this website directly to your phone's home screen like a native app." }
+          { name: "AI Accuracy Tracker", desc: "Every quantifiable claim the AI makes (temp, rain%) is logged and verified the next day against actual historical data. View the results in the Accuracy Hub." },
+          { name: "Historical Analytics", desc: "Compare today's weather against the 5-year seasonal average to understand climate trends." },
+          { name: "Community Reports", desc: "Submit ground-truth weather reports (e.g., 'Heavy Rain', 'Flooded Road') to help others in your area." }
         ]
       }
     ],
-    close: "Close Guide"
+    close: "Got it, let's explore!"
   },
   hi: {
-    title: "संपूर्ण प्लेटफ़ॉर्म फ़ीचर गाइड",
-    subtitle: "WeatherGPT की सभी उन्नत सुविधाएँ",
+    title: "WeatherGPT का उपयोग कैसे करें",
+    subtitle: "सभी सुविधाओं और क्षमताओं के लिए एक व्यापक मार्गदर्शिका",
     sections: [
       {
-        title: "🤖 1. स्मार्ट AI चैटबॉट (मुख्य फ़ीचर)",
+        title: "🌍 1. मूल बातें और भाषा चयन",
         items: [
-          { name: "बहुभाषी बातचीत", desc: "अंग्रेजी, हिंदी, बंगाली या असमिया में चैट करें। AI आपकी भाषा को समझकर सटीक उत्तर देता है।" },
-          { name: "आवाज़ समर्थन (Voice & TTS)", desc: "बोलकर सवाल पूछने के लिए माइक पर क्लिक करें। AI का जवाब सुनने के लिए स्पीकर आइकन दबाएं।" },
-          { name: "कॉन्टेक्स्ट-अवेयर मेमोरी", desc: "AI आपका स्थान और पिछले सवाल याद रखता है। आप 'कल का क्या?' पूछ सकते हैं और वह समझ जाएगा।" }
+          { name: "भाषा स्विच करें", desc: "शीर्ष नेविगेशन बार से अंग्रेजी, हिंदी, बंगाली या असमिया का चयन करें। पूरा इंटरफ़ेस, AI चैट और आवाज़ तुरंत बदल जाएगी।" },
+          { name: "गतिशील थीम", desc: "लाइव मौसम की स्थिति (जैसे, बारिश, साफ, आंधी) के आधार पर पृष्ठभूमि और UI रंग स्वचालित रूप से बदलते हैं।" },
+          { name: "ऑफ़लाइन मोड", desc: "यदि आपका इंटरनेट बंद हो जाता है, तो WeatherGPT सुरक्षित रूप से आपका अंतिम ज्ञात डेटा लोड करता है ताकि आपको जानकारी मिलती रहे।" }
         ]
       },
       {
-        title: "📊 2. उन्नत मौसम डैशबोर्ड",
+        title: "👨‍🌾 2. पेशे के अनुसार प्रोफाइल",
         items: [
-          { name: "लाइव हाइपर-लोकल डेटा", desc: "आपके GPS या खोजे गए शहर के आधार पर वास्तविक तापमान, हवा, और 'Feels Like' डेटा प्राप्त करता है।" },
-          { name: "प्रति घंटा और 7-दिन का पूर्वानुमान", desc: "आने वाले सप्ताह के सटीक मौसम विवरण को देखने के लिए इंटरैक्टिव ग्रिड।" },
-          { name: "इंटरैक्टिव रडार मैप्स", desc: "मैप पर लाइव बारिश, तापमान और हवा का बहाव देखें।" }
+          { name: "प्रोफाइल बदलें", desc: "सामान्य, किसान, मछुआरा, उड्डयन और शहरी योजनाकार के बीच स्विच करने के लिए शीर्ष दाईं ओर प्रोफाइल आइकन पर क्लिक करें।" },
+          { name: "अनुकूलित डेटा", desc: "आपकी प्रोफ़ाइल के आधार पर, AI प्रासंगिक डेटा को प्राथमिकता देगा (जैसे मछुआरों के लिए लहरों की ऊंचाई, किसानों के लिए मिट्टी की नमी, शहरी योजनाकारों के लिए AQI)।" },
+          { name: "कार्रवाई योग्य सलाह", desc: "विशिष्ट स्थितियों के आधार पर वास्तविक समय की सलाह प्राप्त करें, जैसे बारिश >10mm होने पर कीटनाशक स्प्रे से बचना।" }
         ]
       },
       {
-        title: "🎯 3. विशेषज्ञ हब (हमारा नया फ़ीचर)",
+        title: "🤖 3. AI चैट और वॉयस सुविधाएँ",
         items: [
-          { name: "किसान प्रोफ़ाइल", desc: "फसल कैलेंडर, मिट्टी की नमी, और बारिश के आधार पर कीटनाशक छिड़काव की सलाह।" },
-          { name: "मछुआरा प्रोफ़ाइल", desc: "समुद्री लहरों की ऊंचाई, ज्वार-भाटा (Tide), और सुरक्षित मछली पकड़ने के क्षेत्र दिखाता है।" },
-          { name: "विमानन और शहरी प्रोफ़ाइल", desc: "पायलटों के लिए दृश्यता अलर्ट; शहर योजनाकारों के लिए AQI अलर्ट।" }
+          { name: "कुछ भी पूछें", desc: "AI से मौसम संबंधी जटिल प्रश्न पूछने के लिए टाइप करें या माइक्रोफ़ोन का उपयोग करें। यह संदर्भ को समझता है।" },
+          { name: "आवाज़ (TTS)", desc: "किसी भी AI प्रतिक्रिया को अपनी चुनी हुई भाषा में ज़ोर से सुनने के लिए उसके बगल में स्थित प्ले बटन पर क्लिक करें।" },
+          { name: "लाइव डेटा इंटीग्रेशन", desc: "AI उत्तर देने से पहले स्वचालित रूप से रीयल-टाइम ओपन-मेटियो डेटा, NDMA अलर्ट और समुद्री पूर्वानुमान प्राप्त करता है।" }
         ]
       },
       {
-        title: "🧠 4. NWP मॉडल डायवर्जेंस (सुपरकंप्यूटर तुलना)",
+        title: "📊 4. डैशबोर्ड और कॉन्फिडेंस स्कोर",
         items: [
-          { name: "विश्व के शीर्ष 3 मॉडल", desc: "हम GFS, ICON, और ECMWF से डेटा की तुलना करते हैं।" },
-          { name: "डायवर्जेंस चेतावनी", desc: "यदि मॉडल आपस में असहमत हैं (एक बारिश कहता है, दूसरा सूखा), तो हम पूर्वानुमान में कम विश्वास की चेतावनी (Yellow Badge) देते हैं।" }
+          { name: "मल्टी-मॉडल NWP", desc: "हम 3 वैश्विक मॉडलों (GFS, ICON, ECMWF) से डेटा प्राप्त करते हैं। 'मॉडल्स एग्री' बैज उनकी सहमति के आधार पर उच्च/मध्यम/निम्न आत्मविश्वास दिखाता है।" },
+          { name: "रडार और मैप्स", desc: "वर्षा, तापमान और हवा के लिए रीयल-टाइम रडार ओवरले देखने के लिए मैप व्यू पर टॉगल करें।" },
+          { name: "हीट इंडेक्स", desc: "जब तापमान 27°C से अधिक हो जाता है, तो हम स्वचालित रूप से उन्नत NWS रोथफ्यूज़ समीकरण का उपयोग करके 'महसूस होता है' तापमान की गणना करते हैं।" }
         ]
       },
       {
-        title: "🚨 5. आपदा अलर्ट और ऑफ़लाइन मोड",
+        title: "🚨 5. आपदा अलर्ट और SOS",
         items: [
-          { name: "गंभीरता का पता लगाना", desc: "AI हीटवेव या बाढ़ के लिए पूर्वानुमान स्कैन करता है और रेड/येलो अलर्ट उत्पन्न करता है।" },
-          { name: "SMS ब्रॉडकास्ट (ऑफ़लाइन)", desc: "आपदा के दौरान इंटरनेट बंद होने पर, अधिकारियों द्वारा सीधे साधारण फोन पर SMS चेतावनी भेजी जा सकती है।" }
+          { name: "NDMA अलर्ट", desc: "हम हर 5 मिनट में सरकारी NDMA XML फ़ीड पोल करते हैं। चरम अलर्ट एक लाल बैनर और पुश अधिसूचना ट्रिगर करते हैं।" },
+          { name: "आपातकालीन SOS", desc: "आपदा प्रबंधन पोर्टल पर तुरंत अपने GPS निर्देशांक और एक फोटो भेजने के लिए लाल SOS बटन पर टैप करें।" },
+          { name: "SMS रजिस्ट्री", desc: "अपने जिले के आधार पर ऑफ़लाइन SMS चेतावनियां प्राप्त करने के लिए अलर्ट टैब में अपना फ़ोन नंबर दर्ज करें।" }
         ]
       },
       {
-        title: "🌍 6. सामुदायिक और अतिरिक्त सुविधाएँ",
+        title: "🛡️ 6. जवाबदेही और एनालिटिक्स",
         items: [
-          { name: "क्राउडसोर्स रिपोर्टिंग", desc: "उपयोगकर्ता अपने क्षेत्र के वास्तविक मौसम की रिपोर्ट कर सकते हैं।" },
-          { name: "ऐतिहासिक डेटा एनालिटिक्स", desc: "जलवायु परिवर्तन के रुझान को ट्रैक करने के लिए आज के मौसम की 10-वर्षीय ऐतिहासिक औसत से तुलना करें।" },
-          { name: "प्रोग्रेसिव वेब ऐप (PWA)", desc: "इस वेबसाइट को सीधे अपने फोन की होम स्क्रीन पर नेटिव ऐप की तरह इंस्टॉल करें।" }
+          { name: "AI एक्यूरेसी ट्रैकर", desc: "AI द्वारा किए गए प्रत्येक मात्रात्मक दावे (तापमान, बारिश%) को लॉग किया जाता है और अगले दिन वास्तविक ऐतिहासिक डेटा के खिलाफ सत्यापित किया जाता है।" },
+          { name: "ऐतिहासिक एनालिटिक्स", desc: "जलवायु प्रवृत्तियों को समझने के लिए 5 साल के मौसमी औसत के खिलाफ आज के मौसम की तुलना करें।" },
+          { name: "सामुदायिक रिपोर्ट", desc: "अपने क्षेत्र में दूसरों की मदद करने के लिए जमीनी स्तर की मौसम रिपोर्ट (जैसे, 'भारी बारिश', 'बाढ़ वाली सड़क') जमा करें।" }
         ]
       }
     ],
-    close: "गाइड बंद करें"
+    close: "समझ गया, आगे बढ़ें!"
   },
   bn: {
-    title: "সম্পূর্ণ প্ল্যাটফর্ম বৈশিষ্ট্য গাইড",
-    subtitle: "WeatherGPT এর সমস্ত উন্নত বৈশিষ্ট্য",
+    title: "কিভাবে WeatherGPT ব্যবহার করবেন",
+    subtitle: "সমস্ত বৈশিষ্ট্য এবং ক্ষমতার একটি বিস্তৃত নির্দেশিকা",
     sections: [
       {
-        title: "🤖 1. স্মার্ট এআই চ্যাটবট",
+        title: "🌍 ১. বেসিক এবং ভাষা নির্বাচন",
         items: [
-          { name: "বহুভাষিক কথোপকথন", desc: "ইংরেজি, হিন্দি, বাংলা বা অসমীয়া ভাষায় চ্যাট করুন।" },
-          { name: "ভয়েস সাপোর্ট (TTS)", desc: "কথা বলতে মাইক ক্লিক করুন এবং এআই এর উত্তর শুনতে স্পিকার আইকন টিপুন।" },
-          { name: "প্রসঙ্গ-সচেতন মেমরি", desc: "এআই আপনার অবস্থান এবং পূর্ববর্তী প্রশ্ন মনে রাখে।" }
+          { name: "ভাষা পরিবর্তন", desc: "শীর্ষ নেভিগেশন বার থেকে ইংরেজি, হিন্দি, বাংলা বা অসমিয়া নির্বাচন করুন। সম্পূর্ণ ইন্টারফেস, এআই চ্যাট এবং ভয়েস তাত্ক্ষণিকভাবে পরিবর্তিত হবে।" },
+          { name: "ডায়নামিক থিম", desc: "লাইভ আবহাওয়ার অবস্থার উপর ভিত্তি করে ব্যাকগ্রাউন্ড এবং ইউআই রঙ স্বয়ংক্রিয়ভাবে পরিবর্তিত হয় (যেমন, বৃষ্টি, পরিষ্কার, বজ্রঝড়)।" },
+          { name: "অফলাইন মোড", desc: "যদি ইন্টারনেট সংযোগ বিচ্ছিন্ন হয়, WeatherGPT নিরাপদে আপনার সর্বশেষ পরিচিত ডেটা লোড করে।" }
         ]
       },
       {
-        title: "📊 2. উন্নত আবহাওয়া ড্যাশবোর্ড",
+        title: "👨‍🌾 ২. পেশা প্রোফাইল",
         items: [
-          { name: "লাইভ হাইপার-লোকাল ডেটা", desc: "রিয়েল-টাইম তাপমাত্রা, আর্দ্রতা এবং বাতাসের গতি।" },
-          { name: "ঘণ্টা এবং ৭ দিনের পূর্বাভাস", desc: "আগামী সপ্তাহের সুনির্দিষ্ট আবহাওয়া ব্রেকডাউন।" },
-          { name: "ইন্টারেক্টিভ রাডার ম্যাপ", desc: "সরাসরি মানচিত্রে বৃষ্টিপাত এবং বায়ু প্রবাহ দেখুন।" }
+          { name: "প্রোফাইল পরিবর্তন", desc: "সাধারণ, কৃষক, জেলে, বিমান চলাচল এবং নগর পরিকল্পনাকারীর মধ্যে পরিবর্তন করতে উপরের ডানদিকে প্রোফাইল আইকনে ক্লিক করুন।" },
+          { name: "উপযুক্ত ডেটা", desc: "আপনার প্রোফাইলের উপর ভিত্তি করে, এআই প্রাসঙ্গিক ডেটাকে অগ্রাধিকার দেবে (যেমন জেলেদের জন্য ঢেউয়ের উচ্চতা, কৃষকদের জন্য মাটির আর্দ্রতা)।" },
+          { name: "সক্রিয় পরামর্শ", desc: "বৃষ্টিপাত >১০ মিমি হলে কীটনাশক স্প্রে এড়ানো বা ভারী কুয়াশায় পরিবহন বিলম্বিত করার মতো নির্দিষ্ট অবস্থার ভিত্তিতে রিয়েল-টাইম পরামর্শ পান।" }
         ]
       },
       {
-        title: "🎯 3. বিশেষজ্ঞ হাব (Hubs)",
+        title: "🤖 ৩. এআই চ্যাট এবং ভয়েস বৈশিষ্ট্য",
         items: [
-          { name: "কৃষক প্রোফাইল", desc: "বৃষ্টির পূর্বাভাসের উপর ভিত্তি করে ফসল এবং কীটনাশক স্প্রে করার পরামর্শ।" },
-          { name: "জেলে প্রোফাইল", desc: "সামুদ্রিক ঢেউ, জোয়ারের চার্ট এবং মাছ ধরার নিরাপদ অঞ্চল।" }
+          { name: "যেকোনো কিছু জিজ্ঞাসা করুন", desc: "এআই-কে আবহাওয়া সম্পর্কিত জটিল প্রশ্ন জিজ্ঞাসা করতে টাইপ করুন বা মাইক্রোফোন ব্যবহার করুন।" },
+          { name: "ভয়েস (TTS)", desc: "আপনার নির্বাচিত ভাষায় উত্তরটি জোরে শুনতে যেকোনো এআই প্রতিক্রিয়ার পাশের প্লে বোতামে ক্লিক করুন।" },
+          { name: "লাইভ ডেটা ইন্টিগ্রেশন", desc: "এআই উত্তর দেওয়ার আগে স্বয়ংক্রিয়ভাবে রিয়েল-টাইম ওপেন-মেটিও ডেটা, NDMA সতর্কতা এবং সামুদ্রিক পূর্বাভাস নিয়ে আসে।" }
         ]
       },
       {
-        title: "🧠 4. NWP মডেল ডাইভারজেন্স",
+        title: "📊 ৪. ড্যাশবোর্ড এবং কনফিডেন্স স্কোর",
         items: [
-          { name: "সুপারকম্পিউটার তুলনা", desc: "আমরা GFS, ICON এবং ECMWF মডেলের তুলনা করি।" },
-          { name: "ডাইভারজেন্স সতর্কতা", desc: "মডেলগুলি একমত না হলে আমরা একটি সতর্কতা দেখাই।" }
+          { name: "মাল্টি-মডেল NWP", desc: "আমরা ৩টি গ্লোবাল মডেল (GFS, ICON, ECMWF) থেকে ডেটা নিয়ে আসি। 'মডেলস এগ্রি' ব্যাজ তাদের ঐকমত্যের ভিত্তিতে উচ্চ/মাঝারি/নিম্ন আত্মবিশ্বাস দেখায়।" },
+          { name: "রাডার এবং ম্যাপ", desc: "বৃষ্টিপাত, তাপমাত্রা এবং বাতাসের জন্য রিয়েল-টাইম রাডার দেখতে ম্যাপ ভিউতে টগল করুন।" },
+          { name: "হিট ইনডেক্স", desc: "তাপমাত্রা ২৭°C এর বেশি হলে, আমরা উন্নত NWS Rothfusz সমীকরণ ব্যবহার করে স্বয়ংক্রিয়ভাবে 'ফিলস লাইক' তাপমাত্রা গণনা করি।" }
         ]
       },
       {
-        title: "🚨 5. বিপর্যয় সতর্কতা এবং অফলাইন মোড",
+        title: "🚨 ৫. দুর্যোগ সতর্কতা এবং SOS",
         items: [
-          { name: "তীব্রতা সনাক্তকরণ", desc: "তাপপ্রবাহ বা বন্যার জন্য রেড/ইয়েলো অ্যালার্ট।" },
-          { name: "এসএমএস সম্প্রচার", desc: "ইন্টারনেট না থাকলেও সাধারণ ফোনে সরাসরি এসএমএস সতর্কতা পাঠানো।" }
+          { name: "NDMA সতর্কতা", desc: "আমরা প্রতি ৫ মিনিটে সরকারি NDMA এক্সএমএল ফিড পোল করি। চরম সতর্কতা একটি লাল ব্যানার ট্রিগার করে।" },
+          { name: "জরুরী SOS", desc: "দুর্যোগ ব্যবস্থাপনা পোর্টালে আপনার জিপিএস স্থানাঙ্ক এবং একটি ছবি অবিলম্বে পাঠাতে লাল SOS বোতামে ট্যাপ করুন।" },
+          { name: "SMS রেজিস্ট্রি", desc: "আপনার জেলার উপর ভিত্তি করে অফলাইন SMS সতর্কতা পেতে সতর্কতা ট্যাবে আপনার ফোন নম্বর নিবন্ধন করুন।" }
         ]
       },
       {
-        title: "🌍 6. অতিরিক্ত বৈশিষ্ট্য",
+        title: "🛡️ ৬. জবাবদিহিতা এবং বিশ্লেষণ",
         items: [
-          { name: "ক্রাউডসোর্স রিপোর্টিং", desc: "ব্যবহারকারীরা স্থানীয় আবহাওয়ার রিপোর্ট করতে পারেন।" },
-          { name: "ঐতিহাসিক বিশ্লেষণ", desc: "১০ বছরের ঐতিহাসিক গড়ের সাথে আজকের আবহাওয়ার তুলনা।" }
+          { name: "এআই অ্যাকুরেসি ট্র্যাকার", desc: "এআই দ্বারা করা প্রতিটি পরিমাণগত দাবি (তাপমাত্রা, বৃষ্টিপাত%) লগ করা হয় এবং পরের দিন প্রকৃত ঐতিহাসিক ডেটার বিরুদ্ধে যাচাই করা হয়।" },
+          { name: "ঐতিহাসিক বিশ্লেষণ", desc: "জলবায়ুর প্রবণতা বুঝতে ৫ বছরের মৌসুমী গড়ের বিপরীতে আজকের আবহাওয়ার তুলনা করুন।" },
+          { name: "কমিউনিটি রিপোর্ট", desc: "আপনার এলাকার অন্যদের সাহায্য করার জন্য গ্রাউন্ড-ট্রুথ আবহাওয়া প্রতিবেদন (যেমন, 'ভারী বৃষ্টি', 'প্লাবিত রাস্তা') জমা দিন।" }
         ]
       }
     ],
-    close: "গাইড বন্ধ করুন"
+    close: "বুঝেছি, শুরু করা যাক!"
   },
   as: {
-    title: "সম্পূৰ্ণ প্লেটফৰ্ম বৈশিষ্ট্য গাইড",
-    subtitle: "WeatherGPT ৰ সকলো উন্নত বৈশিষ্ট্য",
+    title: "WeatherGPT কেনেকৈ ব্যৱহাৰ কৰিব",
+    subtitle: "সকলো বৈশিষ্ট্য আৰু ক্ষমতাৰ এক বিস্তৃত নিৰ্দেশিকা",
     sections: [
       {
-        title: "🤖 1. স্মাৰ্ট এআই চাটবট",
+        title: "🌍 ১. বেসিক আৰু ভাষা নিৰ্বাচন",
         items: [
-          { name: "বহুভাষিক কথা-বতৰা", desc: "ইংৰাজী, হিন্দী, বাংলা বা অসমীয়াত চাট কৰক।" },
-          { name: "ভয়েচ সমৰ্থন (TTS)", desc: "কথা পাতিবলৈ মাইক ক্লিক কৰক আৰু উত্তৰ শুনিবলৈ স্পীকাৰ আইকন টিপক।" },
-          { name: "প্ৰসংগ-সচেতন মেমৰি", desc: "এআইয়ে আপোনাৰ অৱস্থান আৰু পূৰ্বৱৰ্তী প্ৰশ্ন মনত ৰাখে।" }
+          { name: "ভাষা সলনি কৰক", desc: "শীৰ্ষ নেভিগেচন বাৰৰ পৰা ইংৰাজী, হিন্দী, বঙালী বা অসমীয়া নিৰ্বাচন কৰক। সমগ্ৰ ইন্টাৰফেচ, এআই চেট আৰু ভয়েচ লগে লগে সলনি হ'ব।" },
+          { name: "ডাইনামিক থিম", desc: "লাইভ বতৰৰ অৱস্থাৰ ওপৰত ভিত্তি কৰি বেকগ্ৰাউণ্ড আৰু ইউআই ৰং স্বয়ংক্ৰিয়ভাৱে সলনি হয় (যেনে, বৰষুণ, পৰিষ্কাৰ, ধুমুহা)।" },
+          { name: "অফলাইন মোড", desc: "যদি আপোনাৰ ইন্টাৰনেট সংযোগ বিচ্ছিন্ন হয়, WeatherGPT সুৰক্ষিতভাৱে আপোনাৰ শেহতীয়া জনা ডাটা লোড কৰে।" }
         ]
       },
       {
-        title: "📊 2. উন্নত বতৰ ডেশ্ববোৰ্ড",
+        title: "👨‍🌾 ২. পেচা প্ৰোফাইল",
         items: [
-          { name: "লাইভ হাইপাৰ-লোকেল ডেটা", desc: "ৰিয়েল-টাইম উষ্ণতা, আৰ্দ্ৰতা আৰু বতাহৰ গতি।" },
-          { name: "ঘণ্টা আৰু ৭ দিনৰ পূৰ্বানুমান", desc: "অহা সপ্তাহৰ নিৰ্দিষ্ট বতৰৰ ব্ৰেকডাউন।" },
-          { name: "ইণ্টাৰেক্টিভ ৰাডাৰ মেপ", desc: "সরাসৰি মানচিত্ৰত বৰষুণ আৰু বতাহৰ প্ৰবাহ চাওক।" }
+          { name: "প্ৰোফাইল সলনি কৰক", desc: "সাধাৰণ, কৃষক, মৎস্যজীবী, বিমান চলাচল আৰু নগৰ পৰিকল্পনাকাৰীৰ মাজত সলনি কৰিবলৈ ওপৰৰ সোঁফালে প্ৰোফাইল আইকনত ক্লিক কৰক।" },
+          { name: "উপযুক্ত ডাটা", desc: "আপোনাৰ প্ৰোফাইলৰ ওপৰত ভিত্তি কৰি, এআইয়ে প্ৰাসংগিক ডাটাক অগ্ৰাধিকাৰ দিব (যেনে মৎস্যজীবীসকলৰ বাবে ঢৌৰ উচ্চতা, কৃষকসকলৰ বাবে মাটিৰ আৰ্দ্ৰতা)।" },
+          { name: "সক্ৰিয় পৰামৰ্শ", desc: "বৰষুণ >১০ মিমি হ'লে কীটনাশক স্প্ৰে এৰাই চলা বা ডাঠ কুঁৱলীত পৰিবহন পলম কৰা আদি নিৰ্দিষ্ট অৱস্থাৰ ভিত্তিত ৰিয়েল-টাইম পৰামৰ্শ পাওক।" }
         ]
       },
       {
-        title: "🎯 3. বিশেষজ্ঞ হাব (Hubs)",
+        title: "🤖 ৩. এআই চেট আৰু ভয়েচ বৈশিষ্ট্য",
         items: [
-          { name: "কৃষক প্ৰোফাইল", desc: "বৰষুণৰ পূৰ্বানুমানৰ ওপৰত ভিত্তি কৰি শস্য আৰু কীটনাশক স্প্ৰে কৰাৰ পৰামৰ্শ।" },
-          { name: "মাছমৰীয়া প্ৰোফাইল", desc: "সামুদ্ৰিক ঢৌ, জোৱাৰৰ চাৰ্ট আৰু মাছ ধৰাৰ নিৰাপদ অঞ্চল।" }
+          { name: "যিকোনো কথা সোধক", desc: "এআই-ক বতৰ সম্পৰ্কীয় জটিল প্ৰশ্ন সুধিবলৈ টাইপ কৰক বা মাইক্ৰ'ফোন ব্যৱহাৰ কৰক।" },
+          { name: "ভয়েচ (TTS)", desc: "আপোনাৰ নিৰ্বাচিত ভাষাত উত্তৰটো ডাঙৰকৈ শুনিবলৈ যিকোনো এআই সঁহাৰিৰ কাষৰ প্লে বুটামত ক্লিক কৰক।" },
+          { name: "লাইভ ডাটা একত্ৰীকৰণ", desc: "এআইয়ে উত্তৰ দিয়াৰ আগতে স্বয়ংক্ৰিয়ভাৱে ৰিয়েল-টাইম অ'পেন-মেটিঅ' ডাটা, NDMA সতৰ্কবাণী আৰু সামুদ্ৰিক আগজাননী লৈ আহে।" }
         ]
       },
       {
-        title: "🧠 4. NWP মডেল ডাইভাৰজেন্স",
+        title: "📊 ৪. ডেশ্ববৰ্ড আৰু কনফিডেন্স স্ক'ৰ",
         items: [
-          { name: "চুপাৰকম্পিউটাৰ তুলনা", desc: "আমি GFS, ICON আৰু ECMWF মডেল তুলনা কৰোঁ।" },
-          { name: "ডাইভাৰজেন্স সতৰ্কতা", desc: "মডেলসমূহ একমত নহ'লে আমি এক সতৰ্কতা দেখুৱাওঁ।" }
+          { name: "মাল্টি-মডেল NWP", desc: "আমি ৩টা গ্লোবেল মডেল (GFS, ICON, ECMWF) ৰ পৰা ডাটা লৈ আহো। 'মডেলছ এগ্ৰী' বেজে তেওঁলোকৰ ঐকমত্যৰ ভিত্তিত উচ্চ/মজলীয়া/নিম্ন আত্মবিশ্বাস দেখুৱায়।" },
+          { name: "ৰাডাৰ আৰু মেপ", desc: "বৰষুণ, তাপমাত্ৰা আৰু বতাহৰ বাবে ৰিয়েল-টাইম ৰাডাৰ চাবলৈ মেপ ভিউলৈ টগল কৰক।" },
+          { name: "হিট ইনডেক্স", desc: "তাপমাত্ৰা ২৭°C ৰ বেছি হ'লে, আমি উন্নত NWS Rothfusz সমীকৰণ ব্যৱহাৰ কৰি স্বয়ংক্ৰিয়ভাৱে 'ফিলছ লাইক' তাপমাত্ৰা গণনা কৰো।" }
         ]
       },
       {
-        title: "🚨 5. দুৰ্যোগ সতৰ্কতা আৰু অফলাইন মোড",
+        title: "🚨 ৫. দুৰ্যোগ সতৰ্কবাণী আৰু SOS",
         items: [
-          { name: "তীব্ৰতা চিনাক্তকৰণ", desc: "তাপপ্ৰবাহ বা বানপানীৰ বাবে ৰেড/ইয়েলো এলাৰ্ট।" },
-          { name: "এছএমএছ সম্প্ৰচাৰ", desc: "ইণ্টাৰনেট নাথাকিলেও সাধাৰণ ফোনলৈ পোনে পোনে এছএমএছ সতৰ্কতা পঠোৱা।" }
+          { name: "NDMA সতৰ্কবাণী", desc: "আমি প্ৰতি ৫ মিনিটত চৰকাৰী NDMA এক্সএমএল ফিড প'ল কৰো। চৰম সতৰ্কবাণীয়ে এটা ৰঙা বেনাৰ ট্ৰিগাৰ কৰে।" },
+          { name: "জৰুৰীকালীন SOS", desc: "দুৰ্যোগ ব্যৱস্থাপনা পৰ্টেললৈ আপোনাৰ জিপিএছ স্থানাংক আৰু এখন ফটো লগে লগে পঠিয়াবলৈ ৰঙা SOS বুটামত টেপ কৰক।" },
+          { name: "SMS ৰেজিষ্ট্ৰী", desc: "আপোনাৰ জিলাৰ ওপৰত ভিত্তি কৰি অফলাইন SMS সতৰ্কবাণী পাবলৈ এলাৰ্ট টেবত আপোনাৰ ফোন নম্বৰ পঞ্জীয়ন কৰক।" }
         ]
       },
       {
-        title: "🌍 6. অতিৰিক্ত বৈশিষ্ট্য",
+        title: "🛡️ ৬. জবাবদিহিতা আৰু বিশ্লেষণ",
         items: [
-          { name: "ক্ৰাউডচ'ৰ্চ ৰিপৰ্টিং", desc: "ব্যৱহাৰকাৰীয়ে স্থানীয় বতৰৰ ৰিপৰ্ট কৰিব পাৰে।" },
-          { name: "ঐতিহাসিক বিশ্লেষণ", desc: "১০ বছৰৰ ঐতিহাসিক গড়ৰ সৈতে আজিৰ বতৰৰ তুলনা।" }
+          { name: "এআই একিউৰেচি ট্ৰেকাৰ", desc: "এআইয়ে কৰা প্ৰতিটো পৰিমাণগত দাবী (তাপমাত্ৰা, বৰষুণ%) লগ কৰা হয় আৰু পিছদিনা প্ৰকৃত ঐতিহাসিক ডাটাৰ বিৰুদ্ধে পৰীক্ষা কৰা হয়।" },
+          { name: "ঐতিহাসিক বিশ্লেষণ", desc: "জলবায়ুৰ প্ৰৱণতা বুজিবলৈ ৫ বছৰৰ বতৰৰ গড়ৰ বিপৰীতে আজিৰ বতৰৰ তুলনা কৰক।" },
+          { name: "কমিউনিটি ৰিপ'ৰ্ট", desc: "আপোনাৰ অঞ্চলৰ আন লোকসকলক সহায় কৰিবলৈ গ্ৰাউণ্ড-ট্ৰুথ বতৰৰ ৰিপ'ৰ্ট (যেনে, 'ধাৰাষাৰ বৰষুণ', 'বানপানী হোৱা ৰাস্তা') জমা দিয়ক।" }
         ]
       }
     ],
-    close: "গাইড বন্ধ কৰক"
+    close: "বুজিছো, আগবাঢ়ক!"
   }
 };
 
@@ -225,7 +237,7 @@ export default function UserGuideModal({ isOpen, onClose }) {
       <div className="relative bg-transparent border border-white/10 rounded-[2rem] w-full max-w-5xl shadow-[0_0_50px_rgba(0,0,0,0.8)] animate-scale-up my-auto overflow-hidden flex flex-col">
         
         {/* Sticky Header */}
-        <div className="sticky top-0 bg-transparent/95  border-b border-white/10 px-6 py-5 flex justify-between items-center z-10">
+        <div className="sticky top-0 bg-transparent/95 border-b border-white/10 px-6 py-5 flex justify-between items-center z-10">
           <div>
             <h2 className="text-2xl sm:text-3xl font-bold text-white flex items-center gap-3">
               <span className="text-blue-500">📖</span>
@@ -280,4 +292,5 @@ export default function UserGuideModal({ isOpen, onClose }) {
 
       </div>
     </div>
-  , document.body); }
+  , document.body); 
+}

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { LANGUAGES } from '../utils/constants';
 import { WEATHER_THEMES } from '../utils/themes';
+import { EXTRA_I18N } from '../utils/translationsExtra';
 
 const PROFILES = [
   { code: 'general', label: 'General / सामान्य', icon: '🌍' },
@@ -15,6 +16,7 @@ export default function Onboarding() {
   const { state, dispatch } = useApp();
   const theme = WEATHER_THEMES.clear;
   const [step, setStep] = useState(1);
+  const t = EXTRA_I18N[state.language] || EXTRA_I18N.en;
   
   return (
     <div className="min-h-[100dvh] flex flex-col items-center justify-center p-6 bg-transparent relative transition-colors duration-1000">
@@ -33,9 +35,7 @@ export default function Onboarding() {
       <div className="w-full max-w-sm flex flex-col items-center animate-fade-in relative z-10 space-y-8">
         
         {/* Logo / Icon */}
-        <div className="w-24 h-24 bg-gradient-to-tr from-blue-500 to-purple-500 rounded-3xl flex items-center justify-center shadow-[0_0_40px_rgba(59,130,246,0.6)]">
-          <span className="text-white text-5xl font-bold">W</span>
-        </div>
+        <img src="/logo.png" alt="WeatherGPT Logo" className="w-24 h-24 rounded-3xl object-cover shadow-[0_0_40px_rgba(59,130,246,0.6)]" />
 
         {/* Text */}
         <div className="text-center space-y-3">
@@ -84,9 +84,9 @@ export default function Onboarding() {
         {step === 3 && (
           <div className="glass-panel border border-white/10 text-white p-6 rounded-2xl shadow-xl flex flex-col gap-4 text-center animate-fade-in w-full">
             <span className="text-5xl mb-2">🌍</span>
-            <h2 className="text-2xl font-bold">Ask in Your Language</h2>
+            <h2 className="text-2xl font-bold">{t.onboardingAskLangTitle || 'Ask in Your Language'}</h2>
             <p className="text-white/80 text-[15px] leading-relaxed">
-              Speak or type freely in English, Hindi, Bengali, or Assamese. Tap the <strong>microphone</strong> to talk, and the <strong>play icon</strong> to hear the forecast read aloud.
+              {t.onboardingAskLangDesc || 'Speak or type freely in English, Hindi, Bengali, or Assamese. Tap the microphone to talk, and the play icon to hear the forecast read aloud.'}
             </p>
             <button onClick={() => setStep(4)} className="mt-4 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 py-3.5 px-6 rounded-xl font-semibold transition-colors shadow-lg">Next</button>
           </div>
@@ -94,9 +94,9 @@ export default function Onboarding() {
         {step === 4 && (
           <div className="glass-panel border border-white/10 text-white p-6 rounded-2xl shadow-xl flex flex-col gap-4 text-center animate-fade-in w-full">
             <span className="text-5xl mb-2">🧠</span>
-            <h2 className="text-2xl font-bold">Smart Insights</h2>
+            <h2 className="text-2xl font-bold">{t.onboardingInsightsTitle || 'Smart Insights'}</h2>
             <p className="text-white/80 text-[15px] leading-relaxed">
-              Look for the <strong>Heat Index ⓘ</strong> to know how hot it <em>actually</em> feels, and the <strong>Models Agree ⓘ</strong> badge to see how reliable the forecast is based on supercomputer consensus.
+              {t.onboardingInsightsDesc || 'Look for the Heat Index to know how hot it actually feels, and the Models Agree badge to see how reliable the forecast is based on supercomputer consensus.'}
             </p>
             <button onClick={() => dispatch({ type: 'SET_ONBOARDED' })} className="mt-4 bg-emerald-500 hover:bg-emerald-600 py-3.5 px-6 rounded-xl font-semibold transition-colors shadow-lg">Get Started</button>
           </div>
