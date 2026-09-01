@@ -94,6 +94,28 @@ const smsLogSchema = new mongoose.Schema({
   sentAt: { type: Date, default: Date.now }
 });
 
+const reviewSchema = new mongoose.Schema({
+  id: { type: String },
+  name: { type: String, required: true },
+  text: { type: String, required: true },
+  rating: { type: Number, required: true },
+  accuracyRating: { type: Number },
+  easeRating: { type: Number },
+  date: { type: String },
+  helpful: { type: Number, default: 0 },
+  createdAt: { type: Date, default: Date.now }
+});
+
+const userSettingSchema = new mongoose.Schema({
+  userId: { type: String, required: true, unique: true },
+  theme: { type: String, default: 'dark' },
+  language: { type: String, default: 'en' },
+  isOnboarded: { type: Boolean, default: false },
+  isLargeText: { type: Boolean, default: false },
+  isHighContrast: { type: Boolean, default: false },
+  userProfile: { type: String, default: 'general' }
+});
+
 export const Alert = mongoose.model('Alert', alertSchema);
 export const Snapshot = mongoose.model('Snapshot', snapshotSchema);
 export const AccuracyLog = mongoose.model('AccuracyLog', accuracyLogSchema);
@@ -101,3 +123,5 @@ export const SosRequest = mongoose.model('SosRequest', sosSchema);
 export const CommunityReport = mongoose.model('CommunityReport', communityReportSchema);
 export const SmsRecipient = mongoose.model('SmsRecipient', smsRecipientSchema);
 export const SmsLog = mongoose.model('SmsLog', smsLogSchema);
+export const Review = mongoose.model('Review', reviewSchema);
+export const UserSetting = mongoose.model('UserSetting', userSettingSchema);

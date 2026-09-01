@@ -181,7 +181,7 @@ graph TD
 
 ```mermaid
 graph LR
-    Profile["User Profile (localStorage)"] --> Farmer["🌾 Farmer"]
+    Profile["User Profile (MongoDB UserSetting)"] --> Farmer["🌾 Farmer"]
     Profile --> Fisher["🛥️ Fisherman"]
     Profile --> Air["✈️ Aviation"]
     Profile --> City["🏙️ Urban Planner"]
@@ -254,9 +254,9 @@ $$ HI = -42.379 + 2.049T + 10.143R - 0.224TR - 0.006T^2 - 0.054R^2 + 0.001T^2R +
 
 ### 2.10 Database Schemas & State Management
 
-**MongoDB Collections:** `Alert`, `Snapshot`, `AccuracyLog`, `SosRequest`, `CommunityReport`, `SmsRecipient`, `SmsLog`. (Gracefully falls back to local JSON files if Atlas is unreachable).
+**MongoDB Collections:** `Alert`, `Snapshot`, `AccuracyLog`, `SosRequest`, `CommunityReport`, `SmsRecipient`, `SmsLog`, `Review`, `UserSetting`. (Gracefully falls back to local JSON files if Atlas is unreachable).
 
-**React State:** `AppContext.jsx` uses `useReducer` + `localStorage` for 17 actions (caching weather data, theme, language, and accessibility modes).
+**React State:** `AppContext.jsx` uses `useReducer` for managing 17 actions internally and uses a silent, asynchronous sync to the MongoDB backend to persistently save user preferences (theme, language, onboarding, and accessibility modes).
 
 ---
 

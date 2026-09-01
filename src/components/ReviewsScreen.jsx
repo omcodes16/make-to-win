@@ -7,7 +7,8 @@ import Header from './Header';
 // Replace this with your actual npoint JSON bin URL
 // It should return an array of review objects: [{ id, name, rating, text, date, helpful }]
 // ----------------------------------------------------------------------------
-const NPOINT_API_URL = 'https://api.npoint.io/e6aa544b3fe9a473d014'; 
+// API Endpoint
+const API_URL = '/api/reviews'; 
 
 export default function ReviewsScreen() {
   const { state } = useApp();
@@ -29,22 +30,19 @@ export default function ReviewsScreen() {
   const [likedReviews, setLikedReviews] = useState([]);
 
   useEffect(() => {
-    // Fetch reviews from npoint API
     const fetchReviews = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch(NPOINT_API_URL);
+        const response = await fetch(API_URL);
         if (response.ok) {
           const data = await response.json();
-          // If npoint is empty or invalid, fallback to empty array
           setReviews(Array.isArray(data) ? data : []);
         } else {
-          throw new Error('Failed to fetch from npoint');
+          throw new Error('Failed to fetch from backend');
         }
       } catch (err) {
-        console.warn('Using fallback local storage due to Npoint API error.');
-        const local = JSON.parse(localStorage.getItem('weathergpt-reviews') || 'null');
-        setReviews(local || []);
+        console.error('Using fallback empty reviews due to API error.', err);
+        setReviews([]);
       } finally {
         setIsLoading(false);
       }
@@ -55,21 +53,20 @@ export default function ReviewsScreen() {
   const handleHelpful = async (reviewId) => {
     if (likedReviews.includes(reviewId)) return;
 
-    const updatedReviews = reviews.map(r => 
-      r.id === reviewId ? { ...r, helpful: (r.helpful || 0) + 1 } : r
-    );
+    const reviewToUpdate = reviews.find(r => r.id === reviewId);
+    if (!reviewToUpdate) return;
+    const updatedReview = { ...reviewToUpdate, helpful: (reviewToUpdate.helpful || 0) + 1 };
     
     // Optimistic UI update
-    setReviews(updatedReviews);
+    setReviews(reviews.map(r => r.id === reviewId ? updatedReview : r));
     setLikedReviews([...likedReviews, reviewId]);
 
     try {
-      await fetch(NPOINT_API_URL, {
+      await fetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedReviews)
+        body: JSON.stringify(updatedReview)
       });
-      localStorage.setItem('weathergpt-reviews', JSON.stringify(updatedReviews));
     } catch (err) {
       console.error('Failed to save helpful count to DB', err);
     }
@@ -81,39 +78,30 @@ export default function ReviewsScreen() {
 
     setIsSubmitting(true);
     const newReview = {
-      id: Date.now(),
+      id: Date.now().toString(),
       name: userName.trim(),
       rating,
-      accuracy: accuracyRating,
-      easeOfUse: easeRating,
+      accuracyRating,
+      easeRating,
       text: reviewText.trim(),
       date: 'Just now',
-      helpful: 0,
-      tags: ['New']
+      helpful: 0
     };
 
     const updatedReviews = [newReview, ...reviews];
+    setReviews(updatedReviews);
     
     try {
-      // Save to npoint API
-      await fetch(NPOINT_API_URL, {
-        method: 'POST', // Note: Npoint uses POST to update the entire JSON bin
+      await fetch(API_URL, {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedReviews)
+        body: JSON.stringify(newReview)
       });
-      setReviews(updatedReviews);
-      localStorage.setItem('weathergpt-reviews', JSON.stringify(updatedReviews));
       setRating(0); setAccuracyRating(0); setEaseRating(0);
       setReviewText('');
       setUserName('');
     } catch (err) {
       console.error('Failed to submit review', err);
-      // Fallback local save
-      setReviews(updatedReviews);
-      localStorage.setItem('weathergpt-reviews', JSON.stringify(updatedReviews));
-      setRating(0); setAccuracyRating(0); setEaseRating(0);
-      setReviewText('');
-      setUserName('');
     } finally {
       setIsSubmitting(false);
     }

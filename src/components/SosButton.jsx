@@ -159,7 +159,7 @@ export default function SosButton() {
                 <div className="pt-2">
                   <label className="text-xs text-white/60 block mb-1">Required Help Category *</label>
                   <select value={form.helpType} onChange={e => setForm({...form, helpType: e.target.value})} className="w-full bg-white/10 border border-white/20 rounded-lg p-2.5 text-sm focus:outline-none focus:border-red-500 text-white font-medium">
-                    {helpCategories.map(cat => <option key={cat} value={cat} className="bg-gray-900">{cat}</option>)}
+                    {helpCategories.map(cat => <option key={cat} value={cat} className="bg-gray-900 text-white">{cat}</option>)}
                   </select>
                 </div>
 
@@ -172,22 +172,22 @@ export default function SosButton() {
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className="text-xs text-white/60 block mb-1">Your Name</label>
-                    <input type="text" value={form.name} onChange={e => setForm({...form, name: e.target.value})} placeholder="Optional" className="w-full bg-white/10 border border-white/20 rounded-lg p-2 text-sm focus:outline-none focus:border-red-500" />
+                    <input type="text" value={form.name} onChange={e => setForm({...form, name: e.target.value})} placeholder="Optional" className="w-full bg-white/10 border border-white/20 rounded-lg p-2 text-sm focus:outline-none focus:border-red-500 text-white placeholder-white/40" />
                   </div>
                   <div>
                     <label className="text-xs text-white/60 block mb-1">Phone Number</label>
-                    <input type="tel" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} placeholder="Optional" className="w-full bg-white/10 border border-white/20 rounded-lg p-2 text-sm focus:outline-none focus:border-red-500" />
+                    <input type="tel" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} placeholder="Optional" className="w-full bg-white/10 border border-white/20 rounded-lg p-2 text-sm focus:outline-none focus:border-red-500 text-white placeholder-white/40" />
                   </div>
                 </div>
 
                 <div>
                   <label className="text-xs text-white/60 block mb-1">Additional Details (Optional)</label>
-                  <textarea value={form.message} onChange={e => setForm({...form, message: e.target.value})} placeholder="e.g. 3 people trapped on roof" rows={2} className="w-full bg-white/10 border border-white/20 rounded-lg p-2.5 text-sm focus:outline-none focus:border-red-500 resize-none" />
+                  <textarea value={form.message} onChange={e => setForm({...form, message: e.target.value})} placeholder="e.g. 3 people trapped on roof" rows={2} className="w-full bg-white/10 border border-white/20 rounded-lg p-2.5 text-sm focus:outline-none focus:border-red-500 resize-none text-white placeholder-white/40" />
                 </div>
                 
                 <div className="flex gap-3 pt-2">
-                  <button type="button" onClick={reset} className="flex-1 py-3 bg-white/10 hover:bg-white/20 rounded-lg font-medium transition-colors text-sm">Cancel</button>
-                  <button type="submit" className="flex-1 py-3 bg-red-600 hover:bg-red-700 rounded-lg font-bold text-sm transition-colors shadow-lg shadow-red-900/50">📍 Share Location & Send</button>
+                  <button type="button" onClick={reset} className="flex-1 py-3 bg-white/10 hover:bg-white/20 rounded-lg font-medium transition-colors text-sm text-white">Cancel</button>
+                  <button type="submit" className="flex-1 py-3 bg-red-600 hover:bg-red-700 rounded-lg font-bold text-sm transition-colors shadow-lg shadow-red-900/50 text-white">📍 Share Location & Send</button>
                 </div>
               </form>
             )}

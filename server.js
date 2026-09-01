@@ -45,7 +45,7 @@ import {
 } from './server/tools.js';
 
 import mongoose from 'mongoose';
-import { Alert, Snapshot, AccuracyLog, SosRequest, CommunityReport, SmsRecipient, SmsLog } from './server/models.js';
+import { Alert, Snapshot, AccuracyLog, SosRequest, CommunityReport, SmsRecipient, SmsLog, Review, UserSetting } from './server/models.js';
 
 export let USE_MONGODB = false;
 if (process.env.MONGODB_URI) {
@@ -260,6 +260,71 @@ export let smsRecipientsFallback = [
   { id: 'sim7', phone: '+914321098765', name: 'John Doe', district: 'Kamrup', state: 'Assam', language: 'English', registeredAt: new Date() },
 ];
 export let smsLogsFallback = [];
+
+// --- REVIEWS API ---
+app.get('/api/reviews', async (req, res) => {
+  try {
+    if (USE_MONGODB) {
+      const reviews = await Review.find().sort({ createdAt: -1 });
+      res.json(reviews);
+    } else {
+      res.json([]);
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/reviews', async (req, res) => {
+  try {
+    const reviewsData = req.body; // Can be an array or single
+    if (USE_MONGODB) {
+      if (Array.isArray(reviewsData)) {
+        for (const review of reviewsData) {
+          await Review.findOneAndUpdate({ id: review.id }, review, { upsert: true, new: true });
+        }
+      } else {
+        await Review.findOneAndUpdate({ id: reviewsData.id }, reviewsData, { upsert: true, new: true });
+      }
+      res.json({ success: true });
+    } else {
+      res.json({ success: false, message: 'No MongoDB' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// --- SETTINGS API ---
+app.get('/api/settings/:userId', async (req, res) => {
+  try {
+    if (USE_MONGODB) {
+      const settings = await UserSetting.findOne({ userId: req.params.userId });
+      res.json(settings || {});
+    } else {
+      res.json({});
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/settings/:userId', async (req, res) => {
+  try {
+    if (USE_MONGODB) {
+      const settings = await UserSetting.findOneAndUpdate(
+        { userId: req.params.userId },
+        { ...req.body, userId: req.params.userId },
+        { upsert: true, new: true }
+      );
+      res.json(settings);
+    } else {
+      res.json({ success: false });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // GET /api/community-reports?location=X — returns reports for a location, newest first, capped at 20
 app.get('/api/community-reports', async (req, res) => {
@@ -726,24 +791,56 @@ app.post('/api/chat', async (req, res) => {
     }
 
     while (loopCount < MAX_LOOPS) {
-      const response = await fetchWithRetry(apiBase, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
-        },
-        body: JSON.stringify({
-          model: apiModel,
-          messages: messages,
-          tools: WEATHER_TOOLS,
-          tool_choice: 'auto',
-          temperature: 0.7,
-          max_tokens: 1024
-        }),
-      });
+      let response;
+      try {
+        response = await fetchWithRetry(apiBase, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`
+          },
+          body: JSON.stringify({
+            model: apiModel,
+            messages: messages,
+            tools: WEATHER_TOOLS,
+            tool_choice: 'auto',
+            temperature: 0.7,
+            max_tokens: 1024
+          }),
+        });
+      } catch (e) {
+        console.warn(`[FAILOVER] Primary API threw error: ${e.message}`);
+      }
 
-      if (!response.ok) {
-        throw new Error(`AI API error during tool loop: ${response.status} ${await response.text()}`);
+      if (!response || !response.ok) {
+        const errContext = response ? response.status : 'Network/Timeout';
+        console.warn(`[FAILOVER] Primary API failed: ${errContext}. Attempting Alternate API fallback...`);
+        const altApiBase = useGroq ? 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions' : 'https://api.groq.com/openai/v1/chat/completions';
+        const altApiKey = useGroq ? geminiKey : groqKey;
+        const altApiModel = useGroq ? 'gemini-3.6-flash' : 'openai/gpt-oss-20b';
+
+        if (altApiKey) {
+          response = await fetchWithRetry(altApiBase, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${altApiKey}`
+            },
+            body: JSON.stringify({
+              model: altApiModel,
+              messages: messages,
+              tools: WEATHER_TOOLS,
+              tool_choice: 'auto',
+              temperature: 0.7,
+              max_tokens: 1024
+            }),
+          });
+        }
+        
+        if (!response || !response.ok) {
+          const fallbackStatus = response ? response.status : 'Network/Timeout';
+          throw new Error(`AI API error during tool loop: ${fallbackStatus}`);
+        }
       }
 
       const data = await response.json();
@@ -850,24 +947,55 @@ Current weather data (Fallback):
 ${heatIndexNote ? '- ' + heatIndexNote : ''}
 ${modelNote}`;
 
-      const fallbackRes = await fetchWithRetry(apiBase, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-        body: JSON.stringify({
-          model: apiModel,
-          messages: [
-            { role: 'system', content: SYSTEM_PROMPT + `\n\nActive User Profile: ${profile.toUpperCase()}\n\nCRITICAL INSTRUCTION: DO NOT CALL ANY TOOLS. You are in fallback mode. Answer the user directly using the provided Current weather data (Fallback).` },
-            ...history,
-            { role: 'user', content: fallbackPrompt }
-          ],
-          temperature: 0.7,
-          max_tokens: 1024
-        }),
-      });
+      let fallbackRes;
+      try {
+        fallbackRes = await fetchWithRetry(apiBase, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+          body: JSON.stringify({
+            model: apiModel,
+            messages: [
+              { role: 'system', content: SYSTEM_PROMPT + `\n\nActive User Profile: ${profile.toUpperCase()}\n\nCRITICAL INSTRUCTION: DO NOT CALL ANY TOOLS. You are in fallback mode. Answer the user directly using the provided Current weather data (Fallback).` },
+              ...history,
+              { role: 'user', content: fallbackPrompt }
+            ],
+            temperature: 0.7,
+            max_tokens: 1024
+          }),
+        });
+      } catch (e) {
+        console.warn(`[FAILOVER] Primary API threw error in fallback mode: ${e.message}`);
+      }
 
-      if (!fallbackRes.ok) {
-        console.error(`[DEBUG] Fallback failed. Status: ${fallbackRes.status} Text:`, await fallbackRes.text());
-        return res.status(502).json({ error: 'Weather AI is temporarily unavailable. Try again in a moment.' });
+      if (!fallbackRes || !fallbackRes.ok) {
+        const errContext = fallbackRes ? fallbackRes.status : 'Network/Timeout';
+        console.warn(`[FAILOVER] Primary API failed in fallback mode: ${errContext}. Attempting Alternate API fallback...`);
+        const altApiBase = useGroq ? 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions' : 'https://api.groq.com/openai/v1/chat/completions';
+        const altApiKey = useGroq ? geminiKey : groqKey;
+        const altApiModel = useGroq ? 'gemini-3.6-flash' : 'openai/gpt-oss-20b';
+
+        if (altApiKey) {
+          fallbackRes = await fetchWithRetry(altApiBase, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${altApiKey}` },
+            body: JSON.stringify({
+              model: altApiModel,
+              messages: [
+                { role: 'system', content: SYSTEM_PROMPT + `\n\nActive User Profile: ${profile.toUpperCase()}\n\nCRITICAL INSTRUCTION: DO NOT CALL ANY TOOLS. You are in fallback mode. Answer the user directly using the provided Current weather data (Fallback).` },
+                ...history,
+                { role: 'user', content: fallbackPrompt }
+              ],
+              temperature: 0.7,
+              max_tokens: 1024
+            }),
+          });
+        }
+
+        if (!fallbackRes || !fallbackRes.ok) {
+          const fallbackStatus = fallbackRes ? fallbackRes.status : 'Network/Timeout';
+          console.error(`[DEBUG] Fallback failed. Status: ${fallbackStatus}`);
+          return res.status(502).json({ error: 'Weather AI is temporarily unavailable. Try again in a moment.' });
+        }
       }
 
       const fallbackData = await fallbackRes.json();

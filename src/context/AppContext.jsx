@@ -18,21 +18,21 @@ const AppContext = createContext();
 const initialState = {
   activeTab: 'chat',
   weatherStageData: safeLoad('weathergpt-stage-cache', null),
-  language: localStorage.getItem('weathergpt-lang') || 'en',
+  language: 'en',
   messages: [],
   isLoading: false,
   currentWeather: null,
   governmentAlerts: [],
   weatherCondition: 'clear',
   severeAlert: null,
-  isOnboarded: localStorage.getItem('weathergpt-onboarded') === 'true',
+  isOnboarded: false,
   isOnline: navigator.onLine,
-  isLargeText: localStorage.getItem('weathergpt-largetext') === 'true',
-  isHighContrast: localStorage.getItem('weathergpt-highcontrast') === 'true',
+  isLargeText: false,
+  isHighContrast: false,
   lastCachedResponse: safeLoad('weathergpt-cache', null),
   savedLocations: safeLoad('weathergpt-saved-locations', []),
-  userProfile: localStorage.getItem('weathergpt-profile') || 'general',
-  uiTheme: localStorage.getItem('weathergpt-theme') || 'dark',
+  userProfile: 'general',
+  uiTheme: 'dark',
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -42,14 +42,12 @@ function appReducer(state, action) {
   switch (action.type) {
 
     case 'SET_UI_THEME':
-      localStorage.setItem('weathergpt-theme', action.payload);
       return { ...state, uiTheme: action.payload };
 
     case 'SET_GOVERNMENT_ALERTS':
       return { ...state, governmentAlerts: action.payload };
 
     case 'SET_PROFILE':
-      localStorage.setItem('weathergpt-profile', action.payload);
       return { ...state, userProfile: action.payload };
 
     case 'SET_ACTIVE_TAB':
@@ -60,11 +58,9 @@ function appReducer(state, action) {
       return { ...state, weatherStageData: action.payload };
 
     case 'SET_LANGUAGE':
-      localStorage.setItem('weathergpt-lang', action.payload);
       return { ...state, language: action.payload };
 
     case 'SET_ONBOARDED':
-      localStorage.setItem('weathergpt-onboarded', 'true');
       return { ...state, isOnboarded: true };
 
     case 'ADD_USER_MESSAGE':
@@ -134,13 +130,11 @@ function appReducer(state, action) {
 
     case 'TOGGLE_LARGE_TEXT': {
       const newVal = !state.isLargeText;
-      localStorage.setItem('weathergpt-largetext', String(newVal));
       return { ...state, isLargeText: newVal };
     }
 
     case 'TOGGLE_HIGH_CONTRAST': {
       const newVal = !state.isHighContrast;
-      localStorage.setItem('weathergpt-highcontrast', String(newVal));
       return { ...state, isHighContrast: newVal };
     }
 
@@ -169,6 +163,51 @@ function appReducer(state, action) {
 // ─────────────────────────────────────────────────────────────────────────────
 export function AppProvider({ children }) {
   const [state, dispatch] = useReducer(appReducer, initialState);
+  const isFirstRender = React.useRef(true);
+  const settingsLoaded = React.useRef(false);
+
+  // 1. Fetch settings from backend on mount
+  useEffect(() => {
+    fetch('/api/settings/demo_user')
+      .then(res => res.json())
+      .then(data => {
+        if (data && Object.keys(data).length > 0) {
+           if (data.theme) dispatch({ type: 'SET_UI_THEME', payload: data.theme });
+           if (data.language) dispatch({ type: 'SET_LANGUAGE', payload: data.language });
+           if (data.userProfile) dispatch({ type: 'SET_PROFILE', payload: data.userProfile });
+           if (data.isOnboarded) dispatch({ type: 'SET_ONBOARDED' });
+           if (data.isLargeText !== state.isLargeText) dispatch({ type: 'TOGGLE_LARGE_TEXT' });
+           if (data.isHighContrast !== state.isHighContrast) dispatch({ type: 'TOGGLE_HIGH_CONTRAST' });
+        }
+        settingsLoaded.current = true;
+      })
+      .catch(err => {
+        console.error('Failed to load settings', err);
+        settingsLoaded.current = true;
+      });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // 2. Sync settings back to backend when they change
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    if (!settingsLoaded.current) return;
+
+    fetch('/api/settings/demo_user', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        theme: state.uiTheme,
+        language: state.language,
+        isOnboarded: state.isOnboarded,
+        isLargeText: state.isLargeText,
+        isHighContrast: state.isHighContrast,
+        userProfile: state.userProfile
+      })
+    }).catch(e => console.error('Failed to sync settings', e));
+  }, [state.uiTheme, state.language, state.isOnboarded, state.isLargeText, state.isHighContrast, state.userProfile]);
 
   useEffect(() => {
     const handleOnline  = () => dispatch({ type: 'SET_ONLINE', payload: true });
