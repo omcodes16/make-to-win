@@ -3,6 +3,7 @@ import { useApp } from '../context/AppContext';
 import { LANGUAGES } from '../utils/constants';
 import { WEATHER_THEMES } from '../utils/themes';
 import { EXTRA_I18N } from '../utils/translationsExtra';
+import UserGuideModal from './UserGuideModal';
 
 const PROFILES = [
   { code: 'general', label: 'General / सामान्य', icon: '🌍' },
@@ -16,12 +17,13 @@ export default function Onboarding() {
   const { state, dispatch } = useApp();
   const theme = WEATHER_THEMES.clear;
   const [step, setStep] = useState(1);
+  const [isGuideOpen, setGuideOpen] = useState(false);
   const t = EXTRA_I18N[state.language] || EXTRA_I18N.en;
   
   return (
     <div className="min-h-[100dvh] flex flex-col items-center justify-center p-6 bg-transparent relative transition-colors duration-1000">
       {/* Fixed Background Image */}
-      <div className="fixed inset-0 z-0 bg-cover bg-center transition-opacity duration-1000" style={{ backgroundImage: `url(${theme.bgImage})` }}></div>
+      <div className="fixed inset-0 z-0 bg-cover bg-center transition-opacity duration-1000" style={{ backgroundImage: 'url(/backgrounds/onboarding_clean.jpg)' }}></div>
       
       {/* Overlay */}
       <div className={`fixed inset-0 z-0 bg-gradient-to-br ${theme.overlay} pointer-events-none`}></div>
@@ -98,7 +100,10 @@ export default function Onboarding() {
             <p className="text-white/80 text-[15px] leading-relaxed">
               {t.onboardingInsightsDesc || 'Look for the Heat Index to know how hot it actually feels, and the Models Agree badge to see how reliable the forecast is based on supercomputer consensus.'}
             </p>
-            <button onClick={() => dispatch({ type: 'SET_ONBOARDED' })} className="mt-4 bg-emerald-500 hover:bg-emerald-600 py-3.5 px-6 rounded-xl font-semibold transition-colors shadow-lg">Get Started</button>
+            <div className="flex flex-col sm:flex-row gap-3 mt-4 w-full justify-center">
+              <button onClick={() => setGuideOpen(true)} className="bg-white/10 hover:bg-white/20 border border-white/20 py-3.5 px-6 rounded-xl font-semibold transition-colors shadow-lg flex-1">Read Guide</button>
+              <button onClick={() => dispatch({ type: 'SET_ONBOARDED' })} className="bg-emerald-500 hover:bg-emerald-600 py-3.5 px-6 rounded-xl font-semibold transition-colors shadow-lg flex-1">Get Started</button>
+            </div>
           </div>
         )}
 
@@ -110,6 +115,8 @@ export default function Onboarding() {
         </p>
 
       </div>
+    <UserGuideModal isOpen={isGuideOpen} onClose={() => setGuideOpen(false)} />
     </div>
+      
   );
 }
