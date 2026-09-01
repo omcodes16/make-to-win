@@ -79,10 +79,12 @@ export async function geocodeLocation(name, lang = 'en') {
     const nominatimData = await nominatimRes.json();
     if (nominatimData && nominatimData.length > 0) {
       const r = nominatimData[0];
+      const rawName = r.name || '';
+      const finalName = (typeof rawName === 'string' && rawName.trim().length > 0) ? rawName : r.display_name.split(',')[0];
       return {
         lat: parseFloat(r.lat),
         lng: parseFloat(r.lon),
-        name: r.name || r.display_name.split(',')[0],
+        name: finalName,
         state: r.address?.state || '',
         district: r.address?.state_district || r.address?.county || ''
       };
@@ -157,10 +159,12 @@ export async function searchLocationSuggestions(name, lang = 'en') {
           existing => Math.abs(existing.lat - parseFloat(r.lat)) < 0.05 && Math.abs(existing.lng - parseFloat(r.lon)) < 0.05
         );
         if (!isDuplicate) {
+          const rawName = r.name || '';
+          const finalName = (typeof rawName === 'string' && rawName.trim().length > 0) ? rawName : r.display_name.split(',')[0];
           results.push({
             lat: parseFloat(r.lat),
             lng: parseFloat(r.lon),
-            name: r.name || r.display_name.split(',')[0],
+            name: finalName,
             state: r.address?.state || '',
             district: r.address?.state_district || r.address?.county || '',
             country: r.address?.country || 'India'

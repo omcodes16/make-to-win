@@ -184,7 +184,7 @@ export default function WeatherDashboard() {
                     onMouseDown={() => handleSelectLocation(loc)}
                     className="px-4 py-3 hover:bg-[var(--theme-border)] cursor-pointer border-b border-[var(--theme-border)] last:border-0 transition-colors text-left"
                   >
-                    <div className="font-medium text-sm">{loc.name}</div>
+                    <div className="font-medium text-sm">{typeof loc.name === 'string' ? loc.name : 'Unknown Location'}</div>
                     <div className="text-xs opacity-60">
                       {[loc.district, loc.state, loc.country].filter(Boolean).join(', ')}
                     </div>
@@ -316,7 +316,7 @@ return (
                     onMouseDown={() => handleSelectLocation(loc)}
                     className="px-5 py-3.5 hover:bg-[var(--theme-border)] cursor-pointer border-b border-[var(--theme-border)] last:border-0 transition-colors text-left flex flex-col sm:flex-row sm:items-center justify-between gap-1"
                   >
-                    <div className="font-medium text-sm sm:text-base">{loc.name}</div>
+                    <div className="font-medium text-sm sm:text-base">{typeof loc.name === 'string' ? loc.name : 'Unknown Location'}</div>
                     <div className="text-[10px] sm:text-xs opacity-60">
                       {[loc.district, loc.state, loc.country].filter(Boolean).join(', ')}
                     </div>
@@ -333,7 +333,7 @@ return (
           <div className="flex flex-col">
             <div className="flex items-center gap-2 text-white/90 mb-2 font-medium text-base sm:text-lg flex-wrap">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#E8A33D" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-              <span className="truncate max-w-[200px] sm:max-w-none">{stageData.locationName}</span>
+              <span className="truncate max-w-[200px] sm:max-w-none">{typeof stageData.locationName === 'string' ? stageData.locationName : 'Unknown Location'}</span>
               {selectedDay > 0 && <span className="text-white/50 text-sm">({dailyData[selectedDay].day})</span>}
               <button
                 onClick={() => {
@@ -530,8 +530,12 @@ return (
                     if (!isToday) return null;
                     
                     const now = new Date().getTime();
-                    const sunrise = new Date(weather.daily.sunrise[selectedDay]).getTime();
-                    const sunset = new Date(weather.daily.sunset[selectedDay]).getTime();
+                    const sunriseRaw = weather.daily.sunrise?.[selectedDay];
+                    const sunsetRaw = weather.daily.sunset?.[selectedDay];
+                    if (!sunriseRaw || !sunsetRaw) return null;
+                    
+                    const sunrise = new Date(sunriseRaw).getTime();
+                    const sunset = new Date(sunsetRaw).getTime();
                     
                     let cx, cy, isNightIcon = false;
                     if (now >= sunrise && now <= sunset) {
