@@ -44,7 +44,7 @@ export default function Header() {
 
   // Fetch mini weather for saved locations when dropdown opens
   useEffect(() => {
-    if (!showSaved || state.savedLocations.length === 0) return;
+    if (!showMoreMenu || state.savedLocations.length === 0) return;
     setLoadingSaved(true);
     Promise.all(
       state.savedLocations.map(async (loc) => {
@@ -62,7 +62,7 @@ export default function Header() {
       setSavedWeather(map);
       setLoadingSaved(false);
     });
-  }, [showSaved, state.savedLocations]);
+  }, [showMoreMenu, state.savedLocations]);
 
   // Handle tapping a saved location — switch to Weather View
   const handleSelectSaved = async (loc) => {
@@ -178,186 +178,180 @@ export default function Header() {
   };
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-50 header-bar border-b border-[var(--header-border)] pt-3 pb-3">
-        <div className="mx-auto px-3 sm:px-6 flex items-center justify-between max-w-[1400px]">
+      <header className="fixed top-0 left-0 right-0 z-50 header-bar border-b border-[var(--header-border)] pt-2.5 pb-2.5 sm:pt-3 sm:pb-3">
+        <div className="mx-auto px-3 sm:px-6 flex items-center justify-between max-w-[1400px] gap-2 sm:gap-4">
           
-          {/* Left: App name & Logo */}
-          <div className="flex items-center gap-2">
-            <img src="/logo_new.jpg" alt="SIH Code Matrix Logo" className="w-10 h-10 object-cover rounded-md flex-shrink-0 shadow-[0_0_15px_rgba(255,255,255,0.3)] bg-white" />
-            <h1 className="font-heading font-semibold text-base tracking-tight text-white drop-shadow-md hidden sm:block">
-              WeatherGPT
-            </h1>
-            
+          {/* Left Corner: Clean App Name (No logo icon) */}
+          <div className="flex items-center shrink-0">
             <button 
-              onClick={handleLiveLocation}
-              disabled={isLocating}
-              className="flex items-center gap-1 px-2 sm:px-3 py-1.5 rounded-full bg-blue-500/20 hover:bg-blue-500/40 border border-blue-400/30 transition-colors text-blue-100 text-xs whitespace-nowrap max-w-[120px] sm:max-w-[180px] overflow-hidden"
+              className="cursor-pointer flex items-center gap-1.5 group select-none text-left focus:outline-none" 
+              onClick={() => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'chat' })}
+              title="WeatherGPT - SIH 2026"
             >
-              {isLocating ? (
-                <span className="w-3 h-3 border-2 border-white/50 border-t-white rounded-full animate-spin flex-shrink-0"></span>
-              ) : (
-                <svg className="flex-shrink-0" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-              )}
-              <span className="truncate">
-                {state.currentWeather?.locationName ? state.currentWeather.locationName : 'Live'}
+              <span className="font-heading font-black text-lg sm:text-xl tracking-tight text-[var(--text-primary)]">
+                Weather<span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 via-blue-500 to-sky-400">GPT</span>
+              </span>
+              <span className="hidden lg:inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border border-indigo-500/25">
+                SIH '26
               </span>
             </button>
           </div>
 
-          {/* Center: Tabs — desktop only */}
-          <div className="hidden md:flex justify-center flex-1 max-w-md mx-4">
-            <div className="flex w-full rounded-full p-1 glass-panel border border-white/10 shadow-inner">
+          {/* Center (In-Between): Desktop Tabs & Hub Button */}
+          <div className="flex items-center justify-center gap-2 sm:gap-4 flex-1 max-w-xl mx-auto">
+            {/* Desktop Navigation Tabs */}
+            <div className="hidden md:flex w-full max-w-xs rounded-full p-1 glass-panel border border-[var(--glass-border)] shadow-inner">
               <button
                 onClick={() => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'chat' })}
-                className={`flex-1 px-4 py-1.5 text-sm font-medium rounded-full transition-all duration-300 whitespace-nowrap ${
+                className={`flex-1 px-3.5 py-1.5 text-xs sm:text-sm font-bold rounded-full transition-all duration-300 whitespace-nowrap ${
                   state.activeTab === 'chat'
-                    ? 'bg-white/15 text-white shadow-[0_0_10px_rgba(255,255,255,0.1)] border border-white/10'
-                    : 'text-white/50 hover:text-white'
+                    ? 'bg-blue-500/20 text-blue-500 shadow-sm border border-blue-400/30'
+                    : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
                 }`}
               >
                 {t.tabChat}
               </button>
               <button
                 onClick={() => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'stage' })}
-                className={`flex-1 px-4 py-1.5 text-sm font-medium rounded-full transition-all duration-300 whitespace-nowrap ${
+                className={`flex-1 px-3.5 py-1.5 text-xs sm:text-sm font-bold rounded-full transition-all duration-300 whitespace-nowrap ${
                   state.activeTab === 'stage'
-                    ? 'bg-white/15 text-white shadow-[0_0_10px_rgba(255,255,255,0.1)] border border-white/10'
-                    : 'text-white/50 hover:text-white'
+                    ? 'bg-blue-500/20 text-blue-500 shadow-sm border border-blue-400/30'
+                    : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
                 }`}
               >
                 {t.tabStage}
               </button>
               <button
                 onClick={() => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'alerts' })}
-                className={`flex-1 px-4 py-1.5 text-sm font-medium rounded-full transition-all duration-300 whitespace-nowrap ${
+                className={`flex-1 px-3.5 py-1.5 text-xs sm:text-sm font-bold rounded-full transition-all duration-300 whitespace-nowrap ${
                   state.activeTab === 'alerts'
-                    ? 'bg-red-500/20 text-red-400 shadow-[0_0_15px_rgba(239,68,68,0.2)] border border-red-500/30'
-                    : 'text-white/50 hover:text-white'
+                    ? 'bg-red-500/20 text-red-500 shadow-[0_0_15px_rgba(239,68,68,0.2)] border border-red-500/30'
+                    : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
                 }`}
               >
-                <span className="flex items-center justify-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
+                <span className="flex items-center justify-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
                   {t.tabAlerts}
                 </span>
               </button>
             </div>
+
+            {/* Hub Button (Centered in between!) */}
+            <div 
+              onClick={() => setIsHubOpen(true)}
+              className="header-hub-btn flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full cursor-pointer transition-all shadow-md shrink-0"
+              title="Open Profession Advisory Hub"
+            >
+              {/* Multi-Layer Stack Icon */}
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="animate-pulse text-white">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+              </svg>
+              <span className="text-[11px] sm:text-xs font-black tracking-wider uppercase whitespace-nowrap text-white">
+                {currentLang.code === 'hi' ? 'हब खोलें' : currentLang.code === 'bn' ? 'হাব খুলুন' : currentLang.code === 'as' ? 'হাব খোলক' : 'Open Hub'}
+              </span>
+            </div>
           </div>
 
-          {/* Right: Controls */}
-          <div className="flex items-center justify-end gap-1.5 sm:gap-3">
-            {/* Accessibility toggle */}
-              {(() => {
-                return (
-                  <div 
-                    onClick={() => setIsHubOpen(true)}
-                    className="flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-gradient-to-r from-blue-600/30 to-purple-600/30 border border-blue-400/30 rounded-full cursor-pointer hover:bg-white/10 hover:border-blue-400/50 transition-all shadow-[0_0_15px_rgba(59,130,246,0.2)]"
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-blue-400 animate-pulse sm:w-4 sm:h-4">
-                      <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
-                      <polyline points="2 17 12 22 22 17"></polyline>
-                      <polyline points="2 12 12 17 22 12"></polyline>
-                    </svg>
-                    <span className="text-white text-[10px] sm:text-xs font-bold tracking-wide uppercase whitespace-nowrap">
-                      {currentLang.code === 'hi' ? 'हब खोलें' : currentLang.code === 'bn' ? 'হাব খুলুন' : currentLang.code === 'as' ? 'হাব খোলক' : 'Open Hub'}
-                    </span>
-                  </div>
-                );
-              })()}
-
-              {/* AI Trust / Accuracy Modal Button */}
-              <button
-                onClick={() => setShowAccuracyModal(true)}
-                className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full transition-colors border text-white/70 glass-panel border-white/10 hover:bg-white/10 hover:text-green-400"
-                title="AI Trust & Accuracy"
-                aria-label="AI Trust & Accuracy"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          {/* Right Corner: Live Location Pill + Shield + Three Dots + Language */}
+          <div className="flex items-center justify-end gap-1.5 sm:gap-2.5 shrink-0">
+            {/* Live Location Pill */}
+            <button 
+              onClick={handleLiveLocation}
+              disabled={isLocating}
+              className="header-live-btn flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full font-bold text-xs whitespace-nowrap max-w-[110px] sm:max-w-[170px] overflow-hidden shadow-sm"
+              title="Get Live Location Weather"
+            >
+              {isLocating ? (
+                <span className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin flex-shrink-0"></span>
+              ) : (
+                <svg className="flex-shrink-0 text-amber-500" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                  <circle cx="12" cy="10" r="3" fill="currentColor" opacity="0.3" />
                 </svg>
-              </button>
-  
-              {/* Saved Locations bookmark */}
-            <div className="relative" ref={savedRef}>
-              <button
-                onClick={() => { setShowSaved(!showSaved); setShowLangPicker(false); setShowMoreMenu(false); }}
-                className={`w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full transition-colors border ${
-                  showSaved || state.savedLocations.length > 0
-                    ? 'text-amber-400 bg-amber-500/10 border-amber-500/30 hover:bg-amber-500/20'
-                    : 'text-white/70 glass-panel border-white/10 hover:bg-white/10'
-                }`}
-                aria-label="Saved locations"
-              >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill={state.savedLocations.length > 0 ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
-                </svg>
-              </button>
-
-              {showSaved && (
-                <div className="absolute right-0 top-full mt-2 rounded-2xl py-3 w-[260px] sm:w-[280px] z-[100] glass-panel theme-modal border border-[var(--modal-border)] text-[var(--text-primary)] shadow-[var(--modal-shadow)]">
-                  <div className="px-4 pb-2 mb-2 border-b border-white/10 flex items-center gap-2">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1" className="text-amber-400"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
-                    <span className="text-sm font-semibold text-white/90">Saved Locations</span>
-                    {state.savedLocations.length > 0 && (
-                      <span className="ml-auto text-xs text-white/40">{state.savedLocations.length}/5</span>
-                    )}
-                  </div>
-                  {state.savedLocations.length === 0 ? (
-                    <div className="px-4 py-4 text-center">
-                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-white/20 mx-auto mb-3"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
-                      <p className="text-white/40 text-xs leading-relaxed">No saved locations yet. Search a city and tap the bookmark icon.</p>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col">
-                      {state.savedLocations.map((loc) => {
-                        const w = savedWeather[loc.name];
-                        return (
-                          <div key={loc.name} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/10 transition-colors group">
-                            <button onClick={() => handleSelectSaved(loc)} className="flex-1 flex items-center gap-3 text-left min-w-0">
-                              <span className="text-xl shrink-0">{loadingSaved ? '⏳' : (w?.icon || '🌤️')}</span>
-                              <div className="flex-1 min-w-0">
-                                <div className="text-sm font-medium text-white/90 truncate">{loc.name}</div>
-                              </div>
-                              <span className="text-sm font-semibold text-white/70 shrink-0">{loadingSaved ? '...' : (w ? `${w.temp}°` : '--')}</span>
-                            </button>
-                            <button
-                              onClick={(e) => { e.stopPropagation(); dispatch({ type: 'REMOVE_LOCATION', payload: loc.name }); }}
-                              className="w-6 h-6 flex items-center justify-center rounded-full text-white/30 hover:text-red-400 hover:bg-red-500/10 transition-colors opacity-0 group-hover:opacity-100"
-                            >
-                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                            </button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
               )}
-            </div>
+              <span className="truncate font-bold">
+                {state.currentWeather?.locationName ? state.currentWeather.locationName : 'Live'}
+              </span>
+            </button>
 
-            {/* More Menu Dropdown */}
+            {/* AI Trust / Accuracy Shield Button */}
+            <button
+              onClick={() => setShowAccuracyModal(true)}
+              className="header-icon-btn w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full hover:!text-emerald-500 transition-colors"
+              title="AI Trust & Verification"
+              aria-label="AI Trust & Verification"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                <polyline points="9 12 11 14 15 10" strokeWidth="2" />
+              </svg>
+            </button>
+
+            {/* Three Dots Menu (Contains Saved Locations, Theme, Reviews, Portal, Accessibility, Guide) */}
             <div className="relative" ref={moreMenuRef}>
               <button
-                onClick={() => { setShowMoreMenu(!showMoreMenu); setShowSaved(false); setShowLangPicker(false); }}
-                className={`w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full transition-colors border ${
-                  showMoreMenu
-                    ? 'text-white glass-panel border-white/10'
-                    : 'text-white/70 glass-panel border-white/10 hover:bg-white/10'
+                onClick={() => { setShowMoreMenu(!showMoreMenu); setShowLangPicker(false); }}
+                className={`header-icon-btn w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full transition-colors ${
+                  showMoreMenu ? '!border-[var(--theme-accent)] !text-[var(--text-primary)] bg-[var(--glass-bg-hover)]' : ''
                 }`}
                 aria-label="More options"
+                title="Menu & Saved Locations"
               >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="5" r="1.5" />
-                  <circle cx="12" cy="12" r="1.5" />
-                  <circle cx="12" cy="19" r="1.5" />
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <circle cx="12" cy="5" r="1.8" />
+                  <circle cx="12" cy="12" r="1.8" />
+                  <circle cx="12" cy="19" r="1.8" />
                 </svg>
               </button>
 
               {showMoreMenu && (
-                <div className="absolute right-0 top-full mt-2 rounded-2xl py-2 w-[240px] z-[100] glass-panel theme-modal border border-[var(--modal-border)] text-[var(--text-primary)] shadow-[var(--modal-shadow)]">
+                <div className="absolute right-0 top-full mt-2 rounded-2xl py-2 w-[270px] sm:w-[290px] z-[100] glass-panel theme-modal border border-[var(--modal-border)] text-[var(--text-primary)] shadow-[var(--modal-shadow)] overflow-hidden">
+                  
+                  {/* Saved Locations Section inside 3 Dots */}
+                  <div className="px-3 pt-2 pb-2.5 border-b border-[var(--modal-border)]">
+                    <div className="flex items-center justify-between mb-1.5 px-1">
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-[var(--text-primary)]">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className="text-amber-500"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+                        <span>Saved Locations</span>
+                      </div>
+                      <span className="text-[10px] font-bold text-[var(--text-secondary)]">{state.savedLocations.length}/5</span>
+                    </div>
+
+                    {state.savedLocations.length === 0 ? (
+                      <p className="text-[11px] text-[var(--text-muted)] py-1.5 px-1 leading-relaxed">
+                        No saved locations. Tap the bookmark icon in Weather View to save a city.
+                      </p>
+                    ) : (
+                      <div className="flex flex-col gap-1 max-h-36 overflow-y-auto">
+                        {state.savedLocations.map((loc) => {
+                          const w = savedWeather[loc.name];
+                          return (
+                            <div key={loc.name} className="flex items-center justify-between p-1.5 rounded-xl hover:bg-[var(--glass-bg-hover)] transition-colors group">
+                              <button 
+                                onClick={() => { handleSelectSaved(loc); setShowMoreMenu(false); }} 
+                                className="flex items-center gap-2 text-left truncate flex-1 min-w-0"
+                              >
+                                <span className="text-sm shrink-0">{loadingSaved ? '⏳' : (w?.icon || '🌤️')}</span>
+                                <span className="text-xs font-semibold text-[var(--text-primary)] truncate">{loc.name}</span>
+                                <span className="text-xs font-bold text-[var(--text-secondary)] ml-auto mr-1.5">{loadingSaved ? '...' : (w ? `${w.temp}°` : '--')}</span>
+                              </button>
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); dispatch({ type: 'REMOVE_LOCATION', payload: loc.name }); }}
+                                className="text-red-400 hover:text-red-500 p-1 opacity-60 group-hover:opacity-100 transition-opacity"
+                                title="Remove"
+                              >
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
 
                   {/* Theme Switcher */}
-                  <div className="px-4 pt-2 pb-3 border-b border-[var(--modal-border)]">
-                    <p className="text-[10px] font-bold uppercase tracking-widest mb-2.5" style={{ color: 'var(--text-secondary)' }}>Theme</p>
+                  <div className="px-3 pt-2.5 pb-2.5 border-b border-[var(--modal-border)]">
+                    <p className="text-[10px] font-bold uppercase tracking-widest mb-2 px-1 text-[var(--text-secondary)]">Theme</p>
                     <div className="grid grid-cols-3 gap-1.5">
                       {[
                         { key: 'dark',  label: 'Dark',  icon: '🌙' },
@@ -367,51 +361,48 @@ export default function Header() {
                         <button
                           key={key}
                           onClick={(e) => { e.stopPropagation(); dispatch({ type: 'SET_UI_THEME', payload: key }); }}
-                          className={`flex flex-col items-center gap-1 py-2 px-1 rounded-xl text-[10px] font-semibold transition-all duration-200 border ${
+                          className={`flex flex-col items-center gap-1 py-1.5 px-1 rounded-xl text-[10px] font-bold transition-all duration-200 border ${
                             state.uiTheme === key
-                              ? 'border-[var(--theme-accent)] shadow-[0_0_12px_var(--focus-glow)]'
-                              : 'border-[var(--modal-border)] hover:border-[var(--glass-border-top)]'
+                              ? 'border-[var(--theme-accent)] shadow-[0_0_12px_var(--focus-glow)] bg-[var(--glass-bg-hover)] text-[var(--theme-accent)]'
+                              : 'border-[var(--modal-border)] hover:border-[var(--glass-border-top)] text-[var(--text-muted)]'
                           }`}
-                          style={{
-                            background: state.uiTheme === key ? 'var(--glass-bg-hover)' : 'var(--glass-bg)',
-                            color: state.uiTheme === key ? 'var(--theme-accent)' : 'var(--text-muted)',
-                          }}
                           title={`Switch to ${label} theme`}
                         >
-                          <span className="text-base">{icon}</span>
+                          <span className="text-sm">{icon}</span>
                           <span>{label}</span>
                         </button>
                       ))}
                     </div>
                   </div>
 
+                  {/* User Reviews */}
                   <button
                     onClick={() => { dispatch({ type: 'SET_ACTIVE_TAB', payload: 'reviews' }); setShowMoreMenu(false); }}
-                    className="w-full text-left flex items-center gap-3 px-4 py-3 text-sm transition-colors hover:glass-panel"
+                    className="w-full text-left flex items-center gap-2.5 px-3.5 py-2.5 text-xs font-semibold transition-colors hover:bg-[var(--glass-bg-hover)]"
                   >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-yellow-400">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-amber-400">
                       <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
                     </svg>
                     <span>User Reviews</span>
                   </button>
 
+                  {/* Authority Portal */}
                   <button
                     onClick={() => { dispatch({ type: 'SET_ACTIVE_TAB', payload: 'manager' }); setShowMoreMenu(false); }}
-                    className="w-full text-left flex items-center gap-3 px-4 py-3 text-sm transition-colors hover:glass-panel"
+                    className="w-full text-left flex items-center gap-2.5 px-3.5 py-2.5 text-xs font-semibold transition-colors hover:bg-[var(--glass-bg-hover)]"
                   >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-red-400">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-red-400">
                       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                     </svg>
                     <span>Authority Portal</span>
                   </button>
-                  
-                  <div className="h-px bg-[var(--modal-border)] my-1 mx-3" />
 
+                  {/* Accessibility */}
                   <button
                     onClick={(e) => { e.stopPropagation(); setShowA11y(!showA11y); }}
-                    className="w-full text-left flex items-center gap-3 px-4 py-3 text-sm transition-colors hover:glass-panel"
+                    className="w-full text-left flex items-center gap-2.5 px-3.5 py-2.5 text-xs font-semibold transition-colors hover:bg-[var(--glass-bg-hover)]"
                   >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-300">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-400">
                       <circle cx="12" cy="12" r="10"/><path d="M12 8a1 1 0 100-2 1 1 0 000 2zm-3 4h6m-5 4h4"/>
                     </svg>
                     <span>Accessibility</span>
@@ -419,49 +410,48 @@ export default function Header() {
 
                   {/* Inline Accessibility Toggles */}
                   {showA11y && (
-                    <div className="mx-4 mb-3 p-3 rounded-lg border border-[var(--modal-border)] space-y-3" style={{ background: 'var(--glass-bg)' }} onClick={e => e.stopPropagation()}>
+                    <div className="mx-3 mb-2 p-2.5 rounded-xl border border-[var(--modal-border)] space-y-2 bg-[var(--glass-bg)]" onClick={e => e.stopPropagation()}>
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>Large text</span>
+                        <span className="text-[11px] font-semibold text-[var(--text-muted)]">Large text</span>
                         <button
                           onClick={() => dispatch({ type: 'TOGGLE_LARGE_TEXT' })}
-                          className={`w-10 h-5 rounded-full transition-all relative ${
-                            state.isLargeText ? 'bg-indigo-500 shadow-[0_0_12px_rgba(99,102,241,0.5)]' : 'bg-white/15'
+                          className={`w-9 h-5 rounded-full transition-all relative ${
+                            state.isLargeText ? 'bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]' : 'bg-white/15'
                           }`}
                         >
                           <span
                             className={`absolute top-[2px] left-[2px] w-4 h-4 bg-white rounded-full shadow transition-transform ${
-                              state.isLargeText ? 'translate-x-5' : ''
+                              state.isLargeText ? 'translate-x-4' : ''
                             }`}
                           />
                         </button>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>High contrast</span>
+                        <span className="text-[11px] font-semibold text-[var(--text-muted)]">High contrast</span>
                         <button
                           onClick={() => dispatch({ type: 'TOGGLE_HIGH_CONTRAST' })}
-                          className={`w-10 h-5 rounded-full transition-all relative ${
-                            state.isHighContrast ? 'bg-indigo-500 shadow-[0_0_12px_rgba(99,102,241,0.5)]' : 'bg-white/15'
+                          className={`w-9 h-5 rounded-full transition-all relative ${
+                            state.isHighContrast ? 'bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]' : 'bg-white/15'
                           }`}
                         >
                           <span
                             className={`absolute top-[2px] left-[2px] w-4 h-4 bg-white rounded-full shadow transition-transform ${
-                              state.isHighContrast ? 'translate-x-5' : ''
+                              state.isHighContrast ? 'translate-x-4' : ''
                             }`}
                           />
                         </button>
+                      </div>
                     </div>
-                  </div>
                   )}
 
+                  <div className="h-px bg-[var(--modal-border)] my-1 mx-2.5" />
 
-
-                  <div className="h-px bg-[var(--modal-border)] my-1 mx-3" />
-
+                  {/* User Guide */}
                   <button
                     onClick={() => { setShowGuide(true); setShowMoreMenu(false); }}
-                    className="w-full text-left flex items-center gap-3 px-4 py-3 text-sm transition-colors hover:glass-panel"
+                    className="w-full text-left flex items-center gap-2.5 px-3.5 py-2.5 text-xs font-semibold transition-colors hover:bg-[var(--glass-bg-hover)]"
                   >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-teal-300">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-teal-400">
                       <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
                     </svg>
                     <span>{currentLang.code === 'hi' ? 'गाइड' : currentLang.code === 'bn' ? 'গাইড' : currentLang.code === 'as' ? 'গাইড' : 'User Guide'}</span>
@@ -470,15 +460,22 @@ export default function Header() {
               )}
             </div>
 
-            {/* Language pill */}
+            {/* Language Selector Pill */}
             <div className="relative">
               <button
-                onClick={() => { setShowLangPicker(!showLangPicker); setShowSaved(false); setShowMoreMenu(false); }}
-                className="px-2.5 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-colors flex items-center gap-1 bg-white/10 hover:bg-white/10 text-white border border-white/10"
+                onClick={() => { setShowLangPicker(!showLangPicker); setShowMoreMenu(false); }}
+                className="header-lang-btn px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-sm"
+                title="Change Language"
               >
+                {/* Globe Icon */}
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="2" y1="12" x2="22" y2="12"/>
+                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                </svg>
                 <span className="hidden sm:inline">{currentLang.nativeLabel}</span>
                 <span className="sm:hidden uppercase">{currentLang.code}</span>
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="6 9 12 15 18 9"/></svg>
               </button>
               {showLangPicker && (
                 <div className="absolute right-0 top-full mt-2 rounded-xl py-1 min-w-[140px] z-[100] glass-panel theme-modal border border-[var(--modal-border)] text-[var(--text-primary)] shadow-[var(--modal-shadow)]">
@@ -486,7 +483,7 @@ export default function Header() {
                     <button
                       key={lang.code}
                       onClick={() => { dispatch({ type: 'SET_LANGUAGE', payload: lang.code }); setShowLangPicker(false); }}
-                      className={`w-full text-left px-4 py-2 text-sm transition-colors hover:bg-white/10 ${state.language === lang.code ? 'text-blue-400 font-medium' : ''}`}
+                      className={`w-full text-left px-4 py-2 text-xs font-semibold transition-colors hover:bg-white/10 ${state.language === lang.code ? 'text-blue-400 font-bold' : ''}`}
                     >
                       {lang.nativeLabel}
                     </button>
@@ -511,31 +508,78 @@ export default function Header() {
         />
       )}
 
-      {/* Mobile Bottom Tab Bar */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 header-bar border-t border-[var(--header-border)] flex safe-pb">
-        <button
-          onClick={() => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'chat' })}
-          className={`flex-1 flex flex-col items-center justify-center py-3 gap-1 transition-colors ${state.activeTab === 'chat' ? 'text-blue-400' : 'text-white/40'}`}
-        >
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-          <span className="text-[10px] font-semibold">{t.tabChat}</span>
-        </button>
-        <button
-          onClick={() => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'stage' })}
-          className={`flex-1 flex flex-col items-center justify-center py-3 gap-1 transition-colors ${state.activeTab === 'stage' ? 'text-blue-400' : 'text-white/40'}`}
-        >
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
-          <span className="text-[10px] font-semibold">{t.tabStage}</span>
-        </button>
-        <button
-          onClick={() => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'alerts' })}
-          className={`flex-1 flex flex-col items-center justify-center py-3 gap-1 transition-colors relative ${state.activeTab === 'alerts' ? 'text-red-400' : 'text-white/40'}`}
-        >
-          <span className="absolute top-2 right-[calc(50%-14px)] w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-          <span className="text-[10px] font-semibold">{t.tabAlerts}</span>
-        </button>
-      </nav>
+      {/* Mobile Expanded Full-Width Bottom Navigation Bar */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 mobile-bottom-bar safe-pb shadow-[0_-4px_24px_rgba(0,0,0,0.20)]">
+        <nav className="w-full grid grid-cols-4 px-2 py-1.5 gap-1 items-center">
+          {/* Tab 1: Chat */}
+          <button
+            onClick={() => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'chat' })}
+            className={`flex flex-col items-center justify-center py-1.5 px-1 rounded-xl transition-all duration-200 gap-1 ${
+              state.activeTab === 'chat'
+                ? 'bottom-tab-active font-bold'
+                : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] opacity-75 hover:opacity-100'
+            }`}
+          >
+            <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />
+              <path d="M8 12h.01M12 12h.01M16 12h.01" strokeWidth="2.5" strokeLinecap="round" />
+            </svg>
+            <span className="text-[10px] tracking-tight font-semibold">{t.tabChat}</span>
+          </button>
+
+          {/* Tab 2: Weather Stage */}
+          <button
+            onClick={() => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'stage' })}
+            className={`flex flex-col items-center justify-center py-1.5 px-1 rounded-xl transition-all duration-200 gap-1 ${
+              state.activeTab === 'stage'
+                ? 'bottom-tab-active font-bold'
+                : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] opacity-75 hover:opacity-100'
+            }`}
+          >
+            <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+              <circle cx="12" cy="12" r="4"/>
+            </svg>
+            <span className="text-[10px] tracking-tight font-semibold">{t.tabStage}</span>
+          </button>
+
+          {/* Tab 3: Alerts */}
+          <button
+            onClick={() => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'alerts' })}
+            className={`flex flex-col items-center justify-center py-1.5 px-1 rounded-xl transition-all duration-200 gap-1 relative ${
+              state.activeTab === 'alerts'
+                ? 'bottom-tab-active font-bold'
+                : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] opacity-75 hover:opacity-100'
+            }`}
+          >
+            <div className="relative">
+              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-red-500 animate-ping"></span>
+              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-red-500 border-2 border-[var(--header-bg)]"></span>
+              <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+              </svg>
+            </div>
+            <span className="text-[10px] tracking-tight font-semibold">{t.tabAlerts}</span>
+          </button>
+
+          {/* Tab 4: SOS Emergency */}
+          <button
+            onClick={() => {
+              window.dispatchEvent(new CustomEvent('weathergpt-open-sos'));
+            }}
+            className="flex flex-col items-center justify-center py-1.5 px-1 rounded-xl bottom-tab-sos gap-1 active:scale-95 transition-all duration-200"
+            title="Emergency SOS"
+          >
+            <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <span className="text-[10px] tracking-tight font-bold">SOS</span>
+          </button>
+        </nav>
+      </div>
 
       {isHubOpen && (
         <ProfessionModal

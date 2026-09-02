@@ -232,44 +232,47 @@ export default function UserGuideModal({ isOpen, onClose }) {
   if (!isOpen) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-start justify-center p-2 sm:p-6 overflow-y-auto custom-scrollbar bg-black/80 ">
+    <div className="fixed inset-0 z-[100] flex items-start justify-center p-2 sm:p-6 overflow-y-auto custom-scrollbar bg-black/60 backdrop-blur-sm animate-fade-in" onClick={onClose}>
       
-      <div className="relative bg-transparent border border-white/10 rounded-[2rem] w-full max-w-5xl shadow-[0_0_50px_rgba(0,0,0,0.8)] animate-scale-up my-auto overflow-hidden flex flex-col">
+      <div 
+        className="relative theme-modal border border-[var(--modal-border)] rounded-[2rem] w-full max-w-5xl shadow-2xl animate-scale-up my-auto overflow-hidden flex flex-col max-h-[90vh]"
+        onClick={e => e.stopPropagation()}
+      >
         
         {/* Sticky Header */}
-        <div className="sticky top-0 bg-transparent/95 border-b border-white/10 px-6 py-5 flex justify-between items-center z-10">
+        <div className="sticky top-0 bg-[var(--header-bg)] border-b border-[var(--modal-border)] px-6 py-5 flex justify-between items-center z-10">
           <div>
-            <h2 className="text-2xl sm:text-3xl font-bold text-white flex items-center gap-3">
+            <h2 className="text-2xl sm:text-3xl font-black text-[var(--text-primary)] flex items-center gap-3 tracking-tight">
               <span className="text-blue-500">📖</span>
               {content.title}
             </h2>
-            <p className="text-white/50 text-sm mt-1 ml-10 hidden sm:block">{content.subtitle}</p>
+            <p className="text-[var(--text-secondary)] text-sm mt-1 ml-10 hidden sm:block font-medium">{content.subtitle}</p>
           </div>
           <button 
             onClick={onClose}
-            className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/10 hover:rotate-90 text-white/70 transition-all"
+            className="w-10 h-10 flex items-center justify-center rounded-full bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-hover)] border border-[var(--theme-border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all"
             aria-label="Close"
           >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
           </button>
         </div>
 
         {/* Content Body */}
-        <div className="p-6 sm:p-8 space-y-10 overflow-y-auto">
+        <div className="p-6 sm:p-8 space-y-10 overflow-y-auto flex-1 custom-scrollbar">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
             {content.sections.map((section, idx) => (
-              <div key={idx} className="glass-panel border border-white/10 rounded-3xl p-6 hover:bg-white/10 transition-colors">
-                <h3 className="text-xl font-bold text-blue-400 mb-5 pb-3 border-b border-white/10">
+              <div key={idx} className="glass-panel border border-[var(--theme-border)] rounded-3xl p-6 shadow-sm">
+                <h3 className="text-xl font-extrabold text-blue-700 dark:text-blue-400 mb-5 pb-3 border-b border-[var(--theme-border)]">
                   {section.title}
                 </h3>
                 <div className="space-y-5">
                   {section.items.map((item, itemIdx) => (
                     <div key={itemIdx} className="flex flex-col">
-                      <span className="font-semibold text-white text-base mb-1.5 flex items-center gap-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-blue-500 inline-block"></span>
+                      <span className="font-extrabold text-[var(--text-primary)] text-base mb-1.5 flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-blue-500 inline-block"></span>
                         {item.name}
                       </span>
-                      <span className="text-sm text-white/60 leading-relaxed pl-3.5 border-l-2 border-white/10">
+                      <span className="text-sm text-[var(--text-secondary)] leading-relaxed pl-3.5 border-l-2 border-[var(--theme-border)] font-medium">
                         {item.desc}
                       </span>
                     </div>
@@ -281,10 +284,10 @@ export default function UserGuideModal({ isOpen, onClose }) {
         </div>
 
         {/* Sticky Footer */}
-        <div className="sticky bottom-0 bg-gradient-to-t from-[#0f172a] via-[#0f172a]/95 to-transparent px-6 py-6 border-t border-white/10 mt-auto">
+        <div className="sticky bottom-0 bg-[var(--header-bg)] px-6 py-4 border-t border-[var(--modal-border)] mt-auto flex items-center justify-end">
           <button 
             onClick={onClose}
-            className="w-full sm:w-auto sm:ml-auto block px-12 py-3 sm:py-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-lg shadow-[0_0_20px_rgba(37,99,235,0.4)] transition-all active:scale-[0.98]"
+            className="w-full sm:w-auto px-10 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-base shadow-lg shadow-blue-600/30 transition-all active:scale-[0.98]"
           >
             {content.close}
           </button>

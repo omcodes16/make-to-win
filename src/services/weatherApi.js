@@ -1,8 +1,40 @@
 // Open-Meteo Weather & Geocoding API service
-// No API key needed — free for non-commercial use
+// Strictly scoped to India (Villages, Districts, Cities, States)
 
-// Hardcoded NER cities for instant fallback geocoding
-const NER_CITIES = {
+// Major Indian cities and state capitals for instant local resolution
+const INDIA_CITIES = {
+  'bhopal': { lat: 23.2599, lng: 77.4126, name: 'Bhopal', state: 'Madhya Pradesh', district: 'Bhopal' },
+  'indore': { lat: 22.7196, lng: 75.8577, name: 'Indore', state: 'Madhya Pradesh', district: 'Indore' },
+  'jabalpur': { lat: 23.1815, lng: 79.9864, name: 'Jabalpur', state: 'Madhya Pradesh', district: 'Jabalpur' },
+  'gwalior': { lat: 26.2183, lng: 78.1828, name: 'Gwalior', state: 'Madhya Pradesh', district: 'Gwalior' },
+  'ujjain': { lat: 23.1765, lng: 75.7885, name: 'Ujjain', state: 'Madhya Pradesh', district: 'Ujjain' },
+  'delhi': { lat: 28.6139, lng: 77.2090, name: 'New Delhi', state: 'Delhi (NCT)', district: 'New Delhi' },
+  'new delhi': { lat: 28.6139, lng: 77.2090, name: 'New Delhi', state: 'Delhi (NCT)', district: 'New Delhi' },
+  'mumbai': { lat: 19.0760, lng: 72.8777, name: 'Mumbai', state: 'Maharashtra', district: 'Mumbai' },
+  'pune': { lat: 18.5204, lng: 73.8567, name: 'Pune', state: 'Maharashtra', district: 'Pune' },
+  'nagpur': { lat: 21.1458, lng: 79.0882, name: 'Nagpur', state: 'Maharashtra', district: 'Nagpur' },
+  'bengaluru': { lat: 12.9716, lng: 77.5946, name: 'Bengaluru', state: 'Karnataka', district: 'Bengaluru Urban' },
+  'bangalore': { lat: 12.9716, lng: 77.5946, name: 'Bengaluru', state: 'Karnataka', district: 'Bengaluru Urban' },
+  'hyderabad': { lat: 17.3850, lng: 78.4867, name: 'Hyderabad', state: 'Telangana', district: 'Hyderabad' },
+  'chennai': { lat: 13.0827, lng: 80.2707, name: 'Chennai', state: 'Tamil Nadu', district: 'Chennai' },
+  'kolkata': { lat: 22.5726, lng: 88.3639, name: 'Kolkata', state: 'West Bengal', district: 'Kolkata' },
+  'jaipur': { lat: 26.9124, lng: 75.7873, name: 'Jaipur', state: 'Rajasthan', district: 'Jaipur' },
+  'lucknow': { lat: 26.8467, lng: 80.9462, name: 'Lucknow', state: 'Uttar Pradesh', district: 'Lucknow' },
+  'kanpur': { lat: 26.4499, lng: 80.3319, name: 'Kanpur', state: 'Uttar Pradesh', district: 'Kanpur Nagar' },
+  'varanasi': { lat: 25.3176, lng: 82.9739, name: 'Varanasi', state: 'Uttar Pradesh', district: 'Varanasi' },
+  'patna': { lat: 25.5941, lng: 85.1376, name: 'Patna', state: 'Bihar', district: 'Patna' },
+  'ranchi': { lat: 23.3441, lng: 85.3096, name: 'Ranchi', state: 'Jharkhand', district: 'Ranchi' },
+  'raipur': { lat: 21.2514, lng: 81.6296, name: 'Raipur', state: 'Chhattisgarh', district: 'Raipur' },
+  'bhubaneswar': { lat: 20.2961, lng: 85.8245, name: 'Bhubaneswar', state: 'Odisha', district: 'Khurda' },
+  'ahmedabad': { lat: 23.0225, lng: 72.5714, name: 'Ahmedabad', state: 'Gujarat', district: 'Ahmedabad' },
+  'surat': { lat: 21.1702, lng: 72.8311, name: 'Surat', state: 'Gujarat', district: 'Surat' },
+  'chandigarh': { lat: 30.7333, lng: 76.7794, name: 'Chandigarh', state: 'Chandigarh', district: 'Chandigarh' },
+  'dehradun': { lat: 30.3165, lng: 78.0322, name: 'Dehradun', state: 'Uttarakhand', district: 'Dehradun' },
+  'shimla': { lat: 31.1048, lng: 77.1734, name: 'Shimla', state: 'Himachal Pradesh', district: 'Shimla' },
+  'srinagar': { lat: 34.0837, lng: 74.7973, name: 'Srinagar', state: 'Jammu & Kashmir', district: 'Srinagar' },
+  'jammu': { lat: 32.7266, lng: 74.8570, name: 'Jammu', state: 'Jammu & Kashmir', district: 'Jammu' },
+  'amritsar': { lat: 31.6340, lng: 74.8723, name: 'Amritsar', state: 'Punjab', district: 'Amritsar' },
+  'ludhiana': { lat: 30.9010, lng: 75.8573, name: 'Ludhiana', state: 'Punjab', district: 'Ludhiana' },
   'guwahati': { lat: 26.1445, lng: 91.7362, name: 'Guwahati', state: 'Assam', district: 'Kamrup Metropolitan' },
   'shillong': { lat: 25.5788, lng: 91.8933, name: 'Shillong', state: 'Meghalaya', district: 'East Khasi Hills' },
   'imphal': { lat: 24.8170, lng: 93.9368, name: 'Imphal', state: 'Manipur', district: 'Imphal West' },
@@ -31,50 +63,54 @@ const NER_CITIES = {
 };
 
 /**
- * Geocode a location name to coordinates.
- * First checks local NER city map, then falls back to Open-Meteo geocoding API.
+ * Geocode a location name to coordinates (Exclusively inside India).
+ * First checks local INDIA_CITIES map, then Open-Meteo with India filter, then Nominatim India.
  */
 export async function geocodeLocation(name, lang = 'en') {
+  if (!name || typeof name !== 'string') return null;
   const normalized = name.toLowerCase().trim();
 
-  // Check local NER cities first
-  if (NER_CITIES[normalized]) {
-    const city = NER_CITIES[normalized];
+  // Check local INDIA_CITIES first
+  if (INDIA_CITIES[normalized]) {
+    const city = INDIA_CITIES[normalized];
     return { lat: city.lat, lng: city.lng, name: city.name, state: city.state, district: city.district };
   }
 
-  // Partial match against NER cities
-  for (const [key, city] of Object.entries(NER_CITIES)) {
+  // Partial match against INDIA_CITIES
+  for (const [key, city] of Object.entries(INDIA_CITIES)) {
     if (normalized.includes(key) || key.includes(normalized)) {
       return { lat: city.lat, lng: city.lng, name: city.name, state: city.state, district: city.district };
     }
   }
 
-  // Fall back to Open-Meteo geocoding
+  // Fall back to Open-Meteo geocoding filtered for India
   try {
     const res = await fetch(
-      `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(name)}&count=1&language=${lang}`
+      `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(name)}&count=10&language=${lang}`
     );
     const data = await res.json();
     if (data.results && data.results.length > 0) {
-      const r = data.results[0];
-      return {
-        lat: r.latitude,
-        lng: r.longitude,
-        name: r.name,
-        state: r.admin1 || '',
-        district: r.admin2 || ''
-      };
+      // Prioritize Indian results
+      const indiaResult = data.results.find(r => r.country_code === 'IN' || r.country === 'India') || data.results[0];
+      if (indiaResult) {
+        return {
+          lat: indiaResult.latitude,
+          lng: indiaResult.longitude,
+          name: indiaResult.name,
+          state: indiaResult.admin1 || '',
+          district: indiaResult.admin2 || ''
+        };
+      }
     }
   } catch (err) {
     console.error('Open-Meteo geocoding error:', err);
   }
 
-  // If Open-Meteo fails, try Nominatim (OpenStreetMap) which has much better village/district coverage
+  // Fallback to Nominatim (OpenStreetMap) strictly for India (All Villages, Tehsils, Districts, States)
   try {
     const nominatimRes = await fetch(
       `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(name)}&format=json&limit=1&countrycodes=in&accept-language=${lang}&addressdetails=1`,
-      { headers: { 'User-Agent': 'WeatherGPT' } }
+      { headers: { 'User-Agent': 'WeatherGPT-SIH2026' } }
     );
     const nominatimData = await nominatimRes.json();
     if (nominatimData && nominatimData.length > 0) {
@@ -86,7 +122,7 @@ export async function geocodeLocation(name, lang = 'en') {
         lng: parseFloat(r.lon),
         name: finalName,
         state: r.address?.state || '',
-        district: r.address?.state_district || r.address?.county || ''
+        district: r.address?.state_district || r.address?.county || r.address?.district || ''
       };
     }
   } catch (err) {
@@ -97,16 +133,17 @@ export async function geocodeLocation(name, lang = 'en') {
 }
 
 /**
- * Fetch multiple location suggestions for disambiguation.
+ * Fetch multiple location suggestions for disambiguation (Exclusively for India: Villages, Districts, States).
  */
 export async function searchLocationSuggestions(name, lang = 'en') {
+  if (!name || typeof name !== 'string') return [];
   const normalized = name.toLowerCase().trim();
   const results = [];
   
   if (!normalized) return results;
 
-  // Add matching NER cities as initial suggestions if any
-  for (const [key, city] of Object.entries(NER_CITIES)) {
+  // Add matching predefined Indian cities first
+  for (const [key, city] of Object.entries(INDIA_CITIES)) {
     if (key.includes(normalized) || normalized.includes(key)) {
       results.push({
         lat: city.lat,
@@ -121,12 +158,13 @@ export async function searchLocationSuggestions(name, lang = 'en') {
 
   try {
     const res = await fetch(
-      `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(name)}&count=5&language=${lang}`
+      `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(name)}&count=10&language=${lang}`
     );
     const data = await res.json();
     if (data.results && data.results.length > 0) {
-      data.results.forEach(r => {
-        // Avoid exact duplicates with NER cities based on lat/lng roughly
+      // Filter strictly for India
+      const indiaResults = data.results.filter(r => r.country_code === 'IN' || r.country === 'India');
+      indiaResults.forEach(r => {
         const isDuplicate = results.some(
           existing => Math.abs(existing.lat - r.latitude) < 0.05 && Math.abs(existing.lng - r.longitude) < 0.05
         );
@@ -137,7 +175,7 @@ export async function searchLocationSuggestions(name, lang = 'en') {
             name: r.name,
             state: r.admin1 || '',
             district: r.admin2 || '',
-            country: r.country || ''
+            country: 'India'
           });
         }
       });
@@ -146,28 +184,30 @@ export async function searchLocationSuggestions(name, lang = 'en') {
     console.error('Open-Meteo suggestion error:', err);
   }
 
-  // Fallback / Supplement with Nominatim (OpenStreetMap) which has superior coverage of Indian villages and rural areas
+  // Supplement with Nominatim (OpenStreetMap) strictly for India (All Villages, Gram Panchayats, Tehsils, Districts)
   try {
     const nominatimRes = await fetch(
-      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(name)}&format=json&limit=3&countrycodes=in&accept-language=${lang}&addressdetails=1`,
-      { headers: { 'User-Agent': 'WeatherGPT' } }
+      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(name)}&format=json&limit=5&countrycodes=in&accept-language=${lang}&addressdetails=1`,
+      { headers: { 'User-Agent': 'WeatherGPT-SIH2026' } }
     );
     const nominatimData = await nominatimRes.json();
     if (nominatimData && nominatimData.length > 0) {
       nominatimData.forEach(r => {
+        const lat = parseFloat(r.lat);
+        const lng = parseFloat(r.lon);
         const isDuplicate = results.some(
-          existing => Math.abs(existing.lat - parseFloat(r.lat)) < 0.05 && Math.abs(existing.lng - parseFloat(r.lon)) < 0.05
+          existing => Math.abs(existing.lat - lat) < 0.05 && Math.abs(existing.lng - lng) < 0.05
         );
         if (!isDuplicate) {
           const rawName = r.name || '';
           const finalName = (typeof rawName === 'string' && rawName.trim().length > 0) ? rawName : r.display_name.split(',')[0];
           results.push({
-            lat: parseFloat(r.lat),
-            lng: parseFloat(r.lon),
+            lat: lat,
+            lng: lng,
             name: finalName,
             state: r.address?.state || '',
-            district: r.address?.state_district || r.address?.county || '',
-            country: r.address?.country || 'India'
+            district: r.address?.state_district || r.address?.county || r.address?.district || '',
+            country: 'India'
           });
         }
       });
@@ -176,7 +216,7 @@ export async function searchLocationSuggestions(name, lang = 'en') {
     console.error('Nominatim suggestion error:', err);
   }
 
-  return results.slice(0, 6); // Cap at 6 results total
+  return results.slice(0, 6); // Cap at 6 Indian location results
 }
 
 /**
@@ -344,7 +384,7 @@ export async function reverseGeocode(lat, lng) {
   return { name: "Current Location", state: "", district: "", lat, lng };
 }
 
-export { NER_CITIES };
+export { INDIA_CITIES, INDIA_CITIES as NER_CITIES };
 
 /**
  * Fetches specialized data based on the selected user profile.

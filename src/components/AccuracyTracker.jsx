@@ -146,18 +146,38 @@ const I18N = {
 // Helpers
 // ---------------------------------------------------------------------------
 const statusStyles = {
-  accurate: { dot: 'bg-green-400',  text: 'text-green-400',  badge: 'bg-green-500/10 border-green-500/25 text-green-400'  },
-  close:    { dot: 'bg-yellow-400', text: 'text-yellow-400', badge: 'bg-yellow-500/10 border-yellow-500/25 text-yellow-400' },
-  off:      { dot: 'bg-red-400',    text: 'text-red-400',    badge: 'bg-red-500/10 border-red-500/25 text-red-400'        },
-  unknown:  { dot: 'bg-white/30',   text: 'text-white/40',   badge: 'bg-white/5 border-white/10 text-white/40'           },
-  pending:  { dot: 'bg-blue-400 animate-pulse', text: 'text-blue-300', badge: 'bg-blue-500/10 border-blue-500/20 text-blue-300' },
+  accurate: { 
+    dot: 'bg-emerald-500',  
+    text: 'text-emerald-800 dark:text-emerald-400 font-bold',  
+    badge: 'bg-emerald-50 border-emerald-300 text-emerald-900 dark:bg-emerald-500/15 dark:border-emerald-400/30 dark:text-emerald-300'  
+  },
+  close: { 
+    dot: 'bg-amber-500', 
+    text: 'text-amber-800 dark:text-amber-400 font-bold', 
+    badge: 'bg-amber-50 border-amber-300 text-amber-900 dark:bg-amber-500/15 dark:border-amber-400/30 dark:text-amber-300' 
+  },
+  off: { 
+    dot: 'bg-rose-500',    
+    text: 'text-rose-800 dark:text-rose-400 font-bold',    
+    badge: 'bg-rose-50 border-rose-300 text-rose-900 dark:bg-rose-500/15 dark:border-rose-400/30 dark:text-rose-300'        
+  },
+  unknown: { 
+    dot: 'bg-slate-400 dark:bg-white/30',   
+    text: 'text-slate-700 dark:text-white/40 font-bold',   
+    badge: 'bg-slate-100 border-slate-300 text-slate-800 dark:bg-white/5 dark:border-white/10 dark:text-white/40'           
+  },
+  pending: { 
+    dot: 'bg-sky-600 dark:bg-blue-400 animate-pulse', 
+    text: 'text-sky-950 dark:text-blue-300 font-bold', 
+    badge: 'bg-sky-100 border-sky-300 text-sky-950 dark:bg-blue-500/15 dark:border-blue-500/30 dark:text-blue-300 font-bold' 
+  },
 };
 
 function StatusBadge({ status, label }) {
   const s = statusStyles[status] || statusStyles.unknown;
   return (
-    <span className={`inline-flex items-center gap-1.5 border px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wide ${s.badge}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
+    <span className={`inline-flex items-center gap-1.5 border px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wide shadow-sm ${s.badge}`}>
+      <span className={`w-2 h-2 rounded-full ${s.dot}`} />
       {label}
     </span>
   );
@@ -171,15 +191,15 @@ function ClaimRow({ claim, t }) {
   const fmtVal = (v) => v != null ? `${v}${unit}` : '—';
 
   return (
-    <div className="flex items-center justify-between py-1.5 border-b border-white/5 last:border-0 gap-3">
-      <span className="text-xs text-white/50 w-28 shrink-0">{label}</span>
-      <span className="text-xs font-semibold text-amber-300 w-16 text-right">{fmtVal(claim.claimValue)}</span>
-      <span className="text-white/30 text-xs">→</span>
-      <span className={`text-xs font-semibold w-16 text-right ${s.text}`}>{fmtVal(claim.actualValue)}</span>
+    <div className="flex items-center justify-between py-2 border-b border-[var(--theme-border)] last:border-0 gap-3">
+      <span className="text-xs font-semibold text-[var(--text-primary)] w-28 shrink-0">{label}</span>
+      <span className="text-xs font-bold text-amber-700 dark:text-amber-300 w-16 text-right">{fmtVal(claim.claimValue)}</span>
+      <span className="text-[var(--text-secondary)] text-xs">→</span>
+      <span className={`text-xs font-bold w-16 text-right ${s.text}`}>{fmtVal(claim.actualValue)}</span>
       {claim.accuracyStatus ? (
-        <span className={`text-[10px] font-bold uppercase w-14 text-right ${s.text}`}>{claim.accuracyStatus}</span>
+        <span className={`text-[11px] font-extrabold uppercase w-14 text-right ${s.text}`}>{claim.accuracyStatus}</span>
       ) : (
-        <span className="text-[10px] text-white/25 uppercase w-14 text-right">—</span>
+        <span className="text-[10px] text-[var(--text-secondary)] uppercase w-14 text-right">—</span>
       )}
     </div>
   );
@@ -201,30 +221,30 @@ function AccuracyCard({ item, t }) {
   const overallLabel = t[overall] || overall;
 
   return (
-    <div className="bg-black/20 rounded-2xl border border-white/5 hover:border-white/10 transition-colors overflow-hidden">
+    <div className="glass-panel rounded-2xl border border-[var(--theme-border)] shadow-sm hover:shadow-md transition-all overflow-hidden mb-3">
       {/* ── Card Header ── */}
       <div className="p-4 sm:p-5">
         {/* Top row: date + status */}
         <div className="flex items-start justify-between gap-3 mb-3">
-          <div className="flex items-center gap-1.5 text-white/40 text-xs">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <div className="flex items-center gap-1.5 text-[var(--text-secondary)] text-xs font-medium">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
               <line x1="16" y1="2" x2="16" y2="6"/>
               <line x1="8" y1="2" x2="8" y2="6"/>
               <line x1="3" y1="10" x2="21" y2="10"/>
             </svg>
-            {dateLabel}
+            <span className="font-semibold">{dateLabel}</span>
             {item.location && item.location !== 'Unknown' && (
-              <span className="text-white/20">· {item.location}</span>
+              <span className="opacity-60">· {item.location}</span>
             )}
           </div>
           <StatusBadge status={overall} label={overallLabel} />
         </div>
 
-        {/* Question */}
-        <div className="mb-3 pl-3 border-l-2 border-blue-500/30">
-          <span className="text-blue-400/70 text-[10px] uppercase tracking-wider font-bold block mb-0.5">{t.question}</span>
-          <p className="italic text-white/85 text-sm leading-snug">"{item.question}"</p>
+        {/* Question (Bold & Crisp) */}
+        <div className="mb-3 pl-3.5 pr-3 py-2.5 rounded-xl border border-blue-500/25 bg-blue-500/10 shadow-sm">
+          <span className="text-blue-700 dark:text-blue-400 text-[10px] uppercase tracking-wider font-black block mb-1">{t.question}</span>
+          <p className="font-bold text-[var(--text-primary)] text-sm sm:text-[15px] leading-snug">"{item.question}"</p>
         </div>
 
         {/* Quick claims summary (inline chips) */}
@@ -237,10 +257,10 @@ function AccuracyCard({ item, t }) {
               return (
                 <span
                   key={idx}
-                  className={`inline-flex items-center gap-1 border px-2 py-0.5 rounded-full text-[10px] font-semibold ${cs.badge}`}
+                  className={`inline-flex items-center gap-1.5 border px-3 py-1 rounded-full text-[11px] font-extrabold shadow-sm ${cs.badge}`}
                 >
-                  {lbl}: {c.claimValue}{unit}
-                  {c.actualValue != null && <> → {c.actualValue}{unit}</>}
+                  <span>{lbl}: {c.claimValue}{unit}</span>
+                  {c.actualValue != null && <> → <span className={cs.text}>{c.actualValue}{unit}</span></>}
                 </span>
               );
             })}
@@ -252,16 +272,16 @@ function AccuracyCard({ item, t }) {
       {(hasClaims || hasAnswer) && (
         <button
           onClick={() => setOpen(o => !o)}
-          className="w-full flex items-center justify-between px-4 sm:px-5 py-2 border-t border-white/5 text-white/40 hover:text-white/70 hover:bg-white/5 transition-colors text-xs font-semibold uppercase tracking-wider"
+          className="w-full flex items-center justify-between px-4 sm:px-5 py-2.5 border-t border-[var(--theme-border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--glass-bg-hover)] transition-colors text-xs font-bold uppercase tracking-wider"
         >
           <span className="flex items-center gap-1.5">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M9 18l6-6-6-6"/>
             </svg>
             {t.details}
           </span>
           <svg
-            width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+            width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
             className={`transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
           >
             <polyline points="6 9 12 15 18 9"/>
@@ -271,20 +291,20 @@ function AccuracyCard({ item, t }) {
 
       {/* ── Expanded Details Panel ── */}
       {open && (
-        <div className="border-t border-white/5 px-4 sm:px-5 pb-4 pt-3 space-y-4">
+        <div className="border-t border-[var(--theme-border)] px-4 sm:px-5 pb-4 pt-3 space-y-4 bg-[var(--card-bg)]">
 
           {/* All-claims table */}
           {hasClaims && (
             <div>
-              <p className="text-[10px] uppercase tracking-wider font-bold text-white/30 mb-2">{t.claims}</p>
-              <div className="bg-black/20 rounded-xl border border-white/5 px-3 py-1">
+              <p className="text-[11px] uppercase tracking-wider font-extrabold text-[var(--text-secondary)] mb-2">{t.claims}</p>
+              <div className="rounded-xl border border-[var(--theme-border)] px-3 py-1 bg-[var(--glass-bg)] shadow-sm">
                 {/* Column headers */}
-                <div className="flex items-center justify-between py-1 border-b border-white/10 mb-1">
-                  <span className="text-[9px] uppercase tracking-wider text-white/25 w-28">Metric</span>
-                  <span className="text-[9px] uppercase tracking-wider text-white/25 w-16 text-right">{t.aiSaid}</span>
+                <div className="flex items-center justify-between py-1.5 border-b border-[var(--theme-border)] mb-1">
+                  <span className="text-[10px] uppercase tracking-wider font-extrabold text-[var(--text-secondary)] w-28">Metric</span>
+                  <span className="text-[10px] uppercase tracking-wider font-extrabold text-[var(--text-secondary)] w-16 text-right">{t.aiSaid}</span>
                   <span className="w-6" />
-                  <span className="text-[9px] uppercase tracking-wider text-white/25 w-16 text-right">{t.actual}</span>
-                  <span className="text-[9px] uppercase tracking-wider text-white/25 w-14 text-right">Status</span>
+                  <span className="text-[10px] uppercase tracking-wider font-extrabold text-[var(--text-secondary)] w-16 text-right">{t.actual}</span>
+                  <span className="text-[10px] uppercase tracking-wider font-extrabold text-[var(--text-secondary)] w-14 text-right">Status</span>
                 </div>
                 {claims.map((c, idx) => <ClaimRow key={idx} claim={c} t={t} />)}
               </div>
@@ -294,15 +314,15 @@ function AccuracyCard({ item, t }) {
           {/* Full AI answer text */}
           {hasAnswer && (
             <div>
-              <p className="text-[10px] uppercase tracking-wider font-bold text-white/30 mb-2">{t.aiAnswer}</p>
-              <div className="bg-black/20 rounded-xl border border-white/5 p-3">
-                <p className="text-white/60 text-xs leading-relaxed whitespace-pre-wrap">{item.answerText}</p>
+              <p className="text-[11px] uppercase tracking-wider font-extrabold text-[var(--text-secondary)] mb-2">{t.aiAnswer}</p>
+              <div className="rounded-xl border border-[var(--theme-border)] p-3.5 bg-[var(--glass-bg)] shadow-inner">
+                <p className="text-[var(--text-primary)] text-xs sm:text-[13px] leading-relaxed whitespace-pre-wrap font-medium">{item.answerText}</p>
               </div>
             </div>
           )}
 
           {!hasClaims && !hasAnswer && (
-            <p className="text-white/30 text-xs italic">{t.noAnswer}</p>
+            <p className="text-[var(--text-secondary)] text-xs italic">{t.noAnswer}</p>
           )}
         </div>
       )}

@@ -483,32 +483,35 @@ export default function ProfessionModal({ lat, lng, locationName, weather, onClo
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md animate-fade-in" onClick={onClose}>
-      <div className="w-full max-w-xl glass-panel overflow-hidden animate-slide-up flex flex-col max-h-full" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-sm animate-fade-in" onClick={onClose}>
+      <div 
+        className="w-full max-w-xl theme-modal rounded-3xl border border-[var(--modal-border)] shadow-2xl overflow-hidden animate-slide-up flex flex-col max-h-[90vh]" 
+        onClick={e => e.stopPropagation()}
+      >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 sm:p-8 pb-4 border-b border-white/5 bg-white/[0.01]">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-white/5 rounded-2xl border border-white/10 shadow-inner">
+        <div className="flex items-center justify-between p-5 sm:p-6 pb-4 border-b border-[var(--modal-border)] bg-[var(--header-bg)]">
+          <div className="flex items-center gap-3.5">
+            <div className="p-3 bg-[var(--glass-bg)] rounded-2xl border border-[var(--theme-border)] shadow-sm">
               <ProfileIcon />
             </div>
             <div>
-              <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">{getProfileTitle(t)}</h2>
-              <div className="text-white/40 text-[11px] sm:text-xs mt-1.5 flex items-center gap-1.5 uppercase tracking-wider font-semibold">
+              <h2 className="text-xl sm:text-2xl font-black text-[var(--text-primary)] tracking-tight">{getProfileTitle(t)}</h2>
+              <div className="text-[var(--text-secondary)] text-[11px] sm:text-xs mt-1 flex items-center gap-1.5 uppercase tracking-wider font-bold">
                 <span>{t.liveData}</span>
-                <span className="text-indigo-400">{locationName}</span>
+                <span className="text-indigo-600 dark:text-indigo-400">· {locationName}</span>
               </div>
             </div>
           </div>
           <button 
             onClick={onClose}
-            className="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/15 text-white/70 hover:text-white transition-all self-start shadow-sm border border-white/5 hover:scale-105"
+            className="w-9 h-9 flex items-center justify-center rounded-full bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all border border-[var(--theme-border)] shadow-sm"
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>
 
         {/* Tab Switcher */}
-        <div className="px-6 sm:px-8 py-3 bg-white/[0.02] border-b border-white/5 flex gap-2 overflow-x-auto hide-scrollbar">
+        <div className="px-5 sm:px-6 py-2.5 bg-[var(--glass-bg)] border-b border-[var(--theme-border)] flex gap-2 overflow-x-auto hide-scrollbar">
           {[
             { id: 'farmer', icon: <FarmerIcon className="w-4 h-4"/>, label: lang === 'hi' ? 'कृषि' : 'Agriculture' },
             { id: 'aviation', icon: <AviationIcon className="w-4 h-4"/>, label: lang === 'hi' ? 'उड़ान' : 'Aviation' },
@@ -518,10 +521,10 @@ export default function ProfessionModal({ lat, lng, locationName, weather, onClo
             <button
               key={tab.id}
               onClick={() => switchProfile(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all whitespace-nowrap shrink-0 ${
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 ${
                 displayProfile === tab.id
-                  ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30'
-                  : 'bg-white/5 text-white/50 border border-transparent hover:bg-white/10 hover:text-white'
+                  ? 'bg-indigo-600 text-white shadow-sm dark:bg-indigo-500/30 dark:text-indigo-200'
+                  : 'bg-[var(--glass-bg)] text-[var(--text-secondary)] border border-[var(--theme-border)] hover:text-[var(--text-primary)] hover:bg-[var(--glass-bg-hover)]'
               }`}
             >
               {tab.icon} {tab.label}
@@ -530,7 +533,7 @@ export default function ProfessionModal({ lat, lng, locationName, weather, onClo
         </div>
         
         {/* Content */}
-        <div className="p-6 sm:p-8 overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.1) transparent' }}>
+        <div className="p-5 sm:p-6 overflow-y-auto custom-scrollbar flex-1">
           {renderContent()}
         </div>
       </div>

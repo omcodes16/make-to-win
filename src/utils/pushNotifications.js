@@ -3,6 +3,20 @@
  * Requests permission, subscribes, and sends alerts when severe weather triggers.
  */
 
+export function isPushDisabled() {
+  if (typeof window === 'undefined') return false;
+  return localStorage.getItem('weathergpt_alerts_disabled') === 'true';
+}
+
+export function setPushDisabled(disabled) {
+  if (typeof window === 'undefined') return;
+  if (disabled) {
+    localStorage.setItem('weathergpt_alerts_disabled', 'true');
+  } else {
+    localStorage.removeItem('weathergpt_alerts_disabled');
+  }
+}
+
 export function requestPushPermission() {
   if (!('Notification' in window)) return Promise.resolve('unsupported');
   if (Notification.permission === 'granted') return Promise.resolve('granted');
@@ -10,6 +24,7 @@ export function requestPushPermission() {
 }
 
 export function sendWeatherPush(title, body, icon = '/favicon.ico', tag = 'weather-alert') {
+  if (isPushDisabled()) return;
   if (!('Notification' in window) || Notification.permission !== 'granted') return;
   try {
     const n = new Notification(title, {

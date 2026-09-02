@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { NE_DISTRICTS } from "../utils/districtData";
+import { INDIA_DISTRICTS } from "../utils/districtData";
 import { geocodeLocation, searchLocationSuggestions } from "../services/weatherApi";
 import SmsSimulatorModal from "./SmsSimulatorModal";
 import SmsRegistryPanel from "./SmsRegistryPanel";
@@ -17,7 +17,7 @@ export default function ManagerDashboard() {
 
   const [form, setForm] = useState({ 
     targetMode: "state", // 'state', 'district', 'radius'
-    state: "Assam", 
+    state: "Madhya Pradesh", 
     district: "", 
     locationName: "", // for radius mode searching
     lat: null, 
@@ -106,7 +106,7 @@ export default function ManagerDashboard() {
   }, [sosRequests]);
   // ----------------------------------------------------
 
-  const STATES = ["Assam", "Meghalaya", "Manipur", "Tripura", "Nagaland", "Mizoram", "Arunachal Pradesh", "Sikkim", "Maharashtra", "Tamil Nadu", "Gujarat", "West Bengal", "Uttar Pradesh", "Odisha"];
+  const STATES = Object.keys(INDIA_DISTRICTS);
 
   // Validate saved token on mount - clear if expired/invalid
   useEffect(() => {

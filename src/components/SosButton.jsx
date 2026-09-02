@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 const API_URL = import.meta.env.VITE_API_URL || "";
 
@@ -18,7 +18,7 @@ export default function SosButton() {
     "Other"
   ];
 
-    const playSiren = () => {
+  const playSiren = () => {
     try {
       const AudioContext = window.AudioContext || window.webkitAudioContext;
       if (!AudioContext) return;
@@ -58,6 +58,14 @@ export default function SosButton() {
     
     setPhase("form");
   };
+
+  useEffect(() => {
+    const handleOpenSos = () => {
+      handleSosClick();
+    };
+    window.addEventListener('weathergpt-open-sos', handleOpenSos);
+    return () => window.removeEventListener('weathergpt-open-sos', handleOpenSos);
+  }, []);
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
@@ -137,57 +145,101 @@ export default function SosButton() {
     <>
       <button
         onClick={handleSosClick}
-        className="fixed bottom-6 right-6 z-50 w-16 h-16 rounded-full bg-red-600 hover:bg-red-700 text-white font-bold text-sm shadow-2xl shadow-red-900/60 border-2 border-red-400 animate-pulse flex flex-col items-center justify-center gap-0.5 transition-transform hover:scale-110"
+        className="hidden md:flex fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-gradient-to-tr from-red-700 to-rose-600 hover:from-red-600 hover:to-rose-500 text-white font-bold text-xs shadow-2xl shadow-red-900/60 border-2 border-red-400/80 animate-pulse flex-col items-center justify-center gap-0.5 transition-transform hover:scale-110 active:scale-95"
         title="Send Emergency SOS Alert"
       >
-        <span className="text-xl">🆘</span>
-        <span className="text-[10px] font-bold tracking-wide">SOS</span>
+        <span className="text-lg">🆘</span>
+        <span className="text-[10px] font-black tracking-wider">SOS</span>
       </button>
 
       {phase !== "idle" && (
-        <div className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-gray-900 border border-red-500/40 rounded-2xl p-6 w-full max-w-sm shadow-2xl text-white max-h-[95vh] overflow-y-auto">
+        <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in" onClick={reset}>
+          <div 
+            className="theme-modal border border-red-500/40 rounded-3xl p-6 w-full max-w-sm shadow-2xl text-[var(--text-primary)] max-h-[95vh] overflow-y-auto relative"
+            onClick={e => e.stopPropagation()}
+          >
 
             {phase === "form" && (
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="text-center space-y-2">
-                  <div className="text-4xl">🆘</div>
-                  <h2 className="text-2xl font-bold text-red-400">Emergency SOS</h2>
-                  <p className="text-white/60 text-xs">Fill details and share location to dispatch rescue.</p>
+                <div className="text-center space-y-1.5">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-red-600 to-rose-500 flex items-center justify-center text-white text-base font-black shadow-lg shadow-red-500/30 mx-auto mb-1">
+                    SOS
+                  </div>
+                  <h2 className="text-2xl font-black text-[var(--text-primary)] tracking-tight">Emergency SOS</h2>
+                  <p className="text-[var(--text-secondary)] text-xs font-medium">Fill details and share location to dispatch rescue.</p>
                 </div>
                 
                 <div className="pt-2">
-                  <label className="text-xs text-white/60 block mb-1">Required Help Category *</label>
-                  <select value={form.helpType} onChange={e => setForm({...form, helpType: e.target.value})} className="w-full bg-white/10 border border-white/20 rounded-lg p-2.5 text-sm focus:outline-none focus:border-red-500 text-white font-medium">
-                    {helpCategories.map(cat => <option key={cat} value={cat} className="bg-gray-900 text-white">{cat}</option>)}
+                  <label className="text-[11px] font-extrabold text-[var(--text-secondary)] uppercase tracking-wider block mb-1">Required Help Category *</label>
+                  <select 
+                    value={form.helpType} 
+                    onChange={e => setForm({...form, helpType: e.target.value})} 
+                    className="w-full bg-[var(--input-bg)] border border-[var(--input-border)] rounded-xl p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 text-[var(--text-primary)] font-semibold shadow-inner"
+                  >
+                    {helpCategories.map(cat => <option key={cat} value={cat} className="bg-[var(--modal-bg)] text-[var(--text-primary)] font-medium">{cat}</option>)}
                   </select>
                 </div>
 
                 <div>
-                  <label className="text-xs text-white/60 block mb-1">Upload Photo of Situation (Optional)</label>
-                  <input type="file" accept="image/*" capture="environment" onChange={handleImageUpload} className="w-full text-xs text-white/50 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-white/10 file:text-white hover:file:bg-white/20 cursor-pointer" />
-                  {imageString && <img src={imageString} alt="Preview" className="mt-2 h-20 w-auto rounded border border-white/20 object-cover" />}
+                  <label className="text-[11px] font-extrabold text-[var(--text-secondary)] uppercase tracking-wider block mb-1">Upload Photo of Situation (Optional)</label>
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    capture="environment" 
+                    onChange={handleImageUpload} 
+                    className="w-full text-xs text-[var(--text-secondary)] file:mr-3 file:py-2 file:px-3.5 file:rounded-xl file:border file:border-[var(--theme-border)] file:text-xs file:font-bold file:bg-[var(--glass-bg)] file:text-[var(--text-primary)] hover:file:bg-[var(--glass-bg-hover)] cursor-pointer" 
+                  />
+                  {imageString && <img src={imageString} alt="Preview" className="mt-2 h-20 w-auto rounded-xl border border-[var(--theme-border)] object-cover shadow-sm" />}
                 </div>
 
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-2.5">
                   <div>
-                    <label className="text-xs text-white/60 block mb-1">Your Name</label>
-                    <input type="text" value={form.name} onChange={e => setForm({...form, name: e.target.value})} placeholder="Optional" className="w-full bg-white/10 border border-white/20 rounded-lg p-2 text-sm focus:outline-none focus:border-red-500 text-white placeholder-white/40" />
+                    <label className="text-[11px] font-extrabold text-[var(--text-secondary)] uppercase tracking-wider block mb-1">Your Name</label>
+                    <input 
+                      type="text" 
+                      value={form.name} 
+                      onChange={e => setForm({...form, name: e.target.value})} 
+                      placeholder="Optional" 
+                      className="w-full bg-[var(--input-bg)] border border-[var(--input-border)] rounded-xl p-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 text-[var(--text-primary)] placeholder-[var(--text-secondary)]/50 font-medium shadow-inner" 
+                    />
                   </div>
                   <div>
-                    <label className="text-xs text-white/60 block mb-1">Phone Number</label>
-                    <input type="tel" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} placeholder="Optional" className="w-full bg-white/10 border border-white/20 rounded-lg p-2 text-sm focus:outline-none focus:border-red-500 text-white placeholder-white/40" />
+                    <label className="text-[11px] font-extrabold text-[var(--text-secondary)] uppercase tracking-wider block mb-1">Phone Number</label>
+                    <input 
+                      type="tel" 
+                      value={form.phone} 
+                      onChange={e => setForm({...form, phone: e.target.value})} 
+                      placeholder="Optional" 
+                      className="w-full bg-[var(--input-bg)] border border-[var(--input-border)] rounded-xl p-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 text-[var(--text-primary)] placeholder-[var(--text-secondary)]/50 font-medium shadow-inner" 
+                    />
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-xs text-white/60 block mb-1">Additional Details (Optional)</label>
-                  <textarea value={form.message} onChange={e => setForm({...form, message: e.target.value})} placeholder="e.g. 3 people trapped on roof" rows={2} className="w-full bg-white/10 border border-white/20 rounded-lg p-2.5 text-sm focus:outline-none focus:border-red-500 resize-none text-white placeholder-white/40" />
+                  <label className="text-[11px] font-extrabold text-[var(--text-secondary)] uppercase tracking-wider block mb-1">Additional Details (Optional)</label>
+                  <textarea 
+                    value={form.message} 
+                    onChange={e => setForm({...form, message: e.target.value})} 
+                    placeholder="e.g. 3 people trapped on roof" 
+                    rows={2} 
+                    className="w-full bg-[var(--input-bg)] border border-[var(--input-border)] rounded-xl p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 resize-none text-[var(--text-primary)] placeholder-[var(--text-secondary)]/50 font-medium shadow-inner" 
+                  />
                 </div>
                 
                 <div className="flex gap-3 pt-2">
-                  <button type="button" onClick={reset} className="flex-1 py-3 bg-white/10 hover:bg-white/20 rounded-lg font-medium transition-colors text-sm text-white">Cancel</button>
-                  <button type="submit" className="flex-1 py-3 bg-red-600 hover:bg-red-700 rounded-lg font-bold text-sm transition-colors shadow-lg shadow-red-900/50 text-white">📍 Share Location & Send</button>
+                  <button 
+                    type="button" 
+                    onClick={reset} 
+                    className="flex-1 py-3 bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-hover)] border border-[var(--theme-border)] rounded-xl font-bold transition-all text-sm text-[var(--text-primary)] shadow-sm active:scale-95"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="submit" 
+                    className="flex-1 py-3 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 rounded-xl font-black text-sm transition-all shadow-lg shadow-red-600/30 text-white active:scale-95"
+                  >
+                    📍 Share Location & Send
+                  </button>
                 </div>
               </form>
             )}
@@ -195,34 +247,34 @@ export default function SosButton() {
             {phase === "locating" && (
               <div className="text-center space-y-4 py-4">
                 <div className="text-4xl animate-spin">📡</div>
-                <p className="text-white/80 font-medium">Acquiring GPS Location...</p>
-                <p className="text-white/50 text-sm">Please allow location access when prompted.</p>
+                <p className="text-[var(--text-primary)] font-bold">Acquiring GPS Location...</p>
+                <p className="text-[var(--text-secondary)] text-sm font-medium">Please allow location access when prompted.</p>
               </div>
             )}
 
             {phase === "sending" && (
               <div className="text-center space-y-4 py-4">
                 <div className="text-4xl animate-bounce">📤</div>
-                <p className="text-white/80 font-medium">Transmitting Data & Images...</p>
+                <p className="text-[var(--text-primary)] font-bold">Transmitting Data & Images...</p>
               </div>
             )}
 
             {phase === "success" && (
               <div className="text-center space-y-4 py-4">
                 <div className="text-5xl">✅</div>
-                <h2 className="text-2xl font-bold text-green-400">Help is Coming!</h2>
-                <p className="text-white/70 text-sm">Your location and details have been sent to disaster management authorities.</p>
-                <button onClick={reset} className="w-full py-3 bg-green-700 hover:bg-green-600 rounded-lg font-bold transition-colors">OK</button>
+                <h2 className="text-2xl font-black text-emerald-600 dark:text-green-400">Help is Coming!</h2>
+                <p className="text-[var(--text-secondary)] text-sm font-medium">Your location and details have been sent to disaster management authorities.</p>
+                <button onClick={reset} className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 rounded-xl font-bold text-white transition-all shadow-lg shadow-emerald-600/30">OK</button>
               </div>
             )}
 
             {phase === "error" && (
               <div className="text-center space-y-4 py-4">
                 <div className="text-5xl">⚠️</div>
-                <h2 className="text-xl font-bold text-amber-400">Transmission Failed</h2>
-                <p className="text-white/70 text-sm">{errorMsg}</p>
-                <p className="text-red-400 font-bold">📞 Call 112 immediately!</p>
-                <button onClick={reset} className="w-full py-3 bg-white/10 hover:bg-white/20 rounded-lg font-medium transition-colors">Close</button>
+                <h2 className="text-xl font-black text-amber-700 dark:text-amber-400">Transmission Failed</h2>
+                <p className="text-[var(--text-secondary)] text-sm font-medium">{errorMsg}</p>
+                <p className="text-red-600 font-bold">📞 Call 112 immediately!</p>
+                <button onClick={reset} className="w-full py-3 bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-hover)] border border-[var(--theme-border)] text-[var(--text-primary)] rounded-xl font-bold transition-colors">Close</button>
               </div>
             )}
 

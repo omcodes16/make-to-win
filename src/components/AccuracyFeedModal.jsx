@@ -159,11 +159,31 @@ const MODAL_I18N = {
 // Status styles
 // ---------------------------------------------------------------------------
 const STATUS = {
-  accurate: { dot: 'bg-green-400',  text: 'text-green-400',  pill: 'bg-green-500/10 border-green-500/25 text-green-400'  },
-  close:    { dot: 'bg-yellow-400', text: 'text-yellow-400', pill: 'bg-yellow-500/10 border-yellow-500/25 text-yellow-400' },
-  off:      { dot: 'bg-red-400',    text: 'text-red-400',    pill: 'bg-red-500/10 border-red-500/25 text-red-400'        },
-  unknown:  { dot: 'bg-white/25',   text: 'text-white/40',   pill: 'bg-white/5 border-white/10 text-white/40'           },
-  pending:  { dot: 'bg-blue-400 animate-pulse', text: 'text-blue-300/80', pill: 'bg-blue-500/10 border-blue-500/20 text-blue-300/80' },
+  accurate: { 
+    dot: 'bg-emerald-500',  
+    text: 'text-emerald-800 dark:text-emerald-400 font-bold',  
+    pill: 'bg-emerald-50 border-emerald-300 text-emerald-900 dark:bg-emerald-500/15 dark:border-emerald-400/30 dark:text-emerald-300'  
+  },
+  close: { 
+    dot: 'bg-amber-500', 
+    text: 'text-amber-800 dark:text-amber-400 font-bold', 
+    pill: 'bg-amber-50 border-amber-300 text-amber-900 dark:bg-amber-500/15 dark:border-amber-400/30 dark:text-amber-300' 
+  },
+  off: { 
+    dot: 'bg-rose-500',    
+    text: 'text-rose-800 dark:text-rose-400 font-bold',    
+    pill: 'bg-rose-50 border-rose-300 text-rose-900 dark:bg-rose-500/15 dark:border-rose-400/30 dark:text-rose-300'        
+  },
+  unknown: { 
+    dot: 'bg-slate-400 dark:bg-white/25',   
+    text: 'text-slate-700 dark:text-white/40 font-bold',   
+    pill: 'bg-slate-100 border-slate-300 text-slate-800 dark:bg-white/5 dark:border-white/10 dark:text-white/40'           
+  },
+  pending: { 
+    dot: 'bg-sky-600 dark:bg-blue-400 animate-pulse', 
+    text: 'text-sky-950 dark:text-blue-300 font-bold', 
+    pill: 'bg-sky-100 border-sky-300 text-sky-950 dark:bg-blue-500/15 dark:border-blue-500/30 dark:text-blue-300 font-bold' 
+  },
 };
 
 // ---------------------------------------------------------------------------
@@ -205,42 +225,44 @@ function FeedCard({ item, lang }) {
   const claimLabel = (type) => lang.claimLabels?.[type] || lang.claimLabels?.other || type;
 
   return (
-    <div className="bg-black/25 rounded-2xl border border-white/5 hover:border-white/10 transition-colors overflow-hidden">
+    <div className="glass-panel rounded-2xl border border-[var(--theme-border)] shadow-sm hover:shadow-md transition-all overflow-hidden mb-3">
 
       {/* ── Top bar: date · location · status ── */}
-      <div className="flex items-center justify-between px-4 sm:px-5 pt-4 pb-3 gap-3">
-        <div className="flex items-center gap-1.5 text-white/40 text-xs">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <div className="flex items-center justify-between px-4 sm:px-5 pt-4 pb-2.5 gap-3">
+        <div className="flex items-center gap-1.5 text-[var(--text-secondary)] text-xs font-medium">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
             <line x1="16" y1="2" x2="16" y2="6"/>
             <line x1="8" y1="2" x2="8" y2="6"/>
             <line x1="3" y1="10" x2="21" y2="10"/>
           </svg>
-          {dateLabel}
+          <span className="font-semibold">{dateLabel}</span>
           {item.location && item.location !== 'Unknown' && (
-            <span className="text-white/20">· {item.location}</span>
+            <span className="opacity-60">· {item.location}</span>
           )}
         </div>
 
         {/* Status badge */}
-        <span className={`inline-flex items-center gap-1.5 border px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wide ${s.pill}`}>
+        <span className={`inline-flex items-center gap-1.5 border px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wide shadow-sm ${s.pill}`}>
           {overallStatus === 'pending' ? (
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="animate-spin">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="animate-spin">
               <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
             </svg>
           ) : (
-            <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
+            <span className={`w-2 h-2 rounded-full ${s.dot}`} />
           )}
           {lang[overallStatus] || overallStatus}
         </span>
       </div>
 
-      {/* ── User Question ── */}
-      <div className="mx-4 sm:mx-5 mb-3 pl-3 border-l-2 border-blue-500/40 bg-blue-500/5 rounded-r-lg py-2 pr-2">
-        <span className="text-blue-400/80 text-[10px] uppercase tracking-wider font-bold block mb-0.5">
+      {/* ── User Question (Bold & Deep Obsidian/Navy) ── */}
+      <div className="mx-4 sm:mx-5 mb-3 pl-3.5 pr-3 py-2.5 rounded-xl border border-blue-500/25 bg-blue-500/10 shadow-sm">
+        <span className="text-blue-700 dark:text-blue-400 text-[10px] uppercase tracking-wider font-black block mb-1">
           {lang.userQuestion}
         </span>
-        <p className="italic text-white/90 text-sm leading-snug">"{item.question}"</p>
+        <p className="font-bold text-[var(--text-primary)] text-sm sm:text-[15px] leading-snug">
+          "{item.question}"
+        </p>
       </div>
 
       {/* ── Claim quick-chips row ── */}
@@ -250,8 +272,8 @@ function FeedCard({ item, lang }) {
             const cs = c.accuracyStatus ? STATUS[c.accuracyStatus] : STATUS.pending;
             return (
               <span key={i}
-                className={`inline-flex items-center gap-1 border px-2 py-0.5 rounded-full text-[10px] font-semibold ${cs.pill}`}>
-                {claimLabel(c.claimType)}: {fmtVal(c.claimType, c.claimValue)}
+                className={`inline-flex items-center gap-1.5 border px-3 py-1 rounded-full text-[11px] font-extrabold shadow-sm ${cs.pill}`}>
+                <span>{claimLabel(c.claimType)}: {fmtVal(c.claimType, c.claimValue)}</span>
                 {c.actualValue != null && <> → <span className={cs.text}>{fmtVal(c.claimType, c.actualValue)}</span></>}
               </span>
             );
@@ -262,16 +284,16 @@ function FeedCard({ item, lang }) {
       {/* ── Details toggle button ── */}
       <button
         onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between px-4 sm:px-5 py-2.5 border-t border-white/5 text-white/40 hover:text-white/70 hover:bg-white/5 transition-colors text-xs font-semibold uppercase tracking-wider"
+        className="w-full flex items-center justify-between px-4 sm:px-5 py-2.5 border-t border-[var(--theme-border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--glass-bg-hover)] transition-colors text-xs font-bold uppercase tracking-wider"
       >
         <span className="flex items-center gap-1.5">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
             <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
           </svg>
           {lang.details}
         </span>
         <svg
-          width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+          width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
           className={`transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
         >
           <polyline points="6 9 12 15 18 9"/>
@@ -280,27 +302,27 @@ function FeedCard({ item, lang }) {
 
       {/* ── Expanded Details Panel ── */}
       {open && (
-        <div className="border-t border-white/5 px-4 sm:px-5 py-4 space-y-4 bg-black/10">
+        <div className="border-t border-[var(--theme-border)] px-4 sm:px-5 py-4 space-y-4 bg-[var(--card-bg)]">
 
           {/* Claims verification table */}
           <div>
-            <p className="text-[10px] uppercase tracking-wider font-bold text-white/30 mb-2 flex items-center gap-1.5">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <p className="text-[11px] uppercase tracking-wider font-extrabold text-[var(--text-secondary)] mb-2 flex items-center gap-1.5">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
               </svg>
               {lang.claimsTitle}
             </p>
 
             {claims.length === 0 ? (
-              <p className="text-white/30 text-xs italic px-1">{lang.noClaims}</p>
+              <p className="text-[var(--text-muted)] text-xs italic px-1">{lang.noClaims}</p>
             ) : (
-              <div className="bg-black/20 rounded-xl border border-white/5 overflow-hidden">
+              <div className="rounded-xl border border-[var(--theme-border)] overflow-hidden shadow-sm bg-[var(--glass-bg)]">
                 {/* Table header */}
-                <div className="grid grid-cols-4 gap-2 px-3 py-2 border-b border-white/8 bg-white/3">
-                  <span className="text-[9px] uppercase tracking-wider text-white/25 font-bold">{lang.metric}</span>
-                  <span className="text-[9px] uppercase tracking-wider text-white/25 font-bold text-right">{lang.aiPredicted}</span>
-                  <span className="text-[9px] uppercase tracking-wider text-white/25 font-bold text-right">{lang.actualOutcome}</span>
-                  <span className="text-[9px] uppercase tracking-wider text-white/25 font-bold text-right">Status</span>
+                <div className="grid grid-cols-4 gap-2 px-3 py-2 border-b border-[var(--theme-border)] bg-[var(--glass-bg-hover)] font-extrabold">
+                  <span className="text-[10px] uppercase tracking-wider text-[var(--text-secondary)]">{lang.metric}</span>
+                  <span className="text-[10px] uppercase tracking-wider text-[var(--text-secondary)] text-right">{lang.aiPredicted}</span>
+                  <span className="text-[10px] uppercase tracking-wider text-[var(--text-secondary)] text-right">{lang.actualOutcome}</span>
+                  <span className="text-[10px] uppercase tracking-wider text-[var(--text-secondary)] text-right">Status</span>
                 </div>
 
                 {/* Table rows — one per claim */}
@@ -308,13 +330,13 @@ function FeedCard({ item, lang }) {
                   const cs = c.accuracyStatus ? STATUS[c.accuracyStatus] : STATUS.pending;
                   return (
                     <div key={idx}
-                      className="grid grid-cols-4 gap-2 px-3 py-2.5 border-b border-white/5 last:border-0 items-center hover:bg-white/3 transition-colors">
-                      <span className="text-xs text-white/55 font-medium truncate">{claimLabel(c.claimType)}</span>
-                      <span className="text-xs font-bold text-amber-300 text-right">{fmtVal(c.claimType, c.claimValue)}</span>
-                      <span className={`text-xs font-bold text-right ${c.actualValue != null ? cs.text : 'text-white/25 italic'}`}>
+                      className="grid grid-cols-4 gap-2 px-3 py-2.5 border-b border-[var(--theme-border)] last:border-0 items-center hover:bg-[var(--glass-bg-hover)] transition-colors">
+                      <span className="text-xs font-bold text-[var(--text-primary)] truncate">{claimLabel(c.claimType)}</span>
+                      <span className="text-xs font-extrabold text-amber-700 dark:text-amber-300 text-right">{fmtVal(c.claimType, c.claimValue)}</span>
+                      <span className={`text-xs font-extrabold text-right ${c.actualValue != null ? cs.text : 'text-[var(--text-secondary)] italic'}`}>
                         {c.actualValue != null ? fmtVal(c.claimType, c.actualValue) : lang.waiting}
                       </span>
-                      <span className={`text-[10px] font-bold uppercase text-right ${cs.text}`}>
+                      <span className={`text-[11px] font-extrabold uppercase text-right ${cs.text}`}>
                         {c.accuracyStatus || (item.verified ? '—' : lang.pending)}
                       </span>
                     </div>
@@ -326,25 +348,25 @@ function FeedCard({ item, lang }) {
 
           {/* Full AI answer text */}
           <div>
-            <p className="text-[10px] uppercase tracking-wider font-bold text-white/30 mb-2 flex items-center gap-1.5">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <p className="text-[11px] uppercase tracking-wider font-extrabold text-[var(--text-secondary)] mb-2 flex items-center gap-1.5">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
               </svg>
               {lang.aiAnswer}
             </p>
-            <div className="bg-black/20 rounded-xl border border-white/5 p-3">
+            <div className="rounded-xl border border-[var(--theme-border)] p-3.5 bg-[var(--glass-bg)] shadow-inner">
               {item.answerText ? (
-                <p className="text-white/65 text-xs leading-relaxed whitespace-pre-wrap">{item.answerText}</p>
+                <p className="text-[var(--text-primary)] text-xs sm:text-[13px] leading-relaxed whitespace-pre-wrap font-medium">{item.answerText}</p>
               ) : (
-                <p className="text-white/25 text-xs italic">{lang.noAnswer}</p>
+                <p className="text-[var(--text-secondary)] text-xs italic">{lang.noAnswer}</p>
               )}
             </div>
           </div>
 
           {/* Verification note */}
           {!item.verified && (
-            <div className="flex items-start gap-2 p-2.5 bg-blue-500/5 rounded-lg border border-blue-500/15 text-blue-300/70 text-[10px]">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="mt-0.5 shrink-0">
+            <div className="flex items-start gap-2 p-2.5 bg-blue-500/10 rounded-lg border border-blue-500/25 text-blue-900 dark:text-blue-300 text-xs font-medium">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="mt-0.5 shrink-0">
                 <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
               </svg>
               Verification runs the next morning using the Open-Meteo weather archive. Each claim is checked independently.
@@ -387,38 +409,38 @@ export default function AccuracyFeedModal({ onClose }) {
 
   return (
     <div
-      className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6"
+      className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 animate-fade-in"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-2xl theme-modal rounded-3xl overflow-hidden flex flex-col max-h-[90vh] relative"
+        className="w-full max-w-2xl theme-modal rounded-3xl overflow-hidden flex flex-col max-h-[90vh] relative border border-[var(--modal-border)] shadow-2xl"
         onClick={e => e.stopPropagation()}
       >
         {/* ── Modal Header ── */}
-        <div className="p-5 sm:p-6 border-b border-white/10 relative shrink-0">
+        <div className="p-5 sm:p-6 border-b border-[var(--modal-border)] relative shrink-0">
           <button
             onClick={onClose}
-            className="absolute top-5 right-5 sm:top-6 sm:right-6 w-8 h-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 transition-colors border border-white/10 text-white/60 hover:text-white"
+            className="absolute top-5 right-5 sm:top-6 sm:right-6 w-8 h-8 flex items-center justify-center rounded-full bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-hover)] transition-colors border border-[var(--theme-border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
             </svg>
           </button>
 
           <div className="flex flex-col items-center text-center mt-2">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-green-500/20 to-blue-500/20 border border-green-400/30 flex items-center justify-center mb-3 shadow-[0_0_15px_rgba(34,197,94,0.2)]">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-green-400">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-tr from-green-500/20 to-blue-500/20 border border-green-400/40 flex items-center justify-center mb-3 shadow-[0_0_20px_rgba(34,197,94,0.25)]">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" className="text-green-500">
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
               </svg>
             </div>
-            <h2 className="text-xl sm:text-2xl font-bold text-white mb-1">{lang.title}</h2>
-            <p className="text-white/60 text-sm max-w-md mx-auto">{lang.subtitle}</p>
+            <h2 className="text-xl sm:text-2xl font-black text-[var(--text-primary)] mb-1 tracking-tight">{lang.title}</h2>
+            <p className="text-[var(--text-secondary)] text-xs sm:text-sm max-w-md mx-auto font-medium">{lang.subtitle}</p>
 
             {!loading && data.totalVerified > 0 && (
-              <div className="mt-4 bg-green-500/10 border border-green-500/30 px-5 py-2 rounded-full text-green-400 font-bold text-sm flex items-center gap-2">
-                <span className="relative flex h-2 w-2">
+              <div className="mt-4 bg-green-500/15 border border-green-500/40 px-5 py-2 rounded-full text-green-700 dark:text-green-400 font-extrabold text-sm flex items-center gap-2 shadow-sm">
+                <span className="relative flex h-2.5 w-2.5">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"/>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"/>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"/>
                 </span>
                 {lang.badge(data.accuratePercent, data.totalVerified)}
               </div>
@@ -429,16 +451,16 @@ export default function AccuracyFeedModal({ onClose }) {
         {/* ── Scrollable feed ── */}
         <div className="p-4 sm:p-6 overflow-y-auto custom-scrollbar flex-1">
           {loading && data.feed.length === 0 ? (
-            <div className="py-12 text-center text-white/50">
+            <div className="py-12 text-center text-[var(--text-secondary)] font-medium">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"/>
               <p>{lang.loading}</p>
             </div>
           ) : data.feed.length === 0 ? (
-            <div className="py-10 px-4 bg-black/20 rounded-2xl border border-white/5 text-center flex flex-col items-center">
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-white/20 mb-3">
+            <div className="py-10 px-4 rounded-2xl border border-[var(--theme-border)] bg-[var(--glass-bg)] text-center flex flex-col items-center">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="opacity-40 text-[var(--text-secondary)] mb-3">
                 <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
               </svg>
-              <p className="text-white/60 text-sm max-w-[280px]">{lang.empty}</p>
+              <p className="text-[var(--text-secondary)] text-sm max-w-[280px] font-medium">{lang.empty}</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -450,9 +472,9 @@ export default function AccuracyFeedModal({ onClose }) {
         </div>
 
         {/* ── Footer ── */}
-        <div className="px-5 py-3 border-t border-white/5 shrink-0">
-          <p className="text-[10px] text-white/25 text-center">
-            Click <strong className="text-white/40">Details & Verification</strong> on any card to see the full AI answer and per-claim accuracy check.
+        <div className="px-5 py-3 border-t border-[var(--modal-border)] shrink-0">
+          <p className="text-[11px] text-[var(--text-secondary)] text-center font-medium">
+            Click <strong className="text-[var(--text-primary)] font-bold">Details & Verification</strong> on any card to see the full AI answer and per-claim accuracy check.
           </p>
         </div>
       </div>

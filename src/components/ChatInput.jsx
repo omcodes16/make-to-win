@@ -248,7 +248,7 @@ export default function ChatInput() {
   };
 
   return (
-    <div className="bg-transparent border-t-0 p-4">
+    <div className="bg-transparent border-t-0 px-2 py-1">
       <div className="max-w-lg mx-auto relative">
         {/* UI States */}
         <div className="absolute -top-6 left-2 text-xs text-theme-muted font-medium">
@@ -290,7 +290,7 @@ export default function ChatInput() {
           <button
             type="submit"
             disabled={!input.trim() || state.isLoading}
-            className="w-10 h-10 flex items-center justify-center rounded-full bg-indigo-500 text-white disabled:opacity-30 disabled:bg-white/10 hover:bg-indigo-400 transition-all shadow-[0_0_15px_rgba(129,140,248,0.5)] hover:shadow-[0_0_25px_rgba(129,140,248,0.8)] active:scale-95"
+            className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-indigo-600 hover:bg-indigo-500 text-white disabled:opacity-40 disabled:bg-slate-200 dark:disabled:bg-white/10 disabled:text-slate-500 dark:disabled:text-white/40 transition-all shadow-md active:scale-95 flex-shrink-0 ml-1"
           >
             {state.isLoading ? (
               <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

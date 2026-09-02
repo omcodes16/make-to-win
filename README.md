@@ -143,26 +143,29 @@ flowchart TD
 
 ### 2.3 Weather Data Pipeline & Geocoding
 
-**Geocoding Pipeline (3-Tier Fallback):**
+**Geocoding Pipeline (Pan-India 3-Tier Resolution):**
 ```mermaid
 flowchart LR
-    A["Location Query"] --> B{"1. NER_CITIES\n(25 Hardcoded)"}
+    A["Location Query\n(e.g., Bhopal, Dispur, Village)"] --> B{"1. INDIA_CITIES\n(Instant Local Lookup)"}
     B -- Match --> C["Return Instantly\n(Zero Latency)"]
-    B -- Miss --> D{"2. Open-Meteo\nGeocoding API"}
-    D -- Success --> E["Return Lat/Lng"]
-    D -- Fail --> F{"3. Nominatim / OSM"}
+    B -- Miss --> D{"2. Open-Meteo API\n(country_code=IN)"}
+    D -- Success --> E["Return Lat/Lng\n(State/District)"]
+    D -- Fail --> F{"3. Nominatim / OSM\n(countrycodes=in)"}
     F -- Success --> E
     F -- Fail --> G["Return Null"]
 ```
 
+* **All-India Coverage**: Resolves all 28 States, 8 Union Territories, districts, tehsils, and rural villages across India with `{Village/City}, {District}, {State}, India` hierarchy.
+* **Authority Portal Expansion**: `districtData.js` covers every Indian state and district for hyper-targeted emergency alerts.
+
 **Weather Pipeline:** Fetches 5 external endpoints in parallel via `Promise.all()`:
 - Open-Meteo main forecast (current, hourly, daily)
-- Open-Meteo AQI
+- Open-Meteo AQI (PM2.5, PM10)
 - GFS Global Model (NOAA)
 - ICON Global Model (DWD)
 - ECMWF IFS025 Model
 
-### 2.4 NWP Multi-Model Confidence System
+### 2.4 NWP Multi-Model Confidence System & Live Compass
 
 Every forecast queries 3 global Numerical Weather Prediction (NWP) models to generate transparent confidence ratings.
 
@@ -176,6 +179,9 @@ graph TD
     Calc --> Med["🟡 MEDIUM: tempDiff ≤ 2.5°C OR precipDiff ≤ 30%"]
     Calc --> Low["🔴 LOW: tempDiff > 2.5°C AND precipDiff > 30%"]
 ```
+
+* **🧭 Live Meteorological & Sensor Compass**: Embedded in-line beside UV Max card, displaying real-time wind direction degrees ($0^\circ - 360^\circ$), cardinal headings (N, NE, E, SE, S, SW, W, NW), and smooth sensor-driven orientation on supported mobile devices.
+* **📖 Interactive User Guide**: Comprehensive 6-section guide embedded in Onboarding, Home Screen, and Header Hub for intuitive access to all platform capabilities.
 
 ### 2.5 Profession-Based Advisory System
 

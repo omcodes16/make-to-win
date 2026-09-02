@@ -175,7 +175,7 @@ export function AppProvider({ children }) {
            if (data.theme) dispatch({ type: 'SET_UI_THEME', payload: data.theme });
            if (data.language) dispatch({ type: 'SET_LANGUAGE', payload: data.language });
            if (data.userProfile) dispatch({ type: 'SET_PROFILE', payload: data.userProfile });
-           if (data.isOnboarded) dispatch({ type: 'SET_ONBOARDED' });
+           // Do not auto-bypass onboarding on mount so user always starts on the Category selection window
            if (data.isLargeText !== state.isLargeText) dispatch({ type: 'TOGGLE_LARGE_TEXT' });
            if (data.isHighContrast !== state.isHighContrast) dispatch({ type: 'TOGGLE_HIGH_CONTRAST' });
         }

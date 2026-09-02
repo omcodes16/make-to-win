@@ -4,6 +4,7 @@ import RadarMap from './RadarMap';
 import HistoricalAnalytics from './HistoricalAnalytics';
 import CommunityReports from './CommunityReports';
 import AccuracyTracker from './AccuracyTracker';
+import LiveCompass from './LiveCompass';
 
 import { geocodeLocation, searchLocationSuggestions, getWeather } from '../services/weatherApi';
 import { getWeatherInfo, checkSeverity } from '../utils/weatherConditions';
@@ -82,7 +83,15 @@ export default function WeatherDashboard() {
       if (ws.readyState === 1) ws.close();
     };
   }, [dispatch]);
+
   const [selectedDay, setSelectedDay] = useState(0); // 0 = today
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Real-time live clock updating every second
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const t = UI_TRANSLATIONS[state.language] || UI_TRANSLATIONS['en'];
   const locale = SPEECH_LANG_CODES[state.language] || 'en-IN';
@@ -157,10 +166,9 @@ export default function WeatherDashboard() {
     }
   };
 
-  if (!stageData) {
+  if (!stageData || !weather || !weather.daily) {
     return (
       <div className="min-h-[100dvh] flex flex-col">
-        
         <div className="relative z-10 flex-1 flex items-center justify-center p-4 sm:p-6 pb-24 md:pb-6 pt-20">
           <div className="w-full max-w-md glass-panel p-6 sm:p-8 rounded-3xl shadow-2xl relative">
             <h2 className="text-xl sm:text-2xl font-semibold text-white mb-6 text-center text-gradient-hero">{t.searchPrompt}</h2>
@@ -174,7 +182,9 @@ export default function WeatherDashboard() {
                 onFocus={() => { if (suggestions.length > 0) setShowSuggestions(true); }}
                 className="flex-1 glass-input rounded-xl px-4 py-3 text-white focus:outline-none transition-colors text-sm sm:text-base glow-focus"
               />
-              <button type="submit" className="px-4 sm:px-6 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-medium transition-all shadow-[0_0_15px_rgba(99,102,241,0.3)] hover:shadow-[0_0_25px_rgba(99,102,241,0.5)] text-sm sm:text-base">Go</button>
+              <button type="submit" disabled={isLoading} className="px-4 sm:px-6 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-medium transition-all shadow-[0_0_15px_rgba(99,102,241,0.3)] hover:shadow-[0_0_25px_rgba(99,102,241,0.5)] text-sm sm:text-base disabled:opacity-50">
+                {isLoading ? '...' : 'Go'}
+              </button>
             </form>
             {showSuggestions && suggestions.length > 0 && (
               <ul className="absolute z-50 w-full left-0 mt-2 theme-modal rounded-xl overflow-hidden max-h-64 overflow-y-auto">
@@ -193,55 +203,55 @@ export default function WeatherDashboard() {
               </ul>
             )}
           </div>
-        
-      
-    </div>
-  </div>
-  );
-}
+        </div>
+      </div>
+    );
+  }
 
-  // Derive Display Values (Today vs Future Day)
+  // Derive Display Values (Today vs Future Day) with 100% null safety
   const isToday = selectedDay === 0;
-  const displayTemp = isToday ? weather.temperature : Math.round(weather.daily.maxTemp[selectedDay]);
-  const displayFeelsLike = isToday ? weather.feelsLike : Math.round((weather.daily.maxTemp[selectedDay] + weather.daily.minTemp[selectedDay]) / 2);
-  const displayCode = isToday ? weather.weatherCode : weather.daily.weatherCode[selectedDay];
-  const displayUv = isToday ? weather.uvIndex : weather.daily.uvIndexMax[selectedDay];
+  const maxTempDaily = weather?.daily?.maxTemp?.[selectedDay] ?? weather?.temperature ?? 25;
+  const minTempDaily = weather?.daily?.minTemp?.[selectedDay] ?? (maxTempDaily - 8);
+  const displayTemp = isToday ? (weather?.temperature ?? Math.round(maxTempDaily)) : Math.round(maxTempDaily);
+  const displayFeelsLike = isToday ? (weather?.feelsLike ?? displayTemp) : Math.round((maxTempDaily + minTempDaily) / 2);
+  const displayCode = isToday ? (weather?.weatherCode ?? 0) : (weather?.daily?.weatherCode?.[selectedDay] ?? 0);
+  const displayUv = isToday ? (weather?.uvIndex ?? 5) : (weather?.daily?.uvIndexMax?.[selectedDay] ?? 5);
   
-  const isDayCurrent = isToday ? weather.isDay : true;
+  const isDayCurrent = isToday ? (weather?.isDay ?? true) : true;
   const weatherInfo = getWeatherInfo(displayCode, state.language, isDayCurrent);
-  const theme = getTheme({ ...weather, weatherCode: displayCode }, weatherInfo); // Pass mock weather with selected code
+  const theme = getTheme({ ...weather, weatherCode: displayCode }, weatherInfo);
 
-  // Generate hourly data (every 1 hour for next 12 hours instead of 3 hours)
+  // Generate hourly data safely
   const hourlyData = [];
-  if (weather && weather.hourly) {
+  if (weather && weather.hourly && Array.isArray(weather.hourly.time)) {
     const now = new Date();
     let currentHourIdx = weather.hourly.time.findIndex(time => new Date(time) > now) - 1 || 0;
     currentHourIdx = Math.max(0, currentHourIdx);
     for (let i = 0; i < 12; i++) {
       if (currentHourIdx + i < weather.hourly.time.length) {
         const timeObj = new Date(weather.hourly.time[currentHourIdx + i]);
-        const wInfo = getWeatherInfo(weather.hourly.weatherCode[currentHourIdx + i], state.language, weather.hourly.isDay[currentHourIdx + i]);
+        const wInfo = getWeatherInfo(weather.hourly.weatherCode?.[currentHourIdx + i] ?? 0, state.language, weather.hourly.isDay?.[currentHourIdx + i] ?? true);
         hourlyData.push({
           timeLabel: i === 0 ? (state.language === 'hi' ? 'अब' : 'Now') : timeObj.toLocaleTimeString(locale, { hour: 'numeric', hour12: true }),
-          temp: Math.round(weather.hourly.temperature[currentHourIdx + i]),
-          icon: wInfo.icon,
+          temp: Math.round(weather.hourly.temperature?.[currentHourIdx + i] ?? 20),
+          icon: wInfo?.icon || '🌤️',
         });
       }
     }
   }
 
-  // Generate daily data
+  // Generate daily data safely
   const dailyData = [];
-  if (weather && weather.daily) {
-    for (let i = 0; i < 7; i++) {
+  if (weather && weather.daily && Array.isArray(weather.daily.time)) {
+    for (let i = 0; i < Math.min(7, weather.daily.time.length); i++) {
       const dateObj = new Date(weather.daily.time[i]);
-      const wInfo = getWeatherInfo(weather.daily.weatherCode[i], state.language, true);
+      const wInfo = getWeatherInfo(weather.daily.weatherCode?.[i] ?? 0, state.language, true);
       dailyData.push({
         index: i,
         day: i === 0 ? t.today : dateObj.toLocaleDateString(locale, { weekday: 'short' }),
-        max: Math.round(weather.daily.maxTemp[i]),
-        min: Math.round(weather.daily.minTemp[i]),
-        icon: wInfo.icon,
+        max: Math.round(weather.daily.maxTemp?.[i] ?? 25),
+        min: Math.round(weather.daily.minTemp?.[i] ?? 18),
+        icon: wInfo?.icon || '🌤️',
       });
     }
   }
@@ -334,7 +344,7 @@ return (
             <div className="flex items-center gap-2 text-white/90 mb-2 font-medium text-base sm:text-lg flex-wrap">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#E8A33D" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
               <span className="truncate max-w-[200px] sm:max-w-none">{typeof stageData.locationName === 'string' ? stageData.locationName : 'Unknown Location'}</span>
-              {selectedDay > 0 && <span className="text-white/50 text-sm">({dailyData[selectedDay].day})</span>}
+              {selectedDay > 0 && <span className="text-white/50 text-sm">({dailyData[selectedDay]?.day || 'Day ' + (selectedDay + 1)})</span>}
               <button
                 onClick={() => {
                   const isSaved = state.savedLocations.some(l => l.name === stageData.locationName);
@@ -353,9 +363,20 @@ return (
                 <svg width="13" height="13" viewBox="0 0 24 24" fill={state.savedLocations.some(l => l.name === stageData.locationName) ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
               </button>
             </div>
-            <div className="flex items-center gap-2 sm:gap-4 mb-2">
+            <div className="flex items-center gap-2.5 sm:gap-4 mb-2 flex-wrap">
               <div className="text-6xl sm:text-[90px] lg:text-[110px] font-medium leading-none tracking-tighter drop-shadow-2xl">{displayTemp}°</div>
               <div className="text-3xl sm:text-5xl lg:text-6xl drop-shadow-xl">{weatherInfo?.icon}</div>
+              
+              {/* Live Real-Time Digital Clock in hr:min:sec format */}
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-2xl glass-panel border border-[var(--theme-border)] shadow-sm backdrop-blur-md self-center ml-1">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span className="font-mono text-xs sm:text-sm font-black tracking-wider text-[var(--text-primary)] tabular-nums">
+                  {currentTime.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}
+                </span>
+              </div>
             </div>
             <div className="flex items-center gap-2 sm:gap-3 mt-1 sm:mt-2 flex-wrap">
               <div className="text-base sm:text-2xl font-medium tracking-wide drop-shadow-md">{weatherInfo?.label}</div>
@@ -372,21 +393,28 @@ return (
             </div>
           </div>
 
-          {/* Right: Stat Cards */}
+          {/* Right: Stat Cards with Live Compass directly beside UV Max */}
           <div className="flex gap-2 sm:gap-4 overflow-x-auto w-full lg:w-auto pb-2 lg:pb-0 scrollbar-hide">
             {[
-              { icon: '🌡️', val: `${weather.daily.maxTemp[selectedDay]}°`, lbl: 'Max' },
-              { icon: '❄️', val: `${weather.daily.minTemp[selectedDay]}°`, lbl: 'Min' },
-              { icon: '💧', val: isToday ? `${weather.humidity}%` : `${weather.daily.precipProbMax[selectedDay]}%`, lbl: isToday ? t.hum : 'Precip' },
-              { icon: '💨', val: isToday ? `${weather.windSpeed} ${t.kmh}` : '--', lbl: t.windTab },
+              { icon: '🌡️', val: `${weather?.daily?.maxTemp?.[selectedDay] ?? '--'}°`, lbl: 'Max' },
+              { icon: '❄️', val: `${weather?.daily?.minTemp?.[selectedDay] ?? '--'}°`, lbl: 'Min' },
+              { icon: '💧', val: isToday ? `${weather?.humidity ?? '--'}%` : `${weather?.daily?.precipProbMax?.[selectedDay] ?? '--'}%`, lbl: isToday ? t.hum : 'Precip' },
               { icon: '☀️', val: `${displayUv}`, lbl: 'UV Max' }
             ].map((stat, i) => (
-              <div key={i} className="glass-panel border border-white/10 rounded-2xl sm:rounded-[2rem] p-2.5 sm:p-5 flex flex-col items-center justify-center min-w-[64px] sm:min-w-[90px] shadow-[0_8px_30px_rgb(0,0,0,0.12)] shimmer-hover stat-card-hover">
+              <div key={i} className="glass-panel border border-[var(--theme-border)] rounded-2xl sm:rounded-[2rem] p-2.5 sm:p-5 flex flex-col items-center justify-center min-w-[64px] sm:min-w-[90px] shadow-sm shimmer-hover stat-card-hover">
                 <div className="text-lg sm:text-2xl mb-1 sm:mb-3 opacity-90">{stat.icon}</div>
-                <div className="font-semibold text-sm sm:text-xl mb-0.5 sm:mb-1 whitespace-nowrap">{stat.val}</div>
-                <div className="text-white/50 text-[8px] sm:text-[11px] font-medium uppercase tracking-wider">{stat.lbl}</div>
+                <div className="font-semibold text-sm sm:text-xl mb-0.5 sm:mb-1 whitespace-nowrap text-[var(--text-primary)]">{stat.val}</div>
+                <div className="text-[var(--text-secondary)] text-[8px] sm:text-[11px] font-medium uppercase tracking-wider">{stat.lbl}</div>
               </div>
             ))}
+
+            {/* Live Meteorological & Device Sensor Compass (In-line beside UV MAX) */}
+            <LiveCompass 
+              windDeg={weather?.windDirection} 
+              windSpeed={weather?.windSpeed} 
+              isCurrentLocation={Boolean(stageData?.lat && state.currentWeather?.lat && Math.abs(stageData.lat - state.currentWeather.lat) < 0.05)}
+              label={t.windTab || "Wind"}
+            />
           </div>
         </div>
 
@@ -513,87 +541,183 @@ return (
               </div>
             )}
 
-            <div className="glass-panel border border-white/10 rounded-3xl p-4 sm:p-6 shadow-xl flex-1 flex flex-col justify-between">
-              <div className="text-white/80 font-medium text-xs sm:text-sm mb-2 flex items-center gap-2 tracking-wide">🌅 {t.sunrise} & {t.sunset}</div>
-              <div className="relative h-40 sm:h-48 w-full flex items-center justify-center mt-2 sm:mt-0">
-                <svg className="absolute inset-0 w-full h-full" preserveAspectRatio="xMidYMid meet" viewBox="0 0 200 80">
-                  {/* Horizon Line */}
-                  <line x1="5" y1="40" x2="195" y2="40" stroke="rgba(255,255,255,0.15)" strokeWidth="1" strokeDasharray="3 4" />
-                  
-                  {/* Top Arc (Day) - Ellipse */}
-                  <path d="M 20 40 A 80 28 0 0 1 180 40" fill="none" stroke="rgba(251, 191, 36, 0.4)" strokeWidth="2" strokeDasharray="4 5" />
-                  
-                  {/* Bottom Arc (Night) - Ellipse */}
-                  <path d="M 180 40 A 80 28 0 0 1 20 40" fill="none" stroke="rgba(96, 165, 250, 0.3)" strokeWidth="2" strokeDasharray="4 5" />
+            <div className="glass-panel border border-[var(--theme-border)] rounded-3xl p-4 sm:p-6 shadow-xl flex-1 flex flex-col justify-between">
+              {(() => {
+                const sunriseRaw = weather?.daily?.sunrise?.[selectedDay];
+                const sunsetRaw = weather?.daily?.sunset?.[selectedDay];
+                if (!sunriseRaw || !sunsetRaw) {
+                  return (
+                    <div className="text-[var(--text-secondary)] text-xs text-center py-8 font-medium">
+                      Sunrise and sunset data unavailable for this date.
+                    </div>
+                  );
+                }
 
-                  {(() => {
-                    if (!isToday) return null;
-                    
-                    const now = new Date().getTime();
-                    const sunriseRaw = weather.daily.sunrise?.[selectedDay];
-                    const sunsetRaw = weather.daily.sunset?.[selectedDay];
-                    if (!sunriseRaw || !sunsetRaw) return null;
-                    
-                    const sunrise = new Date(sunriseRaw).getTime();
-                    const sunset = new Date(sunsetRaw).getTime();
-                    
-                    let cx, cy, isNightIcon = false;
-                    if (now >= sunrise && now <= sunset) {
-                      // Day
-                      const t_val = (now - sunrise) / (sunset - sunrise);
-                      const angle = Math.PI - (t_val * Math.PI);
-                      cx = 100 + 80 * Math.cos(angle);
-                      cy = 40 - 28 * Math.sin(angle);
-                    } else {
-                      // Night
-                      isNightIcon = true;
-                      let t_night = 0;
-                      if (now > sunset) {
-                        const nextSunrise = sunrise + 86400000;
-                        t_night = (now - sunset) / (nextSunrise - sunset);
-                      } else {
-                        const prevSunset = sunset - 86400000;
-                        t_night = (now - prevSunset) / (sunrise - prevSunset);
-                      }
-                      t_night = Math.max(0, Math.min(1, t_night));
-                      const angle = t_night * Math.PI;
-                      cx = 100 + 80 * Math.cos(angle);
-                      cy = 40 + 28 * Math.sin(angle);
-                    }
-                    
-                    const srStr = new Date(sunrise).toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit' });
-                    const ssStr = new Date(sunset).toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit' });
+                const sunrise = new Date(sunriseRaw).getTime();
+                const sunset = new Date(sunsetRaw).getTime();
+                const now = currentTime.getTime();
+                const isDaytime = now >= sunrise && now <= sunset;
 
-                    return (
-                      <>
-                        {/* Sunrise / Sunset Labels */}
-                        <text x="50" y="32" fill="rgba(255,255,255,0.4)" fontSize="6" textAnchor="middle" fontWeight="bold" letterSpacing="1">{t.sunrise.toUpperCase()}</text>
-                        <text x="50" y="39" fill="white" fontSize="8" textAnchor="middle" fontWeight="bold">{srStr}</text>
+                const srStr = new Date(sunrise).toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit' });
+                const ssStr = new Date(sunset).toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit' });
+
+                // Daylight duration calculation
+                const totalDaylightMs = Math.max(0, sunset - sunrise);
+                const daylightHours = Math.floor(totalDaylightMs / (1000 * 60 * 60));
+                const daylightMins = Math.floor((totalDaylightMs % (1000 * 60 * 60)) / (1000 * 60));
+
+                let statusBadge = `${daylightHours}h ${daylightMins}m Daylight`;
+                if (isToday) {
+                  if (isDaytime) {
+                    const leftMs = sunset - now;
+                    const leftH = Math.floor(leftMs / (1000 * 60 * 60));
+                    const leftM = Math.floor((leftMs % (1000 * 60 * 60)) / (1000 * 60));
+                    statusBadge = leftH > 0 ? `☀️ ${leftH}h ${leftM}m until sunset` : `☀️ ${leftM}m until sunset`;
+                  } else if (now < sunrise) {
+                    const untilDawnMs = sunrise - now;
+                    const dawnH = Math.floor(untilDawnMs / (1000 * 60 * 60));
+                    const dawnM = Math.floor((untilDawnMs % (1000 * 60 * 60)) / (1000 * 60));
+                    statusBadge = `🌙 Sunrise in ${dawnH}h ${dawnM}m`;
+                  } else {
+                    statusBadge = `🌙 Night · ${daylightHours}h ${daylightMins}m Day`;
+                  }
+                }
+
+                // Celestial orb coordinates on spacious, balanced curve
+                // ViewBox: 0 0 300 100, Horizon at y=65, rx=120, ry=46
+                let cx = 150, cy = 19, isNightIcon = false;
+                if (isDaytime) {
+                  const t_val = Math.max(0, Math.min(1, (now - sunrise) / (sunset - sunrise)));
+                  const angle = Math.PI * (1 - t_val); // PI at sunrise, 0 at sunset
+                  cx = 150 + 120 * Math.cos(angle);
+                  cy = 65 - 46 * Math.sin(angle);
+                } else {
+                  isNightIcon = true;
+                  let t_night = 0;
+                  if (now > sunset) {
+                    const nextSunrise = sunrise + 86400000;
+                    t_night = (now - sunset) / (nextSunrise - sunset);
+                  } else {
+                    const prevSunset = sunset - 86400000;
+                    t_night = (now - prevSunset) / (sunrise - prevSunset);
+                  }
+                  t_night = Math.max(0, Math.min(1, t_night));
+                  const angle = t_night * Math.PI;
+                  cx = 150 + 120 * Math.cos(angle);
+                  cy = 65 + 24 * Math.sin(angle);
+                }
+
+                return (
+                  <>
+                    {/* Header */}
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="text-[var(--text-primary)] font-black text-xs sm:text-sm flex items-center gap-2 tracking-wide">
+                        <span>🌅</span> {t.sunrise} & {t.sunset}
+                      </div>
+                      <span className="text-[10px] sm:text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/25">
+                        {statusBadge}
+                      </span>
+                    </div>
+
+                    {/* Celestial Arc Graphic */}
+                    <div className="relative h-32 sm:h-36 w-full flex items-center justify-center my-1">
+                      <svg className="w-full h-full" preserveAspectRatio="xMidYMid meet" viewBox="0 0 300 100">
+                        <defs>
+                          <linearGradient id="dayArcGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stopColor="#F59E0B" />
+                            <stop offset="50%" stopColor="#FBBF24" />
+                            <stop offset="100%" stopColor="#EA580C" />
+                          </linearGradient>
+                          <linearGradient id="dayFillGlow" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stopColor="#F59E0B" stopOpacity="0.22" />
+                            <stop offset="80%" stopColor="#F59E0B" stopOpacity="0.03" />
+                            <stop offset="100%" stopColor="#F59E0B" stopOpacity="0" />
+                          </linearGradient>
+                          <linearGradient id="nightArcGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stopColor="#6366F1" />
+                            <stop offset="100%" stopColor="#A855F7" />
+                          </linearGradient>
+                          <filter id="sunGlow" x="-50%" y="-50%" width="200%" height="200%">
+                            <feGaussianBlur stdDeviation="4" result="blur" />
+                            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                          </filter>
+                        </defs>
+
+                        {/* Soft Daylight Dome Fill */}
+                        <path d="M 30 65 A 120 46 0 0 1 270 65 Z" fill="url(#dayFillGlow)" />
+
+                        {/* Horizon Line */}
+                        <line x1="15" y1="65" x2="285" y2="65" stroke="var(--theme-border)" strokeWidth="1" strokeDasharray="3 4" opacity="0.8" />
+
+                        {/* Top Arc (Day Sky Path) */}
+                        <path 
+                          d="M 30 65 A 120 46 0 0 1 270 65" 
+                          fill="none" 
+                          stroke="url(#dayArcGlow)" 
+                          strokeWidth="2.5" 
+                          strokeDasharray="4 4" 
+                        />
                         
-                        <text x="150" y="32" fill="rgba(255,255,255,0.4)" fontSize="6" textAnchor="middle" fontWeight="bold" letterSpacing="1">{t.sunset.toUpperCase()}</text>
-                        <text x="150" y="39" fill="white" fontSize="8" textAnchor="middle" fontWeight="bold">{ssStr}</text>
+                        {/* Bottom Arc (Night Path) */}
+                        <path 
+                          d="M 270 65 A 120 24 0 0 1 30 65" 
+                          fill="none" 
+                          stroke="url(#nightArcGlow)" 
+                          strokeWidth="1.5" 
+                          strokeDasharray="3 4" 
+                          opacity="0.4"
+                        />
 
-                        {/* Animated Sun or Moon Shape */}
-                        <g transform={`translate(${cx}, ${cy})`}>
-                          {isNightIcon ? (
-                            <path d="M-2.5,-6 A 6 6 0 1 0 6 6 A 8 8 0 1 1 -2.5,-6 Z" fill="#BFDBFE" filter="drop-shadow(0px 0px 5px rgba(96,165,250,0.8))">
-                              <animate attributeName="opacity" values="0.7; 1; 0.7" dur="3s" repeatCount="indefinite" />
-                            </path>
-                          ) : (
-                            <>
-                              <circle r="7" fill="#FBBF24" filter="drop-shadow(0px 0px 6px rgba(245,158,11,0.9))">
-                                <animate attributeName="r" values="6; 8; 6" dur="2s" repeatCount="indefinite" />
-                                <animate attributeName="opacity" values="0.8; 1; 0.8" dur="2s" repeatCount="indefinite" />
-                              </circle>
-                              <circle r="4" fill="#FEF08A" />
-                            </>
-                          )}
-                        </g>
-                      </>
-                    );
-                  })()}
-                </svg>
-              </div>
+                        {/* Horizon Anchor Nodes */}
+                        <circle cx="30" cy="65" r="3.5" fill="#F59E0B" stroke="var(--glass-bg)" strokeWidth="1.5" />
+                        <circle cx="270" cy="65" r="3.5" fill="#EA580C" stroke="var(--glass-bg)" strokeWidth="1.5" />
+
+                        {/* Active Sun or Moon Orb with Pulsing Halos */}
+                        {isToday && (
+                          <g transform={`translate(${cx}, ${cy})`}>
+                            {isNightIcon ? (
+                              <g filter="drop-shadow(0px 0px 8px rgba(147,197,253,0.8))">
+                                <circle r="8" fill="rgba(147,197,253,0.2)" />
+                                <path d="M-3,-6 A 6 6 0 1 0 6 6 A 8 8 0 1 1 -3,-6 Z" fill="#BFDBFE">
+                                  <animate attributeName="opacity" values="0.8; 1; 0.8" dur="3s" repeatCount="indefinite" />
+                                </path>
+                              </g>
+                            ) : (
+                              <g filter="url(#sunGlow)">
+                                <circle r="11" fill="rgba(245,158,11,0.25)">
+                                  <animate attributeName="r" values="9; 13; 9" dur="2.5s" repeatCount="indefinite" />
+                                  <animate attributeName="opacity" values="0.4; 0.8; 0.4" dur="2.5s" repeatCount="indefinite" />
+                                </circle>
+                                <circle r="6.5" fill="#FBBF24" />
+                                <circle r="4" fill="#FFFBEB" />
+                              </g>
+                            )}
+                          </g>
+                        )}
+                      </svg>
+                    </div>
+
+                    {/* Dedicated Clean Stats Bar (Zero Text Collision!) */}
+                    <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[var(--theme-border)]">
+                      <div className="flex items-center gap-2.5 p-2 rounded-2xl bg-[var(--glass-bg)] border border-[var(--theme-border)] shadow-sm">
+                        <div className="w-8 h-8 rounded-xl bg-amber-500/15 border border-amber-500/20 flex items-center justify-center text-base shrink-0">🌅</div>
+                        <div>
+                          <div className="text-[10px] font-extrabold uppercase tracking-wider text-[var(--text-secondary)]">{t.sunrise}</div>
+                          <div className="text-xs sm:text-sm font-black text-[var(--text-primary)]">{srStr}</div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2.5 p-2 rounded-2xl bg-[var(--glass-bg)] border border-[var(--theme-border)] shadow-sm">
+                        <div className="w-8 h-8 rounded-xl bg-orange-500/15 border border-orange-500/20 flex items-center justify-center text-base shrink-0">🌇</div>
+                        <div>
+                          <div className="text-[10px] font-extrabold uppercase tracking-wider text-[var(--text-secondary)]">{t.sunset}</div>
+                          <div className="text-xs sm:text-sm font-black text-[var(--text-primary)]">{ssStr}</div>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           </div>
         </div>

@@ -18,16 +18,16 @@ export default function ChatScreen() {
     <div className="flex flex-col h-[100dvh]">
       
 
-      {/* Main chat area — scrollable */}
-      <main className="flex-1 overflow-y-auto relative z-10 pt-[60px] sm:pt-[72px] pb-[200px] md:pb-[160px]">
-        <div className="w-full max-w-3xl mx-auto px-3 sm:px-4">
+      {/* Main chat area — scrollable with generous top and bottom padding */}
+      <main className="flex-1 overflow-y-auto relative z-10 pt-20 sm:pt-24 pb-52 sm:pb-40">
+        <div className="w-full max-w-2xl mx-auto px-3 sm:px-4">
           <MessageList />
         </div>
       </main>
 
-      {/* Input pinned at bottom — above mobile nav bar */}
-      <div className="fixed bottom-[56px] md:bottom-0 left-0 right-0 z-30 pb-3 md:pb-4 pt-8 bg-gradient-to-t from-[var(--overlay-dark)] via-[var(--overlay-dark)] to-transparent">
-        <div className="max-w-3xl mx-auto px-3 sm:px-4">
+      {/* Input pinned at bottom — docked neatly above the mobile bottom bar */}
+      <div className="fixed bottom-[60px] sm:bottom-[64px] md:bottom-0 left-0 right-0 z-40 px-3 pb-2 pt-4 bg-gradient-to-t from-[var(--overlay-dark)] via-[var(--overlay-dark)]/95 to-transparent pointer-events-none">
+        <div className="max-w-xl mx-auto pointer-events-auto">
           <SevereAlertBanner />
           <ChatInput />
         </div>
