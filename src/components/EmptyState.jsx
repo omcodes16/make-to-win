@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useApp } from '../context/AppContext';
 import { EXAMPLE_QUESTIONS } from '../utils/constants';
-import UserGuideModal from './UserGuideModal';
 
 const CARD_ACCENTS = [
   { emoji: '🌾', hover: 'hover:border-indigo-400/40 hover:shadow-[0_0_20px_rgba(129,140,248,0.15)]', iconHover: 'group-hover:bg-indigo-500/20 group-hover:border-indigo-400/30', arrow: 'group-hover:text-indigo-400' },
@@ -11,8 +10,7 @@ const CARD_ACCENTS = [
 ];
 
 export default function EmptyState() {
-  const { state, dispatch } = useApp();
-  const [isGuideOpen, setGuideOpen] = useState(false);
+  const { state } = useApp();
 
   const questions = EXAMPLE_QUESTIONS[state.language] || EXAMPLE_QUESTIONS.en;
 
@@ -35,22 +33,12 @@ export default function EmptyState() {
          state.language === 'as' ? 'আপুনি কি জানিব বিচাৰে?' :
          'আপনি কী জানতে চান?'}
       </h2>
-      <p className="text-theme-muted text-center mb-3 sm:mb-4 max-w-md text-xs sm:text-sm px-4">
+      <p className="text-theme-muted text-center mb-4 sm:mb-5 max-w-md text-xs sm:text-sm px-4">
         {state.language === 'en' ? 'Tap a question below or type your own' :
          state.language === 'hi' ? 'नीचे एक सवाल टैप करें या अपना लिखें' :
          state.language === 'as' ? 'তলৰ প্ৰশ্ন এটা টিপক বা নিজৰ লিখক' :
          'নিচের একটি প্রশ্ন ট্যাপ করুন বা নিজের লিখুন'}
       </p>
-
-      {/* User Guide Pill on Home Screen */}
-      <button
-        onClick={() => setGuideOpen(true)}
-        className="mb-4 px-4 py-2 rounded-full glass-panel border border-indigo-400/40 hover:border-indigo-400/80 bg-indigo-500/15 hover:bg-indigo-500/30 text-indigo-200 hover:text-white text-xs sm:text-sm font-semibold flex items-center gap-2 transition-all shadow-md active:scale-95 shimmer-hover"
-      >
-        <span>📖</span>
-        <span>{state.language === 'hi' ? 'ऐप उपयोग गाइड (User Guide)' : 'App User Guide'}</span>
-        <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-400/20 text-indigo-300 font-bold uppercase">Guide</span>
-      </button>
 
       {/* Glassmorphism Suggestion Cards */}
       <div className="w-full flex flex-col gap-2 sm:gap-2.5 max-w-xl px-1 sm:px-0">
@@ -78,8 +66,6 @@ export default function EmptyState() {
           );
         })}
       </div>
-
-      <UserGuideModal isOpen={isGuideOpen} onClose={() => setGuideOpen(false)} />
     </div>
   );
 }

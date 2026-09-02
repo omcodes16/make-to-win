@@ -44,8 +44,10 @@ export default function WeatherDashboard() {
 
     // Connect to WebSocket
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}`;
+    const host = window.location.port === '5173' ? `${window.location.hostname}:3001` : window.location.host;
+    const wsUrl = `${protocol}//${host}`;
     const ws = new WebSocket(wsUrl);
+    ws.onerror = () => {};
 
     ws.onmessage = (event) => {
       try {
