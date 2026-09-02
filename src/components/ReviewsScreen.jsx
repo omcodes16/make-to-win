@@ -11,7 +11,7 @@ import Header from './Header';
 const API_URL = '/api/reviews'; 
 
 export default function ReviewsScreen() {
-  const { state } = useApp();
+  const { state, dispatch } = useApp();
   const [reviews, setReviews] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   
@@ -122,6 +122,23 @@ export default function ReviewsScreen() {
 
       <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 pt-24 sm:pt-32 pb-10">
         
+        {/* Back Navigation Bar */}
+        <div className="flex items-center mb-6">
+          <button
+            onClick={() => {
+              if (window.history.state?.tab) {
+                window.history.back();
+              } else {
+                dispatch({ type: 'SET_ACTIVE_TAB', payload: 'chat' });
+              }
+            }}
+            className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 text-white font-medium text-xs sm:text-sm backdrop-blur-md border border-white/10 transition-all shadow-md active:scale-95"
+          >
+            <span>←</span>
+            <span>Back to Dashboard</span>
+          </button>
+        </div>
+
         {/* Header */}
         <div className="text-center mb-10">
           <h1 className="text-3xl sm:text-4xl font-bold mb-3 flex items-center justify-center gap-3">

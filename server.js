@@ -296,31 +296,66 @@ app.post('/api/reviews', async (req, res) => {
 });
 
 // --- SETTINGS API ---
+const SETTINGS_FILE = join(__dirname, "user_settings.json");
+let localUserSettings = {};
+try {
+  if (fs.existsSync(SETTINGS_FILE)) {
+    localUserSettings = JSON.parse(fs.readFileSync(SETTINGS_FILE, "utf8"));
+  }
+} catch (e) {
+  console.error("Failed to load user settings file:", e);
+}
+
+const saveLocalSettings = () => {
+  try {
+    fs.writeFileSync(SETTINGS_FILE, JSON.stringify(localUserSettings, null, 2));
+  } catch (e) {
+    console.error("Failed to save user settings file:", e);
+  }
+};
+
 app.get('/api/settings/:userId', async (req, res) => {
   try {
+    const userId = req.params.userId;
     if (USE_MONGODB) {
-      const settings = await UserSetting.findOne({ userId: req.params.userId });
-      res.json(settings || {});
-    } else {
-      res.json({});
+      const settings = await UserSetting.findOne({ userId });
+      if (settings) {
+        return res.json(settings);
+      }
     }
+    const fallback = localUserSettings[userId] || {};
+    res.json(fallback);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    const fallback = localUserSettings[req.params.userId] || {};
+    res.json(fallback);
   }
 });
 
 app.post('/api/settings/:userId', async (req, res) => {
   try {
+    const userId = req.params.userId;
+    const data = { ...req.body, userId, updatedAt: new Date() };
+
+    localUserSettings[userId] = {
+      ...(localUserSettings[userId] || {}),
+      ...data
+    };
+    saveLocalSettings();
+
     if (USE_MONGODB) {
-      const settings = await UserSetting.findOneAndUpdate(
-        { userId: req.params.userId },
-        { ...req.body, userId: req.params.userId },
-        { upsert: true, new: true }
-      );
-      res.json(settings);
-    } else {
-      res.json({ success: false });
+      try {
+        const settings = await UserSetting.findOneAndUpdate(
+          { userId },
+          data,
+          { upsert: true, new: true }
+        );
+        return res.json(settings);
+      } catch (dbErr) {
+        console.error("MongoDB setting update warning, used file fallback:", dbErr.message);
+      }
     }
+
+    res.json(localUserSettings[userId]);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

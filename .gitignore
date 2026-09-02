@@ -1,4 +1,4 @@
-﻿node_modules/
+node_modules/
 dist/
 .env
 .DS_Store
@@ -14,3 +14,4 @@ dev-archive/
 # Generated Data Files
 accuracy_log.json
 forecast_snapshots.json
+user_settings.json

@@ -3,11 +3,18 @@ import { INDIA_DISTRICTS } from "../utils/districtData";
 import { geocodeLocation, searchLocationSuggestions } from "../services/weatherApi";
 import SmsSimulatorModal from "./SmsSimulatorModal";
 import SmsRegistryPanel from "./SmsRegistryPanel";
+import { useApp } from "../context/AppContext";
 
 const API_URL = import.meta.env.VITE_API_URL || "";
 
 export default function ManagerDashboard() {
+  const { dispatch } = useApp();
   const [token, setToken] = useState(null); // Start null, validate on mount
+
+  const handleReturnToApp = () => {
+    window.history.pushState({ tab: 'chat' }, '', '/');
+    dispatch({ type: 'SET_ACTIVE_TAB', payload: 'chat' });
+  };
   const [passcode, setPasscode] = useState("");
   const [alerts, setAlerts] = useState([]);
   const [sosRequests, setSosRequests] = useState([]);
@@ -295,7 +302,7 @@ export default function ManagerDashboard() {
             {isLoggingIn ? "Verifying..." : "Access Panel"}
           </button>
           
-          <button type="button" onClick={() => window.location.href = '/'} className="mt-6 w-full text-white/50 hover:text-white py-2 transition-colors text-sm flex items-center justify-center gap-2">
+          <button type="button" onClick={handleReturnToApp} className="mt-6 w-full text-white/50 hover:text-white py-2 transition-colors text-sm flex items-center justify-center gap-2">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
               Return to Dashboard
           </button>
@@ -321,7 +328,10 @@ export default function ManagerDashboard() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-red-400 to-amber-400">Disaster Management Panel</h1>
           <div className="flex gap-2">
-            <button onClick={() => window.location.href = '/'} className="text-sm bg-white/10 px-4 py-2 rounded-lg hover:bg-white/20">Back to App</button>
+            <button onClick={handleReturnToApp} className="text-sm bg-white/10 px-4 py-2 rounded-lg hover:bg-white/20 flex items-center gap-1.5">
+              <span>←</span>
+              <span>Back to App</span>
+            </button>
             <button onClick={() => { sessionStorage.removeItem("mgr_token"); setToken(null); }} className="text-sm bg-white/10 px-4 py-2 rounded-lg hover:bg-white/20">Logout</button>
           </div>
         </div>

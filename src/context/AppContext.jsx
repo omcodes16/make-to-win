@@ -16,6 +16,7 @@ const AppContext = createContext();
 // INITIAL STATE
 // ─────────────────────────────────────────────────────────────────────────────
 const initialState = {
+  isSettingsLoaded: false,
   activeTab: 'chat',
   weatherStageData: safeLoad('weathergpt-stage-cache', null),
   language: 'en',
@@ -40,6 +41,9 @@ const initialState = {
 // ─────────────────────────────────────────────────────────────────────────────
 function appReducer(state, action) {
   switch (action.type) {
+
+    case 'SET_SETTINGS_LOADED':
+      return { ...state, isSettingsLoaded: true };
 
     case 'SET_UI_THEME':
       return { ...state, uiTheme: action.payload };
@@ -175,14 +179,34 @@ export function AppProvider({ children }) {
            if (data.theme) dispatch({ type: 'SET_UI_THEME', payload: data.theme });
            if (data.language) dispatch({ type: 'SET_LANGUAGE', payload: data.language });
            if (data.userProfile) dispatch({ type: 'SET_PROFILE', payload: data.userProfile });
-           // Do not auto-bypass onboarding on mount so user always starts on the Category selection window
+           if (data.isOnboarded) dispatch({ type: 'SET_ONBOARDED' });
+
+           // Determine activeTab: prioritize specific URL path if present, otherwise restore saved tab from backend
+           const path = window.location.pathname.replace(/^\//, '');
+           if (path === 'manager' || path === 'alerts' || path === 'stage' || path === 'reviews' || path === 'chat') {
+             dispatch({ type: 'SET_ACTIVE_TAB', payload: path });
+           } else if (data.activeTab) {
+             dispatch({ type: 'SET_ACTIVE_TAB', payload: data.activeTab });
+           }
+
            if (data.isLargeText !== state.isLargeText) dispatch({ type: 'TOGGLE_LARGE_TEXT' });
            if (data.isHighContrast !== state.isHighContrast) dispatch({ type: 'TOGGLE_HIGH_CONTRAST' });
+        } else {
+           const path = window.location.pathname.replace(/^\//, '');
+           if (path === 'manager' || path === 'alerts' || path === 'stage' || path === 'reviews') {
+             dispatch({ type: 'SET_ACTIVE_TAB', payload: path });
+           }
         }
+        dispatch({ type: 'SET_SETTINGS_LOADED' });
         settingsLoaded.current = true;
       })
       .catch(err => {
-        console.error('Failed to load settings', err);
+        console.error('Failed to load settings from backend:', err);
+        const path = window.location.pathname.replace(/^\//, '');
+        if (path === 'manager' || path === 'alerts' || path === 'stage' || path === 'reviews') {
+          dispatch({ type: 'SET_ACTIVE_TAB', payload: path });
+        }
+        dispatch({ type: 'SET_SETTINGS_LOADED' });
         settingsLoaded.current = true;
       });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -204,10 +228,29 @@ export function AppProvider({ children }) {
         isOnboarded: state.isOnboarded,
         isLargeText: state.isLargeText,
         isHighContrast: state.isHighContrast,
-        userProfile: state.userProfile
+        userProfile: state.userProfile,
+        activeTab: state.activeTab,
       })
-    }).catch(e => console.error('Failed to sync settings', e));
-  }, [state.uiTheme, state.language, state.isOnboarded, state.isLargeText, state.isHighContrast, state.userProfile]);
+    }).catch(e => console.error('Failed to sync settings to backend', e));
+  }, [state.uiTheme, state.language, state.isOnboarded, state.isLargeText, state.isHighContrast, state.userProfile, state.activeTab]);
+
+  // 3. Listen to browser Back/Forward (popstate) to return to previous window without reload
+  useEffect(() => {
+    const handlePopState = (event) => {
+      if (event.state && event.state.tab) {
+        dispatch({ type: 'SET_ACTIVE_TAB', payload: event.state.tab });
+      } else {
+        const path = window.location.pathname.replace(/^\//, '');
+        if (path === 'manager' || path === 'alerts' || path === 'stage' || path === 'reviews') {
+          dispatch({ type: 'SET_ACTIVE_TAB', payload: path });
+        } else {
+          dispatch({ type: 'SET_ACTIVE_TAB', payload: 'chat' });
+        }
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   useEffect(() => {
     const handleOnline  = () => dispatch({ type: 'SET_ONLINE', payload: true });

@@ -113,7 +113,9 @@ const userSettingSchema = new mongoose.Schema({
   isOnboarded: { type: Boolean, default: false },
   isLargeText: { type: Boolean, default: false },
   isHighContrast: { type: Boolean, default: false },
-  userProfile: { type: String, default: 'general' }
+  userProfile: { type: String, default: 'general' },
+  activeTab: { type: String, default: 'chat' },
+  updatedAt: { type: Date, default: Date.now }
 });
 
 export const Alert = mongoose.model('Alert', alertSchema);

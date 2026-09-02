@@ -16,12 +16,6 @@ import OfflineBanner from './components/OfflineBanner';
 function AppContent() {
   const { state, dispatch } = useApp();
   
-  useEffect(() => {
-    if (window.location.pathname === '/manager') {
-      dispatch({ type: 'SET_ACTIVE_TAB', payload: 'manager' });
-    }
-  }, [dispatch]);
-
   // Global Theme Logic
   const weather = state.weatherStageData?.weather;
   const weatherInfo = weather ? getWeatherInfo(weather.weatherCode, state.language) : null;
@@ -44,6 +38,30 @@ function AppContent() {
     customBg = isPortrait ? '/backgrounds/aviation2.jpg' : '/backgrounds/aviation.jpg';
   }
   else if (state.userProfile === 'urbanPlanning') customBg = '/backgrounds/urban.jpg';
+
+  // Sync URL and browser history stack whenever activeTab changes
+  useEffect(() => {
+    if (!state.isSettingsLoaded) return;
+    const targetPath = state.activeTab === 'chat' ? '/' : `/${state.activeTab}`;
+    if (window.location.pathname !== targetPath) {
+      window.history.pushState({ tab: state.activeTab }, '', targetPath);
+    }
+  }, [state.activeTab, state.isSettingsLoaded]);
+
+  // Prevent flash of onboarding before backend settings are loaded
+  if (!state.isSettingsLoaded) {
+    return (
+      <div className="min-h-[100dvh] flex flex-col items-center justify-center bg-[#070b14] text-white gap-3 animate-fade-in">
+        <div className="w-14 h-14 rounded-2xl p-0.5 bg-gradient-to-tr from-indigo-600 to-sky-400 animate-pulse flex items-center justify-center shadow-[0_0_30px_rgba(99,102,241,0.5)]">
+          <img src="/logo.png" alt="WeatherGPT" className="w-full h-full object-cover rounded-[14px]" />
+        </div>
+        <div className="flex items-center gap-2 text-xs font-semibold text-white/70">
+          <div className="w-3.5 h-3.5 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin"></div>
+          <span>Loading WeatherGPT...</span>
+        </div>
+      </div>
+    );
+  }
 
   if (state.activeTab === 'manager') {
     return (
