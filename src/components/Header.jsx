@@ -205,12 +205,12 @@ export default function Header() {
           </div>
 
           {/* Center (In-Between): Desktop Tabs & Hub Button */}
-          <div className="hidden md:flex items-center justify-center gap-2 sm:gap-4 flex-1 max-w-xl mx-auto">
+          <div className="hidden md:flex items-center justify-center gap-2 lg:gap-3 flex-1 max-w-2xl mx-auto min-w-0">
             {/* Desktop Navigation Tabs */}
-            <div className="hidden md:flex w-full max-w-xs rounded-full p-1 glass-panel border border-[var(--glass-border)] shadow-inner">
+            <div className="flex items-center rounded-full p-1 glass-panel border border-[var(--glass-border)] shadow-inner shrink-0">
               <button
                 onClick={() => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'chat' })}
-                className={`flex-1 px-3.5 py-1.5 text-xs sm:text-sm font-bold rounded-full transition-all duration-300 whitespace-nowrap ${
+                className={`px-3 py-1.5 text-xs lg:text-sm font-bold rounded-full transition-all duration-300 whitespace-nowrap ${
                   state.activeTab === 'chat'
                     ? 'bg-blue-500/20 text-blue-500 shadow-sm border border-blue-400/30'
                     : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
@@ -220,7 +220,7 @@ export default function Header() {
               </button>
               <button
                 onClick={() => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'stage' })}
-                className={`flex-1 px-3.5 py-1.5 text-xs sm:text-sm font-bold rounded-full transition-all duration-300 whitespace-nowrap ${
+                className={`px-3 py-1.5 text-xs lg:text-sm font-bold rounded-full transition-all duration-300 whitespace-nowrap ${
                   state.activeTab === 'stage'
                     ? 'bg-blue-500/20 text-blue-500 shadow-sm border border-blue-400/30'
                     : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
@@ -230,7 +230,7 @@ export default function Header() {
               </button>
               <button
                 onClick={() => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'alerts' })}
-                className={`flex-1 px-3.5 py-1.5 text-xs sm:text-sm font-bold rounded-full transition-all duration-300 whitespace-nowrap ${
+                className={`px-3 py-1.5 text-xs lg:text-sm font-bold rounded-full transition-all duration-300 whitespace-nowrap ${
                   state.activeTab === 'alerts'
                     ? 'bg-red-500/20 text-red-500 shadow-[0_0_15px_rgba(239,68,68,0.2)] border border-red-500/30'
                     : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
@@ -243,17 +243,17 @@ export default function Header() {
               </button>
             </div>
 
-            {/* Hub Button (Centered in between!) */}
+            {/* Hub Button (Cleanly spaced beside tabs without overlapping) */}
             <div 
               onClick={() => setIsHubOpen(true)}
-              className="header-hub-btn flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full cursor-pointer transition-all shadow-md shrink-0"
+              className="header-hub-btn flex items-center gap-1.5 px-3 py-1.5 rounded-full cursor-pointer transition-all shadow-md shrink-0"
               title="Open Profession Advisory Hub"
             >
               {/* Multi-Layer Stack Icon */}
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="animate-pulse text-white">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="animate-pulse text-white">
                 <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
               </svg>
-              <span className="text-[11px] sm:text-xs font-black tracking-wider uppercase whitespace-nowrap text-white">
+              <span className="text-[11px] lg:text-xs font-black tracking-wider uppercase whitespace-nowrap text-white">
                 {currentLang.code === 'hi' ? 'हब खोलें' : currentLang.code === 'bn' ? 'হাব খুলুন' : currentLang.code === 'as' ? 'হাব খোলক' : 'Open Hub'}
               </span>
             </div>
