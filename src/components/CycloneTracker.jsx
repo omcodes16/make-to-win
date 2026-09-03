@@ -145,10 +145,6 @@ export default function CycloneTracker({ lat, lon, locationName = "your area" })
             </div>
             <p className="text-[15px] opacity-90 leading-relaxed font-medium">{active.precaution || "Exercise extreme caution and follow local emergency guidelines immediately."}</p>
           </div>
-
-          <button className="w-full py-4 rounded-xl border border-white/10 bg-black/20 hover:bg-black/40 transition-colors text-[13px] font-bold tracking-widest uppercase flex items-center justify-center gap-2 opacity-80 hover:opacity-100">
-            View Details <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-          </button>
         </div>
 
         {/* Right: Windy live map */}
