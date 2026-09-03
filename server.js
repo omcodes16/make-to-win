@@ -29,10 +29,153 @@ import { startNdmaPoller } from './server/ndmaPoller.js';
 const server = http.createServer(app);
 export const wss = new WebSocketServer({ server });
 
-wss.on('connection', (ws) => {
-  console.log('🔌 New WebSocket connection established for Live Alerts');
-  ws.send(JSON.stringify({ type: 'connected', message: 'Connected to WeatherGPT Alert System' }));
+// Track client heartbeat and drop broken connections
+const wsHeartbeat = setInterval(() => {
+  wss.clients.forEach((ws) => {
+    if (ws.isAlive === false) return ws.terminate();
+    ws.isAlive = false;
+    ws.ping();
+  });
+}, 30000);
+
+wss.on('close', () => {
+  clearInterval(wsHeartbeat);
 });
+
+wss.on('connection', (ws, req) => {
+  ws.isAlive = true;
+  ws.clientLocation = null; // { lat, lng, state, district }
+  ws.trackedSosIds = new Set();
+
+  ws.on('pong', () => {
+    ws.isAlive = true;
+  });
+
+  ws.on('message', (message) => {
+    try {
+      const data = JSON.parse(message.toString());
+      if (data.type === 'register_location') {
+        ws.clientLocation = {
+          lat: typeof data.lat === 'number' ? data.lat : parseFloat(data.lat),
+          lng: typeof data.lng === 'number' ? data.lng : parseFloat(data.lng),
+          state: (data.state || '').toLowerCase().trim(),
+          district: (data.district || '').toLowerCase().trim()
+        };
+        ws.send(JSON.stringify({ 
+          type: 'location_ack', 
+          status: 'registered', 
+          lat: ws.clientLocation.lat, 
+          lng: ws.clientLocation.lng 
+        }));
+      } else if (data.type === 'register_sos') {
+        if (data.sosId) {
+          ws.trackedSosIds.add(data.sosId);
+          ws.send(JSON.stringify({ type: 'sos_ack', sosId: data.sosId }));
+        }
+      } else if (data.type === 'ping') {
+        ws.send(JSON.stringify({ type: 'pong', timestamp: Date.now() }));
+      }
+    } catch (e) {
+      // Ignore malformed client messages
+    }
+  });
+
+  console.log('🔌 New WebSocket connection established for Live Alerts');
+  ws.send(JSON.stringify({ 
+    type: 'connected', 
+    message: 'Connected to WeatherGPT Real-Time Disaster Alert System',
+    timestamp: new Date().toISOString()
+  }));
+});
+
+/**
+ * Broadcast an authority alert to matching connected WebSocket clients:
+ * - 'radius': Only clients within alert.radius km using haversineDistance
+ * - 'district': Clients whose district matches alert.district
+ * - 'state': Clients whose state matches alert.state
+ * - 'all' or untargeted: Broadcast to all connected clients
+ */
+export function broadcastAuthorityAlert(alert) {
+  const payload = JSON.stringify({
+    type: 'authority_alert',
+    alert: {
+      id: alert.id || `mgr-${Date.now()}`,
+      title: alert.title,
+      description: alert.description,
+      severity: alert.severity || 'severe',
+      state: alert.state,
+      district: alert.district,
+      targetMode: alert.targetMode,
+      lat: alert.lat,
+      lng: alert.lng,
+      radius: alert.radius,
+      issuedAt: alert.issuedAt || Date.now(),
+      expiresAt: alert.expiresAt || (Date.now() + 24 * 60 * 60 * 1000),
+      source: alert.source || 'WeatherGPT Disaster Manager'
+    }
+  });
+
+  let dispatchedCount = 0;
+
+  wss.clients.forEach((client) => {
+    if (client.readyState !== 1) return; // 1 === WebSocket.OPEN
+
+    const loc = client.clientLocation;
+
+    // Filter by GPS Radius
+    if (alert.targetMode === 'radius' && alert.lat && alert.lng && alert.radius) {
+      if (!loc || isNaN(loc.lat) || isNaN(loc.lng)) {
+        // Client has not provided GPS coordinates; skip radius-specific push
+        return;
+      }
+      const dist = haversineDistance(alert.lat, alert.lng, loc.lat, loc.lng);
+      if (dist > alert.radius) {
+        // Outside target radius; skip
+        return;
+      }
+    }
+    // Filter by District
+    else if (alert.targetMode === 'district' && alert.district) {
+      if (loc && loc.district && !loc.district.includes(alert.district.toLowerCase()) && !alert.district.toLowerCase().includes(loc.district)) {
+        return;
+      }
+    }
+    // Filter by State
+    else if (alert.targetMode === 'state' && alert.state) {
+      if (loc && loc.state && !loc.state.includes(alert.state.toLowerCase()) && !alert.state.toLowerCase().includes(loc.state)) {
+        return;
+      }
+    }
+
+    client.send(payload);
+    dispatchedCount++;
+  });
+
+  console.log(`📡 [WS BROADCAST] Alert "${alert.title}" delivered to ${dispatchedCount} client(s) (Target: ${alert.targetMode})`);
+  return dispatchedCount;
+}
+
+/**
+ * Broadcast an SOS status update (dispatched, resolved)
+ */
+export function broadcastSosUpdate(sosId, status) {
+  const payload = JSON.stringify({
+    type: 'sos_status_update',
+    sosId,
+    status,
+    updatedAt: new Date().toISOString()
+  });
+
+  let count = 0;
+  wss.clients.forEach((client) => {
+    if (client.readyState === 1) {
+      client.send(payload);
+      count++;
+    }
+  });
+  console.log(`🚑 [WS SOS UPDATE] SOS ${sosId} -> ${status} pushed to ${count} client(s)`);
+  return count;
+}
 
 import { 
   WEATHER_TOOLS, 
@@ -238,12 +381,30 @@ app.post("/api/manager/alerts", verifyToken, (req, res) => {
   };
   managerAlerts.push(alert);
   saveAlerts();
+
+  // Instantly broadcast over WebSocket to matching clients (GPS-radius or state/district filtered)
+  try {
+    broadcastAuthorityAlert(alert);
+  } catch (err) {
+    console.warn('[WS BROADCAST ERROR]', err.message);
+  }
+
   res.json(alert);
 });
 
 app.delete("/api/manager/alerts/:id", verifyToken, (req, res) => {
-  managerAlerts = managerAlerts.filter(a => a.id !== req.params.id);
+  const alertId = req.params.id;
+  managerAlerts = managerAlerts.filter(a => a.id !== alertId);
   saveAlerts();
+
+  // Broadcast dismissal event so client UI can remove the banner
+  try {
+    const payload = JSON.stringify({ type: 'authority_alert_dismissed', alertId });
+    wss.clients.forEach((client) => {
+      if (client.readyState === 1) client.send(payload);
+    });
+  } catch (err) { /* non-critical */ }
+
   res.json({ success: true });
 });
 
@@ -447,11 +608,16 @@ app.put("/api/manager/sos/:id", verifyToken, async (req, res) => {
   const { status } = req.body;
   if (!['pending', 'dispatched', 'resolved'].includes(status)) return res.status(400).json({ error: "Invalid status" });
   if (USE_MONGODB) {
-    try { await SosRequest.findByIdAndUpdate(req.params.id, { status }); return res.json({ success: true }); }
+    try { 
+      await SosRequest.findByIdAndUpdate(req.params.id, { status }); 
+      broadcastSosUpdate(req.params.id, status);
+      return res.json({ success: true }); 
+    }
     catch (e) { return res.status(500).json({ error: "DB Error" }); }
   } else {
     const sos = sosFallback.find(s => s.id === req.params.id);
     if (sos) sos.status = status;
+    broadcastSosUpdate(req.params.id, status);
     return res.json({ success: true });
   }
 });
@@ -528,6 +694,294 @@ app.post('/api/sms/send', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'DB Error' }); }
 });
 
+// ==================================================================
+// MAPPLS (MAPMYINDIA) & NOMINATIM GEOLOCATION PROXY SERVICE
+// Covers small villages, tehsils, and districts across India
+// ==================================================================
+const LOCATION_SEARCH_CACHE = new Map();
+const LOC_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
+const MAX_LOC_CACHE_ENTRIES = 500;
+
+function getCachedLocation(key) {
+  const entry = LOCATION_SEARCH_CACHE.get(key);
+  if (entry && (Date.now() - entry.timestamp) < LOC_CACHE_TTL) {
+    return entry.data;
+  }
+  return null;
+}
+
+function setCachedLocation(key, data) {
+  if (LOCATION_SEARCH_CACHE.size >= MAX_LOC_CACHE_ENTRIES) {
+    const oldestKey = LOCATION_SEARCH_CACHE.keys().next().value;
+    LOCATION_SEARCH_CACHE.delete(oldestKey);
+  }
+  LOCATION_SEARCH_CACHE.set(key, { data, timestamp: Date.now() });
+}
+
+let mapplsTokenCache = { token: null, expiresAt: 0 };
+
+async function getMapplsToken() {
+  const apiKey = process.env.MAPPLS_API_KEY;
+  const clientId = process.env.MAPPLS_CLIENT_ID;
+  const clientSecret = process.env.MAPPLS_CLIENT_SECRET;
+
+  if (apiKey && !clientId) {
+    return apiKey;
+  }
+
+  if (clientId && clientSecret) {
+    if (mapplsTokenCache.token && Date.now() < mapplsTokenCache.expiresAt - 60000) {
+      return mapplsTokenCache.token;
+    }
+    try {
+      const tokenRes = await fetch('https://outpost.mappls.com/api/security/oauth/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          grant_type: 'client_credentials',
+          client_id: clientId,
+          client_secret: clientSecret
+        }),
+        signal: AbortSignal.timeout(3500)
+      });
+      if (tokenRes.ok) {
+        const tokenData = await tokenRes.json();
+        if (tokenData.access_token) {
+          mapplsTokenCache = {
+            token: tokenData.access_token,
+            expiresAt: Date.now() + ((tokenData.expires_in || 86400) * 1000)
+          };
+          return mapplsTokenCache.token;
+        }
+      }
+    } catch (err) {
+      console.warn('[MAPPLS OAUTH NOTICE] OAuth token fetch failed:', err.message);
+    }
+  }
+
+  return apiKey || null;
+}
+
+async function searchMappls(query) {
+  const token = await getMapplsToken();
+  if (!token) return null;
+
+  try {
+    // 1. Search via Mappls AutoSuggest / Search API
+    const url = `https://atlas.mappls.com/api/places/search/json?query=${encodeURIComponent(query)}&region=ind`;
+    const res = await fetch(url, {
+      headers: { 'Authorization': `Bearer ${token}` },
+      signal: AbortSignal.timeout(3500)
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data.suggestedLocations && data.suggestedLocations.length > 0) {
+        const results = [];
+        for (const loc of data.suggestedLocations.slice(0, 6)) {
+          let lat = parseFloat(loc.latitude);
+          let lng = parseFloat(loc.longitude);
+
+          // If coordinates are missing, attempt eLoc lookup
+          if ((isNaN(lat) || isNaN(lng)) && loc.eLoc) {
+            try {
+              const elocRes = await fetch(`https://atlas.mappls.com/api/places/eloc/${loc.eLoc}`, {
+                headers: { 'Authorization': `Bearer ${token}` },
+                signal: AbortSignal.timeout(2000)
+              });
+              if (elocRes.ok) {
+                const elocData = await elocRes.json();
+                lat = parseFloat(elocData.latitude);
+                lng = parseFloat(elocData.longitude);
+              }
+            } catch (e) { /* non-critical */ }
+          }
+
+          if (!isNaN(lat) && !isNaN(lng)) {
+            const addrParts = (loc.placeAddress || '').split(',').map(s => s.trim());
+            const state = addrParts.length >= 2 ? addrParts[addrParts.length - 2] : '';
+            const district = addrParts.length >= 3 ? addrParts[addrParts.length - 3] : '';
+
+            results.push({
+              lat,
+              lng,
+              name: loc.placeName || loc.poi || query,
+              district: district || '',
+              state: state || '',
+              country: 'India',
+              source: 'mappls'
+            });
+          }
+        }
+        if (results.length > 0) return results;
+      }
+    }
+
+    // 2. Fallback to Mappls Geocode API if AutoSuggest didn't resolve
+    const geoUrl = `https://atlas.mappls.com/api/places/geocode?address=${encodeURIComponent(query)}&region=ind`;
+    const geoRes = await fetch(geoUrl, {
+      headers: { 'Authorization': `Bearer ${token}` },
+      signal: AbortSignal.timeout(3500)
+    });
+
+    if (geoRes.ok) {
+      const geoData = await geoRes.json();
+      if (geoData.copResults && geoData.copResults.length > 0) {
+        return geoData.copResults.map(r => ({
+          lat: parseFloat(r.latitude),
+          lng: parseFloat(r.longitude),
+          name: r.village || r.subDistrict || r.locality || r.city || r.district || query,
+          district: r.district || r.subDistrict || '',
+          state: r.state || '',
+          country: 'India',
+          source: 'mappls'
+        })).filter(r => !isNaN(r.lat) && !isNaN(r.lng));
+      }
+    }
+  } catch (err) {
+    console.warn('[MAPPLS NOTICE] Mappls search unavailable, falling back to OSM:', err.message);
+  }
+  return null;
+}
+
+async function searchNominatimFallback(query, lang = 'en') {
+  const results = [];
+
+  // 1. Nominatim (OpenStreetMap) strictly for India with Address Details (Villages, Tehsils, Districts)
+  try {
+    const nomRes = await fetch(
+      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=6&countrycodes=in&accept-language=${lang}&addressdetails=1`,
+      {
+        headers: { 'User-Agent': 'WeatherGPT-SIH2026/1.0 (weathergpt.sih2026@gmail.com)' },
+        signal: AbortSignal.timeout(3500)
+      }
+    );
+    if (nomRes.ok) {
+      const data = await nomRes.json();
+      if (Array.isArray(data)) {
+        data.forEach(r => {
+          const lat = parseFloat(r.lat);
+          const lng = parseFloat(r.lon);
+          if (!isNaN(lat) && !isNaN(lng)) {
+            const addr = r.address || {};
+            const rawName = r.name || addr.village || addr.town || addr.city || addr.suburb || r.display_name.split(',')[0].trim();
+            const district = addr.state_district || addr.county || addr.district || '';
+            const state = addr.state || '';
+            results.push({ lat, lng, name: rawName, district, state, country: 'India', source: 'nominatim' });
+          }
+        });
+      }
+    }
+  } catch (err) {
+    console.warn('[NOMINATIM NOTICE] Nominatim search timed out or error:', err.message);
+  }
+
+  // 2. Open-Meteo Geocoding to supplement if results are sparse
+  if (results.length < 3) {
+    try {
+      const omRes = await fetch(
+        `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=6&language=${lang}`,
+        { signal: AbortSignal.timeout(3500) }
+      );
+      if (omRes.ok) {
+        const omData = await omRes.json();
+        if (omData.results) {
+          const indiaOnly = omData.results.filter(r => r.country_code === 'IN' || r.country === 'India');
+          indiaOnly.forEach(r => {
+            const duplicate = results.some(ex => Math.abs(ex.lat - r.latitude) < 0.05 && Math.abs(ex.lng - r.longitude) < 0.05);
+            if (!duplicate) {
+              results.push({
+                lat: r.latitude,
+                lng: r.longitude,
+                name: r.name,
+                district: r.admin2 || '',
+                state: r.admin1 || '',
+                country: 'India',
+                source: 'open-meteo'
+              });
+            }
+          });
+        }
+      }
+    } catch (err) {
+      console.warn('[OPEN-METEO NOTICE] Open-Meteo search error:', err.message);
+    }
+  }
+
+  return results;
+}
+
+// API endpoint: Multi-source location autocomplete for India
+app.get('/api/location/search', async (req, res) => {
+  try {
+    const query = (req.query.query || req.query.q || '').trim();
+    const lang = req.query.lang || 'en';
+    if (!query || query.length < 2) {
+      return res.json([]);
+    }
+
+    const cacheKey = `${query.toLowerCase()}_${lang}`;
+    const cached = getCachedLocation(cacheKey);
+    if (cached) {
+      return res.json(cached);
+    }
+
+    // 1. Primary: Mappls (MapmyIndia)
+    let results = await searchMappls(query);
+
+    // 2. Secondary: Nominatim + Open-Meteo Fallback
+    if (!results || results.length === 0) {
+      results = await searchNominatimFallback(query, lang);
+    }
+
+    // Deduplicate by spatial proximity (~5km)
+    const uniqueResults = [];
+    for (const item of results) {
+      const exists = uniqueResults.some(
+        u => Math.abs(u.lat - item.lat) < 0.05 && Math.abs(u.lng - item.lng) < 0.05
+      );
+      if (!exists) {
+        uniqueResults.push(item);
+      }
+    }
+
+    const finalResults = uniqueResults.slice(0, 8);
+    if (finalResults.length > 0) {
+      setCachedLocation(cacheKey, finalResults);
+    }
+
+    res.json(finalResults);
+  } catch (err) {
+    console.error('[LOCATION SEARCH ROUTE ERROR]', err);
+    res.json([]); // Fail-safe: Always return empty list on route error, never crash
+  }
+});
+
+// API endpoint: Single location geocoder for tools & backend
+app.get('/api/location/geocode', async (req, res) => {
+  try {
+    const query = (req.query.location || req.query.query || req.query.q || '').trim();
+    const lang = req.query.lang || 'en';
+    if (!query) return res.status(400).json({ error: 'Location required' });
+
+    const cacheKey = `geo_${query.toLowerCase()}_${lang}`;
+    const cached = getCachedLocation(cacheKey);
+    if (cached) return res.json(cached);
+
+    let results = await searchMappls(query);
+    if (!results || results.length === 0) {
+      results = await searchNominatimFallback(query, lang);
+    }
+
+    if (results && results.length > 0) {
+      setCachedLocation(cacheKey, results[0]);
+      return res.json(results[0]);
+    }
+    return res.status(404).json({ error: 'Location not found' });
+  } catch (err) {
+    res.status(500).json({ error: 'Geocoding service error' });
+  }
+});
 
 function haversineDistance(lat1, lon1, lat2, lon2) {
   const R = 6371; // Radius of Earth in km
@@ -1434,30 +1888,26 @@ app.get('/api/extreme-alerts', async (req, res) => {
 
 // Admin endpoint to push severe alerts via WebSocket
 app.post('/api/alerts/push', (req, res) => {
-  const { title, message, severity, location } = req.body;
+  const { title, message, severity, location, targetMode, lat, lng, radius, state, district } = req.body;
   if (!title || !message) return res.status(400).json({ error: 'title and message required' });
   
-  const alertPayload = JSON.stringify({
-    type: 'extreme_weather_alert',
-    alert: {
-      title,
-      message,
-      severity: severity || 'severe',
-      location: location || 'All areas',
-      timestamp: new Date().toISOString()
-    }
-  });
+  const alert = {
+    id: `push-${Date.now()}`,
+    title,
+    description: message,
+    severity: severity || 'severe',
+    location: location || 'All areas',
+    targetMode: targetMode || 'all',
+    lat: typeof lat === 'number' ? lat : parseFloat(lat),
+    lng: typeof lng === 'number' ? lng : parseFloat(lng),
+    radius: typeof radius === 'number' ? radius : parseFloat(radius),
+    state,
+    district,
+    source: 'WeatherGPT Authority'
+  };
 
-  // Broadcast to all connected WebSocket clients
-  let clientCount = 0;
-  wss.clients.forEach((client) => {
-    if (client.readyState === 1) { // WebSocket.OPEN is 1
-      client.send(alertPayload);
-      clientCount++;
-    }
-  });
-
-  res.json({ success: true, clientsNotified: clientCount, message: "Alert disseminated via WebSocket" });
+  const clientsNotified = broadcastAuthorityAlert(alert);
+  res.json({ success: true, clientsNotified, message: "Alert disseminated via WebSocket" });
 });
 
 // Serve built React frontend in production (Docker)

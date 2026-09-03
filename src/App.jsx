@@ -12,9 +12,13 @@ import { getTheme } from './utils/themes';
 import { getWeatherInfo } from './utils/weatherConditions';
 import Header from './components/Header';
 import OfflineBanner from './components/OfflineBanner';
+import { useAlertSocket } from './hooks/useAlertSocket';
 
 function AppContent() {
   const { state, dispatch } = useApp();
+  
+  // Connect to Real-time WebSocket for Live Disaster Alerts and SOS updates
+  useAlertSocket();
   
   // Global Theme Logic
   const weather = state.weatherStageData?.weather;

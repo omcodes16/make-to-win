@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
+import { useApp } from "../context/AppContext";
 
 const API_URL = import.meta.env.VITE_API_URL || "";
 
 export default function SosButton() {
+  const { state } = useApp();
   const [phase, setPhase] = useState("idle"); // idle | confirm | locating | form | sending | success | error
   const [coords, setCoords] = useState(null);
   const [form, setForm] = useState({ name: "", phone: "", message: "", helpType: "Medical Emergency" });
@@ -261,9 +263,29 @@ export default function SosButton() {
 
             {phase === "success" && (
               <div className="text-center space-y-4 py-4">
-                <div className="text-5xl">✅</div>
-                <h2 className="text-2xl font-black text-emerald-600 dark:text-green-400">Help is Coming!</h2>
-                <p className="text-[var(--text-secondary)] text-sm font-medium">Your location and details have been sent to disaster management authorities.</p>
+                <div className="text-5xl">
+                  {state.activeSosStatus?.status === 'dispatched' ? '🚨' : state.activeSosStatus?.status === 'resolved' ? '✅' : '📡'}
+                </div>
+                <h2 className="text-2xl font-black text-emerald-600 dark:text-green-400">
+                  {state.activeSosStatus?.status === 'dispatched' 
+                    ? 'Rescue Team Dispatched!' 
+                    : state.activeSosStatus?.status === 'resolved'
+                    ? 'Emergency Resolved'
+                    : 'Help is Coming!'}
+                </h2>
+                <p className="text-[var(--text-secondary)] text-sm font-medium">
+                  {state.activeSosStatus?.status === 'dispatched'
+                    ? 'Disaster response personnel have been dispatched to your GPS coordinates.'
+                    : state.activeSosStatus?.status === 'resolved'
+                    ? 'Disaster management officers have marked this emergency incident as resolved.'
+                    : 'Your location and details have been transmitted to disaster management authorities in real-time.'}
+                </p>
+                {state.activeSosStatus?.status && (
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
+                    <span className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
+                    Live Status: {state.activeSosStatus.status.toUpperCase()}
+                  </div>
+                )}
                 <button onClick={reset} className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 rounded-xl font-bold text-white transition-all shadow-lg shadow-emerald-600/30">OK</button>
               </div>
             )}

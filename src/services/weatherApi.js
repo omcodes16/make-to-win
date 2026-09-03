@@ -62,35 +62,104 @@ const INDIA_CITIES = {
   'namchi': { lat: 27.1667, lng: 88.3500, name: 'Namchi', state: 'Sikkim', district: 'South Sikkim' },
 };
 
+// Client-side local cache for instant village/district lookup
+const CLIENT_LOC_CACHE_KEY = 'weathergpt_village_cache_v1';
+const MEMORY_LOC_CACHE = new Map();
+
+function getClientCachedSuggestions(query) {
+  const q = query.toLowerCase().trim();
+  if (MEMORY_LOC_CACHE.has(q)) {
+    return MEMORY_LOC_CACHE.get(q);
+  }
+  if (typeof window !== 'undefined' && window.localStorage) {
+    try {
+      const stored = window.localStorage.getItem(`${CLIENT_LOC_CACHE_KEY}_${q}`);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed.expiresAt && parsed.expiresAt > Date.now()) {
+          MEMORY_LOC_CACHE.set(q, parsed.data);
+          return parsed.data;
+        }
+      }
+    } catch (e) { /* ignore localStorage issues */ }
+  }
+  return null;
+}
+
+function setClientCachedSuggestions(query, results) {
+  const q = query.toLowerCase().trim();
+  MEMORY_LOC_CACHE.set(q, results);
+  if (typeof window !== 'undefined' && window.localStorage) {
+    try {
+      window.localStorage.setItem(`${CLIENT_LOC_CACHE_KEY}_${q}`, JSON.stringify({
+        data: results,
+        expiresAt: Date.now() + 24 * 60 * 60 * 1000 // 24 hours TTL
+      }));
+    } catch (e) { /* ignore storage quota */ }
+  }
+}
+
+function getLocationApiBase() {
+  if (typeof window !== 'undefined') {
+    const metaEnv = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env : {};
+    return (metaEnv.VITE_API_URL || '').replace(/\/+$/, '');
+  }
+  return `http://localhost:${(typeof process !== 'undefined' && process.env && process.env.PORT) || 3001}`;
+}
+
 /**
  * Geocode a location name to coordinates (Exclusively inside India).
- * First checks local INDIA_CITIES map, then Open-Meteo with India filter, then Nominatim India.
+ * Tier 1: Local INDIA_CITIES map
+ * Tier 2: Backend Mappls Geocoder (/api/location/geocode)
+ * Tier 3: Client-side Open-Meteo & Nominatim fallback
  */
 export async function geocodeLocation(name, lang = 'en') {
   if (!name || typeof name !== 'string') return null;
   const normalized = name.toLowerCase().trim();
 
-  // Check local INDIA_CITIES first
+  // 1. Check local INDIA_CITIES first (Instant)
   if (INDIA_CITIES[normalized]) {
     const city = INDIA_CITIES[normalized];
-    return { lat: city.lat, lng: city.lng, name: city.name, state: city.state, district: city.district };
+    return { lat: city.lat, lng: city.lng, name: city.name, state: city.state, district: city.district, country: 'India' };
   }
 
   // Partial match against INDIA_CITIES
   for (const [key, city] of Object.entries(INDIA_CITIES)) {
     if (normalized.includes(key) || key.includes(normalized)) {
-      return { lat: city.lat, lng: city.lng, name: city.name, state: city.state, district: city.district };
+      return { lat: city.lat, lng: city.lng, name: city.name, state: city.state, district: city.district, country: 'India' };
     }
   }
 
-  // Fall back to Open-Meteo geocoding filtered for India
+  // 2. Try Backend Mappls & Nominatim Proxy
+  try {
+    const baseUrl = getLocationApiBase();
+    const proxyRes = await fetch(`${baseUrl}/api/location/geocode?location=${encodeURIComponent(name)}&lang=${lang}`, {
+      signal: AbortSignal.timeout(4000)
+    });
+    if (proxyRes.ok) {
+      const geoResult = await proxyRes.json();
+      if (geoResult && geoResult.lat && geoResult.lng) {
+        return {
+          lat: parseFloat(geoResult.lat),
+          lng: parseFloat(geoResult.lng),
+          name: geoResult.name || name,
+          state: geoResult.state || '',
+          district: geoResult.district || '',
+          country: 'India'
+        };
+      }
+    }
+  } catch (err) {
+    // Backend proxy unavailable; gracefully proceed to client fallback
+  }
+
+  // 3. Fall back to direct Open-Meteo geocoding filtered for India
   try {
     const res = await fetch(
       `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(name)}&count=10&language=${lang}`
     );
     const data = await res.json();
     if (data.results && data.results.length > 0) {
-      // Prioritize Indian results
       const indiaResult = data.results.find(r => r.country_code === 'IN' || r.country === 'India') || data.results[0];
       if (indiaResult) {
         return {
@@ -98,15 +167,16 @@ export async function geocodeLocation(name, lang = 'en') {
           lng: indiaResult.longitude,
           name: indiaResult.name,
           state: indiaResult.admin1 || '',
-          district: indiaResult.admin2 || ''
+          district: indiaResult.admin2 || '',
+          country: 'India'
         };
       }
     }
   } catch (err) {
-    console.error('Open-Meteo geocoding error:', err);
+    console.warn('Open-Meteo geocoding error:', err);
   }
 
-  // Fallback to Nominatim (OpenStreetMap) strictly for India (All Villages, Tehsils, Districts, States)
+  // 4. Fallback to direct Nominatim (OpenStreetMap) strictly for India
   try {
     const nominatimRes = await fetch(
       `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(name)}&format=json&limit=1&countrycodes=in&accept-language=${lang}&addressdetails=1`,
@@ -122,29 +192,39 @@ export async function geocodeLocation(name, lang = 'en') {
         lng: parseFloat(r.lon),
         name: finalName,
         state: r.address?.state || '',
-        district: r.address?.state_district || r.address?.county || r.address?.district || ''
+        district: r.address?.state_district || r.address?.county || r.address?.district || '',
+        country: 'India'
       };
     }
   } catch (err) {
-    console.error('Nominatim geocoding error:', err);
+    console.warn('Nominatim geocoding error:', err);
   }
 
   return null; // Location not found
 }
 
 /**
- * Fetch multiple location suggestions for disambiguation (Exclusively for India: Villages, Districts, States).
+ * Fetch multiple location suggestions for disambiguation (Villages, Tehsils, Districts, States across India).
+ * Tier 1: Local INDIA_CITIES + Client-side LocalStorage cache
+ * Tier 2: Backend Mappls & Nominatim Proxy (/api/location/search)
+ * Tier 3: Direct Client-side Open-Meteo & Nominatim fallback
  */
 export async function searchLocationSuggestions(name, lang = 'en') {
   if (!name || typeof name !== 'string') return [];
   const normalized = name.toLowerCase().trim();
-  const results = [];
-  
-  if (!normalized) return results;
+  if (normalized.length < 2) return [];
 
-  // Add matching predefined Indian cities first
+  const results = [];
+
+  // Check client-side memory / localStorage cache first
+  const cached = getClientCachedSuggestions(normalized);
+  if (cached && Array.isArray(cached) && cached.length > 0) {
+    return cached;
+  }
+
+  // Add matching predefined Indian cities first (Instant)
   for (const [key, city] of Object.entries(INDIA_CITIES)) {
-    if (key.includes(normalized) || normalized.includes(key)) {
+    if (key.startsWith(normalized) || key.includes(normalized) || normalized.includes(key)) {
       results.push({
         lat: city.lat,
         lng: city.lng,
@@ -156,67 +236,106 @@ export async function searchLocationSuggestions(name, lang = 'en') {
     }
   }
 
+  // Try Backend Mappls + Nominatim Proxy
+  let proxySuccess = false;
   try {
-    const res = await fetch(
-      `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(name)}&count=10&language=${lang}`
-    );
-    const data = await res.json();
-    if (data.results && data.results.length > 0) {
-      // Filter strictly for India
-      const indiaResults = data.results.filter(r => r.country_code === 'IN' || r.country === 'India');
-      indiaResults.forEach(r => {
-        const isDuplicate = results.some(
-          existing => Math.abs(existing.lat - r.latitude) < 0.05 && Math.abs(existing.lng - r.longitude) < 0.05
-        );
-        if (!isDuplicate) {
-          results.push({
-            lat: r.latitude,
-            lng: r.longitude,
-            name: r.name,
-            state: r.admin1 || '',
-            district: r.admin2 || '',
-            country: 'India'
-          });
-        }
-      });
+    const baseUrl = getLocationApiBase();
+    const proxyRes = await fetch(`${baseUrl}/api/location/search?query=${encodeURIComponent(name)}&lang=${lang}`, {
+      signal: AbortSignal.timeout(4000)
+    });
+    if (proxyRes.ok) {
+      const proxyData = await proxyRes.json();
+      if (Array.isArray(proxyData) && proxyData.length > 0) {
+        proxySuccess = true;
+        proxyData.forEach(item => {
+          const isDuplicate = results.some(
+            existing => Math.abs(existing.lat - item.lat) < 0.05 && Math.abs(existing.lng - item.lng) < 0.05
+          );
+          if (!isDuplicate) {
+            results.push({
+              lat: item.lat,
+              lng: item.lng,
+              name: item.name,
+              district: item.district || '',
+              state: item.state || '',
+              country: 'India'
+            });
+          }
+        });
+      }
     }
   } catch (err) {
-    console.error('Open-Meteo suggestion error:', err);
+    // Proxy call failed or timed out; will fall through to client fallback
   }
 
-  // Supplement with Nominatim (OpenStreetMap) strictly for India (All Villages, Gram Panchayats, Tehsils, Districts)
-  try {
-    const nominatimRes = await fetch(
-      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(name)}&format=json&limit=5&countrycodes=in&accept-language=${lang}&addressdetails=1`,
-      { headers: { 'User-Agent': 'WeatherGPT-SIH2026' } }
-    );
-    const nominatimData = await nominatimRes.json();
-    if (nominatimData && nominatimData.length > 0) {
-      nominatimData.forEach(r => {
-        const lat = parseFloat(r.lat);
-        const lng = parseFloat(r.lon);
-        const isDuplicate = results.some(
-          existing => Math.abs(existing.lat - lat) < 0.05 && Math.abs(existing.lng - lng) < 0.05
-        );
-        if (!isDuplicate) {
-          const rawName = r.name || '';
-          const finalName = (typeof rawName === 'string' && rawName.trim().length > 0) ? rawName : r.display_name.split(',')[0];
-          results.push({
-            lat: lat,
-            lng: lng,
-            name: finalName,
-            state: r.address?.state || '',
-            district: r.address?.state_district || r.address?.county || r.address?.district || '',
-            country: 'India'
-          });
-        }
-      });
+  // Direct client-side fallback if backend was unavailable or returned zero matches
+  if (!proxySuccess && results.length < 4) {
+    try {
+      const res = await fetch(
+        `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(name)}&count=6&language=${lang}`
+      );
+      const data = await res.json();
+      if (data.results && data.results.length > 0) {
+        const indiaResults = data.results.filter(r => r.country_code === 'IN' || r.country === 'India');
+        indiaResults.forEach(r => {
+          const isDuplicate = results.some(
+            existing => Math.abs(existing.lat - r.latitude) < 0.05 && Math.abs(existing.lng - r.longitude) < 0.05
+          );
+          if (!isDuplicate) {
+            results.push({
+              lat: r.latitude,
+              lng: r.longitude,
+              name: r.name,
+              state: r.admin1 || '',
+              district: r.admin2 || '',
+              country: 'India'
+            });
+          }
+        });
+      }
+    } catch (err) {
+      console.warn('Open-Meteo suggestion error:', err);
     }
-  } catch (err) {
-    console.error('Nominatim suggestion error:', err);
+
+    // Direct Nominatim fallback
+    try {
+      const nominatimRes = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(name)}&format=json&limit=5&countrycodes=in&accept-language=${lang}&addressdetails=1`,
+        { headers: { 'User-Agent': 'WeatherGPT-SIH2026' } }
+      );
+      const nominatimData = await nominatimRes.json();
+      if (nominatimData && nominatimData.length > 0) {
+        nominatimData.forEach(r => {
+          const lat = parseFloat(r.lat);
+          const lng = parseFloat(r.lon);
+          const isDuplicate = results.some(
+            existing => Math.abs(existing.lat - lat) < 0.05 && Math.abs(existing.lng - lng) < 0.05
+          );
+          if (!isDuplicate) {
+            const rawName = r.name || '';
+            const finalName = (typeof rawName === 'string' && rawName.trim().length > 0) ? rawName : r.display_name.split(',')[0];
+            results.push({
+              lat: lat,
+              lng: lng,
+              name: finalName,
+              state: r.address?.state || '',
+              district: r.address?.state_district || r.address?.county || r.address?.district || '',
+              country: 'India'
+            });
+          }
+        });
+      }
+    } catch (err) {
+      console.warn('Nominatim suggestion error:', err);
+    }
   }
 
-  return results.slice(0, 6); // Cap at 6 Indian location results
+  const finalResults = results.slice(0, 8);
+  if (finalResults.length > 0) {
+    setClientCachedSuggestions(normalized, finalResults);
+  }
+
+  return finalResults;
 }
 
 /**

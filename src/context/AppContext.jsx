@@ -24,6 +24,7 @@ const initialState = {
   isLoading: false,
   currentWeather: null,
   governmentAlerts: [],
+  activeSosStatus: null,
   weatherCondition: 'clear',
   severeAlert: null,
   isOnboarded: false,
@@ -50,6 +51,29 @@ function appReducer(state, action) {
 
     case 'SET_GOVERNMENT_ALERTS':
       return { ...state, governmentAlerts: action.payload };
+
+    case 'PUSH_LIVE_ALERT': {
+      const newAlert = action.payload;
+      if (!newAlert) return state;
+      const existing = state.governmentAlerts || [];
+      const alreadyPresent = existing.some(
+        a => (a.id && a.id === newAlert.id) ||
+             (a.title === newAlert.title && a.description === newAlert.description)
+      );
+      if (alreadyPresent) return state;
+      return { ...state, governmentAlerts: [newAlert, ...existing] };
+    }
+
+    case 'DISMISS_LIVE_ALERT': {
+      const alertId = action.payload;
+      return {
+        ...state,
+        governmentAlerts: (state.governmentAlerts || []).filter(a => a.id !== alertId)
+      };
+    }
+
+    case 'UPDATE_SOS_STATUS':
+      return { ...state, activeSosStatus: action.payload };
 
     case 'SET_PROFILE':
       return { ...state, userProfile: action.payload };

@@ -42,7 +42,21 @@ export default function SevereAlertBanner() {
           {govExpanded && (
             <div className="px-4 pb-3 space-y-2 border-t border-white/10 pt-2">
               <p className="text-sm text-white/90">{alert.description || "Official government advisory is currently active for this region."}</p>
-              <p className="text-xs text-white/70 italic">Source: WeatherGPT Disaster Manager</p>
+              <div className="flex items-center justify-between pt-1">
+                <p className="text-xs text-white/70 italic">Source: {alert.source || "WeatherGPT Disaster Manager"}</p>
+                {alert.id && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      dispatch({ type: 'DISMISS_LIVE_ALERT', payload: alert.id });
+                    }}
+                    className="text-xs text-white/70 hover:text-white underline"
+                  >
+                    Dismiss
+                  </button>
+                )}
+              </div>
             </div>
           )}
         </div>
