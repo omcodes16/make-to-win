@@ -1,4 +1,6 @@
-export const EXTRA_I18N = {
+import { createTranslationProxy } from './translations.js';
+
+const rawExtraI18n = {
   en: {
 
     onboardingAskLangTitle: 'Ask in Your Language',
@@ -439,3 +441,5 @@ export const EXTRA_I18N = {
 
   }
 };
+
+export const EXTRA_I18N = createTranslationProxy(rawExtraI18n);

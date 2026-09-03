@@ -40,11 +40,11 @@ export default function ModelConfidence({ modelData, selectedDay, language = 'en
           </div>
           <div>
             <div className="text-sm sm:text-base font-semibold text-white">
-              {isDivergent ? 'Models diverge — check back closer to the date' : 'Models agree — high confidence'}
+              {isDivergent ? (t.modelsDiverge || 'Models diverge — check back closer to the date') : (t.modelsAgree || 'Models agree — high confidence')}
               <Tooltip text={t.tooltipNwp} />
             </div>
             <div className="text-xs sm:text-sm text-white/60 mt-0.5">
-              Powered by Open-Meteo Best Match ({models.map(m => m.name).join(', ')})
+              {(t.poweredBy || 'Powered by')} Open-Meteo Best Match ({models.map(m => m.name).join(', ')})
             </div>
           </div>
         </div>
@@ -57,7 +57,7 @@ export default function ModelConfidence({ modelData, selectedDay, language = 'en
 
       {expanded && (
         <div className="mt-4 pt-4 border-t border-white/10">
-          <div className="text-xs font-medium text-white/50 uppercase tracking-wider mb-3">Model Breakdown</div>
+          <div className="text-xs font-medium text-white/50 uppercase tracking-wider mb-3">{t.modelBreakdown || 'Model Breakdown'}</div>
           <div className="grid grid-cols-3 gap-2 sm:gap-4">
             {models.map(m => (
               <div key={m.name} className="glass-panel border border-white/10 rounded-xl p-3 flex flex-col items-center text-center">

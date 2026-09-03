@@ -14,6 +14,7 @@ import MobileMenuSheet from './MobileMenuSheet';
 export default function Header() {
   const { state, dispatch } = useApp();
   const [showLangPicker, setShowLangPicker] = useState(false);
+  const [headerLangSearch, setHeaderLangSearch] = useState('');
   const [showGuide, setShowGuide] = useState(false);
   const [isHubOpen, setIsHubOpen] = useState(false);
   const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
@@ -26,6 +27,7 @@ export default function Header() {
   const [loadingSaved, setLoadingSaved] = useState(false);
   const savedRef = useRef(null);
   const moreMenuRef = useRef(null);
+  const langPickerRef = useRef(null);
 
   const currentLang = LANGUAGES.find(l => l.code === state.language) || LANGUAGES[0];
   const t = UI_TRANSLATIONS[state.language] || UI_TRANSLATIONS['en'];
@@ -38,6 +40,9 @@ export default function Header() {
       }
       if (moreMenuRef.current && !moreMenuRef.current.contains(e.target)) {
         setShowMoreMenu(false);
+      }
+      if (langPickerRef.current && !langPickerRef.current.contains(e.target)) {
+        setShowLangPicker(false);
       }
     };
     document.addEventListener('mousedown', handler);
@@ -502,16 +507,40 @@ export default function Header() {
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="6 9 12 15 18 9"/></svg>
               </button>
               {showLangPicker && (
-                <div className="absolute right-0 top-full mt-2 rounded-xl py-1 min-w-[140px] z-[100] glass-panel theme-modal border border-[var(--modal-border)] text-[var(--text-primary)] shadow-[var(--modal-shadow)]">
-                  {LANGUAGES.map(lang => (
-                    <button
-                      key={lang.code}
-                      onClick={() => { dispatch({ type: 'SET_LANGUAGE', payload: lang.code }); setShowLangPicker(false); }}
-                      className={`w-full text-left px-4 py-2 text-xs font-semibold transition-colors hover:bg-white/10 ${state.language === lang.code ? 'text-blue-400 font-bold' : ''}`}
-                    >
-                      {lang.nativeLabel}
-                    </button>
-                  ))}
+                <div 
+                  ref={langPickerRef}
+                  className="absolute right-0 top-full mt-2 rounded-2xl p-2 w-60 z-[100] glass-panel theme-modal border border-[var(--modal-border)] text-[var(--text-primary)] shadow-[var(--modal-shadow)] backdrop-blur-xl"
+                >
+                  <div className="p-1 pb-2 border-b border-white/10">
+                    <input
+                      type="text"
+                      value={headerLangSearch}
+                      onChange={(e) => setHeaderLangSearch(e.target.value)}
+                      placeholder="🔍 Search / भाषा खोजें..."
+                      className="w-full bg-white/10 border border-white/15 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-white/50 focus:outline-none focus:border-blue-400"
+                      autoFocus
+                    />
+                  </div>
+                  <div className="max-h-56 overflow-y-auto py-1 space-y-0.5 custom-scrollbar">
+                    {LANGUAGES.filter(l => 
+                      l.label.toLowerCase().includes(headerLangSearch.toLowerCase()) ||
+                      l.nativeLabel.toLowerCase().includes(headerLangSearch.toLowerCase()) ||
+                      l.code.toLowerCase().includes(headerLangSearch.toLowerCase())
+                    ).map(lang => (
+                      <button
+                        key={lang.code}
+                        onClick={() => {
+                          dispatch({ type: 'SET_LANGUAGE', payload: lang.code });
+                          setShowLangPicker(false);
+                          setHeaderLangSearch('');
+                        }}
+                        className={`w-full text-left px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors hover:bg-white/10 flex items-center justify-between ${state.language === lang.code ? 'text-blue-400 bg-blue-500/15 font-bold' : ''}`}
+                      >
+                        <span>{lang.nativeLabel}</span>
+                        <span className="text-[10px] text-white/50 font-normal">({lang.label})</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>

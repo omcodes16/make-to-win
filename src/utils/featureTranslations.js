@@ -1,4 +1,6 @@
-export const FEATURE_I18N = {
+import { createTranslationProxy } from './translations.js';
+
+const rawFeatureI18n = {
   en: {
     // Heat Risk
     heatExtremeDanger: 'Extreme Danger',
@@ -326,5 +328,66 @@ export const FEATURE_I18N = {
     seasonAvgRain: 'গড় বৃষ্টি',
     seasonAvgTemp: 'গড় তাপমাত্রা',
     seasonSummary: (month, city, rain, min, max, season) => `${month} মাসে, ${city}-তে সাধারণত ~${rain} মিমি বৃষ্টি হয়, তাপমাত্রা থাকে ${min}–${max}°C। ঋতু: ${season}।`
+  },
+  sa: {
+    // Heat Risk
+    heatExtremeDanger: 'अत्यन्त-सङ्कटः',
+    heatDanger: 'सङ्कटः',
+    heatExtremeCaution: 'अति-सावधानी',
+    heatCaution: 'सावधानी',
+    heatComfortable: 'सुखकरम्',
+    heatAdvExtremeDanger: 'उष्णघातस्य महती सम्भावना। बहिः कार्यं त्यजतु। झटिति शीतलं स्थानं गच्छतु।',
+    heatAdvDanger: 'उष्णताजन्या क्लान्तिः सम्भवति। जलं बहुशः पिबतु।',
+    heatAdvExtremeCaution: 'दीर्घकाल-सम्पर्केण क्लान्तिः सम्भवति। मध्याह्ने क्षेत्रकार्यं परिहरतु।',
+    heatAdvCaution: 'सन्ततं जलग्रहणं कुर्वन्तु। विश्रामं स्वीकुर्वन्तु।',
+    heatAdvComfortable: 'ऋतुः सुखकरः वर्तते। बहिः कार्यार्थम् अनुकूलः समयः।',
+
+    // Farmer Advisory
+    farmTitleStorm: 'क्षेत्रकार्यं स्थगयतु',
+    farmAdvStorm: 'तीव्रः आंधी-तूफानः सम्भाव्यते। त्वरितम् उद्घाटित-क्षेत्राणि त्यजतु।',
+    farmTitleRain: 'क्षेत्रकार्यं विलम्बयतु',
+    farmAdvRain: (val) => `प्रबलवृष्टिः (${val})। बीजारोपणं सस्यसङ्ग्रहणं वा विलम्बयतु। जलनिर्गमव्यवस्थां पश्यतु।`,
+    farmAdvRainProb: (val) => `प्रबलवृष्टिसम्भावना (${val}%)। शुष्कदिने कार्यं कल्पयतु।`,
+    farmTitleSpray: 'कीटनाशक-सेचनं परिहरतु',
+    farmAdvSpray: (val) => `वृष्टिसम्भावना (${val}%)। रसायनानि क्षालितानि भविष्यन्ति।`,
+    farmTitleUV: 'मध्याह्ने क्षेत्रकार्यं मा कुरुत',
+    farmAdvUV: (val) => `अति-उच्चः UV सूचकाङ्कः (${val})। प्रातः १० वादनतः पूर्वं सायङ्काले वा कार्यं कुर्वन्तु।`,
+    farmTitleWind: 'तीव्रवायुः — सेचन-विचालन-भयम्',
+    farmAdvWind: (val) => `वायुगतिः ${val} किमी/होरा। सेचनं विचलितं भविष्यति। १५ किमी/होरा तः न्यूनायां गतौ सेचनं कुर्वन्तु।`,
+    farmTitleFungal: 'कवक-रोग-चेतावनी',
+    farmAdvFungal: (val) => `अत्यधिक-आर्द्रता (${val}%) कवक-रोगस्य कारणं भवितुम् अर्हति। सस्यानि निरीक्षताम्।`,
+    farmTitleFog: 'सघनकुहेलिका — सीमितदृश्यता',
+    farmAdvFog: 'कुहेलिकायाम् यन्त्रसञ्चालनं परिहरतु।',
+    farmTitleFrost: 'तुषारपाताशङ्का',
+    farmAdvFrost: (val) => `तापमानं ${val}°C यावत् पतति। कोमलसस्यानि आव्रियताम्।`,
+    farmTitleIdeal: 'अद्य उत्तमः ऋतुः',
+    farmAdvIdeal: (wind) => `निर्मलाकाशः, मन्दवायुः (${wind || '--'} किमी/होरा), वृष्टिः नास्ति। क्षेत्रकार्यार्थम् उत्तमं दिनम्।`,
+    farmTitleGood: 'अनुकूलं कार्यवातावरणम्',
+    farmAdvGood: (uv) => `सामान्य-कृषिकार्यार्थम् अनुकूलः समयः।`,
+
+    // Health Impacts
+    healthTitle: 'स्वास्थ्ये प्रभावः',
+    healthAqiUnhealthy: (val) => `वायुगुणवत्ता ${val} अस्वास्थ्यकरा अस्ति — श्वासकष्टं सम्भवति। बालकाः वृद्धाश्च गृहे एव तिष्ठन्तु।`,
+    healthAqiMod: 'वायुगुणवत्ता मध्यमा अस्ति। संवेदनशीलजनाः सावधानाः भवन्तु।',
+    healthAqiGood: 'वायुगुणवत्ता उत्तमा अस्ति। बहिः कार्यार्थम् अनुकूला।',
+    healthHeatWarning: 'उच्च-उष्णता — पर्याप्तं जलं पिबन्तु।',
+    healthColdWarning: 'शीतलवातावरणम् — उष्णवस्त्राणि धरन्तु।',
+
+    // Urban Advisory
+    urbanTitleRain: 'नगरे जलभराव-सङ्कटः',
+    urbanAdvRain: (val) => `सघना वृष्टिः (${val})। निम्नप्रदेशेषु जलभरावः सम्भवति। सतर्कतया वाहनं चालयतु।`,
+    urbanTitleHeat: 'नगरीय-उष्णता-प्रभावः',
+    urbanAdvHeat: (val) => `अत्युष्णता (${val}°C)। छायायुक्ते स्थाने तिष्ठन्तु।`,
+    urbanTitleGood: 'सामान्य-नगरीय-स्थितिः',
+    urbanAdvGood: 'ऋतुः स्थिरः अस्ति। नगरे सामान्यसञ्चारः सम्भवति।',
+
+    // Seasonal Context
+    seasonTitle: 'ऐतिहासिक-ऋतुप्रसङ्गः',
+    seasonNormalFor: (month, city) => `${city} मध्ये ${month} मासार्थं सामान्यम्`,
+    seasonAvgRain: 'औसतवृष्टिः',
+    seasonAvgTemp: 'औसततापमानम्',
+    seasonSummary: (month, city, rain, min, max, season) => `${month} मासे ${city} मध्ये सामान्यतः ~${rain} मिमी वृष्टिः भवति, तापमानं ${min}–${max}°C तिष्ठति। ऋतुः: ${season}।`
   }
 };
+
+export const FEATURE_I18N = createTranslationProxy(rawFeatureI18n);

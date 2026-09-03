@@ -242,15 +242,27 @@ export default function WeatherDashboard() {
     }
   }
 
+  const WEEKDAYS_MAP = {
+    sa: ['रविः', 'सोमः', 'मङ्गलम्', 'बुधः', 'गुरुः', 'शुक्रः', 'शनिः'],
+    hi: ['रवि', 'सोम', 'मंगल', 'बुध', 'गुरु', 'शुक्र', 'शनि'],
+    mr: ['रवि', 'सोम', 'मंगळ', 'बुध', 'गुरु', 'शुक्र', 'शनी'],
+    bn: ['রবি', 'সোম', 'মঙ্গল', 'বুধ', 'বৃহঃ', 'শুক্র', 'শনি'],
+    as: ['দেও', 'সোম', 'মঙ্গল', 'বুध', 'বৃহ', 'শুক্ৰ', 'শনি'],
+    ta: ['ஞாயிறு', 'திங்கள்', 'செவ்வாய்', 'புதன்', 'வியாழன்', 'வெள்ளி', 'சனி'],
+    te: ['ఆది', 'సోమ', 'మంగళ', 'బుధ', 'గురు', 'శుక్ర', 'శని'],
+    gu: ['રવિ', 'સોમ', 'મંગળ', 'બુધ', 'ગુરુ', 'શુક્ર', 'શનિ'],
+  };
+
   // Generate daily data safely
   const dailyData = [];
   if (weather && weather.daily && Array.isArray(weather.daily.time)) {
     for (let i = 0; i < Math.min(7, weather.daily.time.length); i++) {
       const dateObj = new Date(weather.daily.time[i]);
       const wInfo = getWeatherInfo(weather.daily.weatherCode?.[i] ?? 0, state.language, true);
+      const localizedDay = WEEKDAYS_MAP[state.language]?.[dateObj.getDay()] || dateObj.toLocaleDateString(locale, { weekday: 'short' });
       dailyData.push({
         index: i,
-        day: i === 0 ? t.today : dateObj.toLocaleDateString(locale, { weekday: 'short' }),
+        day: i === 0 ? t.today : localizedDay,
         max: Math.round(weather.daily.maxTemp?.[i] ?? 25),
         min: Math.round(weather.daily.minTemp?.[i] ?? 18),
         icon: wInfo?.icon || '🌤️',
@@ -389,7 +401,7 @@ return (
               {heatRisk && (
                 <div className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-sm font-semibold border  shadow-sm ${heatRisk.bg} ${heatRisk.border} ${heatRisk.color}`}>
                   <span className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${heatRisk.dot} shrink-0`}></span>
-                  {heatRisk.icon} Heat: {heatRisk.label}
+                  {heatRisk.icon} {t.heat || 'Heat'}: {heatRisk.label}
                 </div>
               )}
             </div>
@@ -398,10 +410,10 @@ return (
           {/* Right: Stat Cards with Live Compass directly beside UV Max */}
           <div className="flex gap-2 sm:gap-4 overflow-x-auto w-full lg:w-auto pb-2 lg:pb-0 scrollbar-hide">
             {[
-              { icon: '🌡️', val: `${weather?.daily?.maxTemp?.[selectedDay] ?? '--'}°`, lbl: 'Max' },
-              { icon: '❄️', val: `${weather?.daily?.minTemp?.[selectedDay] ?? '--'}°`, lbl: 'Min' },
-              { icon: '💧', val: isToday ? `${weather?.humidity ?? '--'}%` : `${weather?.daily?.precipProbMax?.[selectedDay] ?? '--'}%`, lbl: isToday ? t.hum : 'Precip' },
-              { icon: '☀️', val: `${displayUv}`, lbl: 'UV Max' }
+              { icon: '🌡️', val: `${weather?.daily?.maxTemp?.[selectedDay] ?? '--'}°`, lbl: t.statMax || 'Max' },
+              { icon: '❄️', val: `${weather?.daily?.minTemp?.[selectedDay] ?? '--'}°`, lbl: t.statMin || 'Min' },
+              { icon: '💧', val: isToday ? `${weather?.humidity ?? '--'}%` : `${weather?.daily?.precipProbMax?.[selectedDay] ?? '--'}%`, lbl: isToday ? t.hum : (t.precipTab || 'Precip') },
+              { icon: '☀️', val: `${displayUv}`, lbl: t.statUvMax || 'UV Max' }
             ].map((stat, i) => (
               <div key={i} className="glass-panel border border-[var(--theme-border)] rounded-2xl sm:rounded-[2rem] p-2.5 sm:p-5 flex flex-col items-center justify-center min-w-[64px] sm:min-w-[90px] shadow-sm shimmer-hover stat-card-hover">
                 <div className="text-lg sm:text-2xl mb-1 sm:mb-3 opacity-90">{stat.icon}</div>
@@ -427,7 +439,7 @@ return (
         {isToday && (
           <div className="glass-panel border border-indigo-400/30 rounded-3xl p-4 sm:p-6 mb-4 sm:mb-6 shadow-[0_0_25px_rgba(99,102,241,0.15)] relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-indigo-400/60 to-transparent"></div>
-            <div className="text-white/80 font-medium mb-4 sm:mb-6 text-xs sm:text-sm tracking-wide">Hourly Forecast</div>
+            <div className="text-white/80 font-medium mb-4 sm:mb-6 text-xs sm:text-sm tracking-wide">{t.hourlyForecast || 'Hourly Forecast'}</div>
             <div className="flex justify-between items-center overflow-x-auto scrollbar-hide gap-3 sm:gap-6 pb-2">
               {hourlyData.map((d, i) => (
                 <div key={i} className={`flex flex-col items-center min-w-[52px] sm:min-w-[64px] transition-transform hover:scale-105 ${i === 0 ? 'bg-indigo-600/40 rounded-[16px] sm:rounded-[20px] py-3 sm:py-4 px-1.5 sm:px-2 border border-indigo-400/40 shadow-inner' : 'py-3 sm:py-4'}`}>

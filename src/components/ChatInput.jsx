@@ -25,7 +25,17 @@ export default function ChatInput() {
     hi: { listening: '🎤 सुन रहा हूं...', thinking: '🤔 सोच रहा हूं...', speaking: '🔊 बोल रहा हूं...', ready: '✅ तैयार' },
     as: { listening: '🎤 শুনি আছো...', thinking: '🤔 ভাবি আছো...', speaking: '🔊 কৈ আছো...', ready: '✅ সাজু' },
     bn: { listening: '🎤 শুনছি...', thinking: '🤔 ভাবছি...', speaking: '🔊 বলছি...', ready: '✅ প্রস্তুত' },
+    mr: { listening: '🎤 ऐकत आहे...', thinking: '🤔 विचार करत आहे...', speaking: '🔊 बोलत आहे...', ready: '✅ तयार' },
+    ta: { listening: '🎤 கேட்கிறது...', thinking: '🤔 சிந்திக்கிறது...', speaking: '🔊 பேசுகிறது...', ready: '✅ தயார்' },
+    te: { listening: '🎤 వింటున్నాను...', thinking: '🤔 ఆలోచిస్తున్నాను...', speaking: '🔊 మాట్లాడుతున్నాను...', ready: '✅ సిద్ధం' },
+    gu: { listening: '🎤 સાંભળી રહ્યો છું...', thinking: '🤔 વિચારી રહ્યો છું...', speaking: '🔊 બોલી રહ્યો છું...', ready: '✅ તૈયાર' },
+    kn: { listening: '🎤 ಕೇಳಿಸಿಕೊಳ್ಳುತ್ತಿದ್ದೇನೆ...', thinking: '🤔 ಯೋಚಿಸುತ್ತಿದ್ದೇನೆ...', speaking: '🔊 ಮಾತನಾಡುತ್ತಿದ್ದೇನೆ...', ready: '✅ ಸಿದ್ಧ' },
+    ml: { listening: '🎤 കേൾക്കുന്നു...', thinking: '🤔 ചിന്തിക്കുന്നു...', speaking: '🔊 സംസാരിക്കുന്നു...', ready: '✅ തയ്യാറാണ്' },
+    pa: { listening: '🎤 ਸੁਣ ਰਿਹਾ ਹਾਂ...', thinking: '🤔 ਸੋਚ ਰਿਹਾ ਹਾਂ...', speaking: '🔊 ਬੋਲ ਰਿਹਾ ਹਾਂ...', ready: '✅ ਤਿਆਰ' },
+    or: { listening: '🎤 ଶୁଣୁଛି...', thinking: '🤔 ଭାବୁଛି...', speaking: '🔊 କହୁଛି...', ready: '✅ ପ୍ରସ୍ତୁତ' },
+    ur: { listening: '🎤 سن رہا ہوں...', thinking: '🤔 سوچ رہا ہوں...', speaking: '🔊 بول رہا ہوں...', ready: '✅ تیار' },
   };
+  const activeVoiceState = VOICE_STATES[state.language] || VOICE_STATES.en;
 
   useEffect(() => {
     if ('speechSynthesis' in window) {
@@ -253,10 +263,10 @@ export default function ChatInput() {
         {/* UI States */}
         <div className="absolute -top-6 left-2 text-xs text-theme-muted font-medium">
           {ttsMessage ? <span className="text-amber-400">{ttsMessage}</span> :
-           isSpeaking ? VOICE_STATES[state.language]?.speaking :
-           state.isLoading ? VOICE_STATES[state.language]?.thinking :
-           isListening ? <span className="text-red-500 dark:text-red-400 animate-pulse">{VOICE_STATES[state.language]?.listening}</span> : 
-           (isVoiceModeRef.current && input === '') ? VOICE_STATES[state.language]?.ready : ''}
+           isSpeaking ? activeVoiceState.speaking :
+           state.isLoading ? activeVoiceState.thinking :
+           isListening ? <span className="text-red-500 dark:text-red-400 animate-pulse">{activeVoiceState.listening}</span> : 
+           (isVoiceModeRef.current && input === '') ? activeVoiceState.ready : ''}
         </div>
         <form 
           onSubmit={handleSend}

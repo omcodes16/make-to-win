@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 
 export default function MobileMenuSheet({
   isOpen,
@@ -24,6 +24,14 @@ export default function MobileMenuSheet({
   onOpenReviews,
   onOpenManager,
 }) {
+  const [mobileLangSearch, setMobileLangSearch] = useState('');
+
+  const filteredLanguages = (languages || []).filter(l =>
+    l.label.toLowerCase().includes(mobileLangSearch.toLowerCase()) ||
+    l.nativeLabel.toLowerCase().includes(mobileLangSearch.toLowerCase()) ||
+    l.code.toLowerCase().includes(mobileLangSearch.toLowerCase())
+  );
+
   // Prevent background scroll when sheet is open
   useEffect(() => {
     if (isOpen) {
@@ -112,16 +120,39 @@ export default function MobileMenuSheet({
 
           {/* Language Selector */}
           <div>
-            <div className="flex items-center gap-1.5 mb-2">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" className="text-blue-400">
-                <circle cx="12" cy="12" r="10" />
-                <line x1="2" y1="12" x2="22" y2="12" />
-                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-              </svg>
-              <label className="text-[11px] font-black uppercase tracking-wider text-[var(--text-secondary)]">Language / भाषा</label>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-1.5">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" className="text-blue-400">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="2" y1="12" x2="22" y2="12" />
+                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                </svg>
+                <label className="text-[11px] font-black uppercase tracking-wider text-[var(--text-secondary)]">Language / भाषा</label>
+              </div>
+              <span className="text-[10px] text-white/50">{languages?.length || 0} languages</span>
             </div>
-            <div className="grid grid-cols-2 gap-2">
-              {languages.map((l) => {
+
+            {/* Mobile quick filter */}
+            <div className="relative mb-2">
+              <input
+                type="text"
+                value={mobileLangSearch}
+                onChange={(e) => setMobileLangSearch(e.target.value)}
+                placeholder="🔍 Filter language / भाषा खोजें..."
+                className="w-full bg-white/10 border border-white/15 rounded-xl px-3 py-1.5 text-xs text-white placeholder-white/50 focus:outline-none focus:border-blue-400 shadow-inner"
+              />
+              {mobileLangSearch && (
+                <button
+                  onClick={() => setMobileLangSearch('')}
+                  className="absolute right-2.5 top-1.5 text-xs text-white/60 hover:text-white"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
+              {filteredLanguages.map((l) => {
                 const isActive = currentLang.code === l.code;
                 return (
                   <button
@@ -133,11 +164,19 @@ export default function MobileMenuSheet({
                         : 'bg-[var(--glass-bg)] border-[var(--modal-border)] text-[var(--text-primary)] hover:bg-[var(--glass-bg-hover)]'
                     }`}
                   >
-                    <span>{l.nativeLabel}</span>
+                    <div>
+                      <span>{l.nativeLabel}</span>
+                      <span className="block text-[10px] opacity-60 font-normal">({l.label})</span>
+                    </div>
                     {isActive && <span className="text-white text-xs">✓</span>}
                   </button>
                 );
               })}
+              {filteredLanguages.length === 0 && (
+                <div className="col-span-2 text-center py-4 text-xs text-white/50">
+                  No matching language
+                </div>
+              )}
             </div>
           </div>
 

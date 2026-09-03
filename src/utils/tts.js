@@ -67,11 +67,27 @@ export const speakText = async (id, text, currentLang, onFallbackMessage) => {
   notifyListeners(id);
   isPlaying = true;
   
-  // Map standard language codes to Google TTS codes
-  let targetLangCode = 'en';
-  if (currentLang === 'hi') targetLangCode = 'hi';
-  else if (currentLang === 'bn') targetLangCode = 'bn';
-  else if (currentLang === 'as') targetLangCode = 'bn'; // Assamese fallback to Bengali which is closely related
+  // Map standard language codes to TTS voice codes
+  const TTS_LANG_MAP = {
+    en: 'en',
+    hi: 'hi',
+    bn: 'bn',
+    as: 'bn', // Assamese voice fallback to Bengali phonetics
+    mr: 'mr',
+    ta: 'ta',
+    te: 'te',
+    gu: 'gu',
+    kn: 'kn',
+    ml: 'ml',
+    pa: 'pa',
+    or: 'or',
+    ur: 'ur',
+    sa: 'hi', // Sanskrit fallback to Hindi phonetics
+    mai: 'hi', // Maithili fallback to Hindi phonetics
+    ne: 'ne',
+    kok: 'mr', // Konkani fallback to Marathi phonetics
+  };
+  const targetLangCode = TTS_LANG_MAP[currentLang] || 'en';
   
   try {
     const baseUrl = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');

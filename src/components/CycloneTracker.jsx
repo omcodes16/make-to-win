@@ -10,7 +10,6 @@ export default function CycloneTracker({ lat, lon, locationName = "your area" })
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState(null);
   const [selected, setSelected] = useState(0);
-  const [interactiveMap, setInteractiveMap] = useState(false);
 
   const fetchAlerts = async () => {
     if (!lat || !lon) return;
@@ -152,8 +151,8 @@ export default function CycloneTracker({ lat, lon, locationName = "your area" })
           </button>
         </div>
 
-        {/* Right: Windy live map with scroll-protection overlay */}
-        <div className="w-full xl:w-[45%] h-[320px] xl:h-auto min-h-[350px] rounded-2xl overflow-hidden border border-[var(--theme-border)] relative group">
+        {/* Right: Windy live map */}
+        <div className="w-full xl:w-[45%] h-[320px] xl:h-auto min-h-[350px] rounded-2xl overflow-hidden border border-[var(--theme-border)] relative">
           <iframe
             key={`${lat}-${lon}-${windyOverlay}`}
             width="100%" height="100%"
@@ -161,25 +160,8 @@ export default function CycloneTracker({ lat, lon, locationName = "your area" })
             frameBorder="0"
             style={{ border: 0 }}
             title="Extreme Weather Live Map"
-            className={interactiveMap ? "w-full h-full pointer-events-auto" : "w-full h-full pointer-events-none"}
+            className="w-full h-full pointer-events-auto"
           />
-          {!interactiveMap ? (
-            <div 
-              onClick={() => setInteractiveMap(true)}
-              className="absolute inset-0 bg-black/25 hover:bg-black/15 flex items-center justify-center cursor-pointer transition-all"
-            >
-              <span className="bg-black/75 backdrop-blur-md text-white px-4 py-2 rounded-full text-xs font-bold border border-white/25 shadow-xl flex items-center gap-2 hover:scale-105 transition-transform">
-                <span>🖐️</span> Tap to interact with map
-              </span>
-            </div>
-          ) : (
-            <button 
-              onClick={() => setInteractiveMap(false)}
-              className="absolute top-3 right-3 bg-black/75 backdrop-blur-md text-white px-3 py-1.5 rounded-full text-xs font-bold border border-white/20 shadow-md hover:bg-black/90 transition-all flex items-center gap-1.5"
-            >
-              <span>🔒</span> Lock Scroll
-            </button>
-          )}
         </div>
       </div>
     </div>

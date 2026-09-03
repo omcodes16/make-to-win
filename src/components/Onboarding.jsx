@@ -17,8 +17,15 @@ export default function Onboarding() {
   const { state, dispatch } = useApp();
   const theme = WEATHER_THEMES.clear;
   const [step, setStep] = useState(1);
+  const [langSearch, setLangSearch] = useState('');
   const [isGuideOpen, setGuideOpen] = useState(false);
   const t = EXTRA_I18N[state.language] || EXTRA_I18N.en;
+
+  const filteredLanguages = LANGUAGES.filter(l => 
+    l.label.toLowerCase().includes(langSearch.toLowerCase()) ||
+    l.nativeLabel.toLowerCase().includes(langSearch.toLowerCase()) ||
+    l.code.toLowerCase().includes(langSearch.toLowerCase())
+  );
 
   const handleProfileSelect = (profileCode) => {
     dispatch({ type: 'SET_PROFILE', payload: profileCode });
@@ -107,23 +114,52 @@ export default function Onboarding() {
             ))
           ) : (
             <div className="space-y-3">
-              {LANGUAGES.map((lang) => (
-                <button
-                  key={lang.code}
-                  onClick={() => handleLanguageSelect(lang.code)}
-                  className="w-full glass-panel border border-white/10 hover:bg-emerald-600/30 hover:border-emerald-400/50 text-white font-medium py-3.5 px-5 rounded-2xl transition-all shadow-lg flex items-center justify-between group"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="text-lg font-bold">{lang.nativeLabel}</span>
-                    <span className="text-xs text-white/50">({lang.label})</span>
+              {/* Language Search Bar */}
+              <div className="relative">
+                <input
+                  type="text"
+                  value={langSearch}
+                  onChange={(e) => setLangSearch(e.target.value)}
+                  placeholder="🔍 Search language / भाषा खोजें..."
+                  className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-2.5 text-sm text-white placeholder-white/50 focus:outline-none focus:border-emerald-400/80 focus:bg-white/15 transition-all shadow-inner"
+                  autoFocus
+                />
+                {langSearch && (
+                  <button 
+                    onClick={() => setLangSearch('')}
+                    className="absolute right-3 top-2.5 text-xs text-white/60 hover:text-white"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+
+              {/* Scrollable Language List */}
+              <div className="max-h-64 sm:max-h-72 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
+                {filteredLanguages.map((lang) => (
+                  <button
+                    key={lang.code}
+                    onClick={() => handleLanguageSelect(lang.code)}
+                    className="w-full glass-panel border border-white/10 hover:bg-emerald-600/30 hover:border-emerald-400/50 text-white font-medium py-2.5 px-4 rounded-xl transition-all shadow-lg flex items-center justify-between group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-base sm:text-lg font-bold">{lang.nativeLabel}</span>
+                      <span className="text-xs text-white/60">({lang.label})</span>
+                    </div>
+                    <span className="text-xs px-2.5 py-1 rounded-full bg-white/10 group-hover:bg-emerald-500/20 text-emerald-300 transition-all font-semibold">Start 🚀</span>
+                  </button>
+                ))}
+
+                {filteredLanguages.length === 0 && (
+                  <div className="text-center py-6 text-white/50 text-xs">
+                    No languages match "{langSearch}".
                   </div>
-                  <span className="text-xs px-2.5 py-1 rounded-full bg-white/10 group-hover:bg-emerald-500/20 text-emerald-300 transition-all font-semibold">Start 🚀</span>
-                </button>
-              ))}
+                )}
+              </div>
 
               <button
                 onClick={() => setStep(1)}
-                className="w-full py-2.5 text-xs text-white/60 hover:text-white transition-colors flex items-center justify-center gap-1.5 font-medium"
+                className="w-full py-2 text-xs text-white/60 hover:text-white transition-colors flex items-center justify-center gap-1.5 font-medium"
               >
                 ← Change Category / श्रेणी बदलें
               </button>

@@ -1,4 +1,4 @@
-export const UI_TRANSLATIONS = {
+const rawTranslations = {
   en: {
     tooltipHeatIndex: "Heat Index shows how hot it actually feels to the human body when humidity is combined with the air temperature.",
     tooltipNwp: "NWP Divergence indicates how much the world's top 3 forecasting supercomputers agree or disagree. High agreement means the forecast is highly reliable.",
@@ -28,6 +28,7 @@ export const UI_TRANSLATIONS = {
     unknownLocation: 'Location not found. Try another city.',
     fetchFailed: 'Failed to fetch weather data.',
     forecast7Day: '7-Day Forecast',
+    hourlyForecast: 'Hourly Forecast',
     detailedConditions: 'Detailed Conditions',
     rainProb: 'Rain Probability',
     airQuality: 'Air Quality',
@@ -38,6 +39,13 @@ export const UI_TRANSLATIONS = {
     aqiMod: 'Moderate',
     aqiUnhSG: 'Unhealthy (SG)',
     aqiUnh: 'Unhealthy',
+    modelsAgree: 'Models agree — high confidence',
+    modelsDiverge: 'Models diverge — check back closer to the date',
+    statMax: 'Max',
+    statMin: 'Min',
+    statUvMax: 'UV Max',
+    poweredBy: 'Powered by',
+    modelBreakdown: 'Model Breakdown',
   },
   hi: {
     tooltipHeatIndex: "हीट इंडेक्स बताता है कि हवा के तापमान और आर्द्रता (नमी) के मिलने से मानव शरीर को असल में कितनी गर्मी महसूस होती है।",
@@ -158,10 +166,58 @@ export const UI_TRANSLATIONS = {
     aqiMod: 'মাঝারি',
     aqiUnhSG: 'অস্বাস্থ্যকর (সংবেদনশীল)',
     aqiUnh: 'অস্বাস্থ্যকর',
+  },
+  sa: {
+    tooltipHeatIndex: "तापसूचकाङ्कः दर्शयति यत् वायुतापमानस्य आर्द्रतायाश्च सम्मेलनेन मानवेन कीदृशी उष्णता अनुभूयते।",
+    tooltipNwp: "NWP विचलनं दर्शयति यत् विश्वस्य त्रयः सुपर-सङ्गणकाः पूर्वानुमानविषये कियत् सहमताः सन्ति। उच्च-सहमतिः विश्वसनीयतां सूचयति।",
+    tooltipSeverity: "तीव्रता-स्तरः सूचयति यत् भवता सावधानता पालनीया उत न। 'सावधान' इत्युक्ते सज्जता, 'तीव्र' इत्युक्ते तत्क्षणं सुरक्षा-उपायः।",
+    tabChat: 'WeatherGPT पृच्छतु',
+    tabStage: 'ऋतुदृश्यम्',
+    tabAlerts: 'तीव्रचेतावनानि वार्ताश्च',
+    searchPlaceholder: 'नगरम् अन्विष्यतु...',
+    fallbackLocation: 'स्थानप्राप्तिः न जाता — स्वस्य नगरम् अन्विष्यतु।',
+    fallbackName: 'भवतः स्थानम्',
+    searchPrompt: 'ऋतुं द्रष्टुं नगरम् अन्विष्यतु स्वस्थानं वा उपयुञ्जताम्।',
+    tempTab: 'तापमानम्',
+    precipTab: 'वृष्टिः',
+    windTab: 'वायुः',
+    today: 'अद्य',
+    kmh: 'किमी/होरा',
+    in: 'इञ्च्',
+    hum: 'आर्द्रता',
+    vis: 'दृश्यता',
+    heat: 'तापसूचकाङ्कः',
+    rain: 'वृष्टिः',
+    uv: 'UV सूचकाङ्कः',
+    feelsLike: 'अनुभूयते',
+    sunrise: 'सूर्योदयः',
+    sunset: 'सूर्यास्तः',
+    windDir: 'वायुदिशा',
+    unknownLocation: 'स्थानं न लब्धम्। अन्यनगरं प्रयतताम्।',
+    fetchFailed: 'ऋतुसूचनाप्राप्तिः विफला जाता।',
+    forecast7Day: 'सप्तदिनात्मक-पूर्वानुमानम्',
+    hourlyForecast: 'प्रतिघण्टा-पूर्वानुमानम्',
+    detailedConditions: 'विस्तृत-ऋतुस्थितिः',
+    rainProb: 'वृष्टिसम्भावना',
+    airQuality: 'वायुगुणवत्ता',
+    maxUv: 'अधिकतमः UV सूचकाङ्कः',
+    radarLive: 'प्रत्यक्ष-ऋतु-रडार्',
+    liveBadge: 'प्रत्यक्षम्',
+    aqiGood: 'उत्तमम्',
+    aqiMod: 'मध्यमम्',
+    aqiUnhSG: 'अस्वास्थ्यकरम् (संवेदनशील)',
+    aqiUnh: 'अस्वास्थ्यकरम्',
+    modelsAgree: 'प्रतिरूपाणां सहमतिः — उच्चविश्वसनीयता',
+    modelsDiverge: 'प्रतिरूपाणां विचलनम् — पुनरपि पश्यतु',
+    statMax: 'अधिकतमम्',
+    statMin: 'न्यूनतमम्',
+    statUvMax: 'अधिकतमः UV',
+    poweredBy: 'प्रदत्तम्',
+    modelBreakdown: 'प्रतिरूप-विवरणम्',
   }
 };
 
-export const WEATHER_CONDITIONS_I18N = {
+const rawWeatherConditions = {
   en: {
     clear: 'Clear sky',
     mostlyClear: 'Mainly clear',
@@ -265,5 +321,53 @@ export const WEATHER_CONDITIONS_I18N = {
     thunderstorm: 'বজ্রঝড়',
     thunderstormHail: 'শিলাবৃষ্টি সহ বজ্রঝড়',
     unknown: 'অজানা'
+  },
+  sa: {
+    clear: 'निर्मलाकाशः',
+    mostlyClear: 'मुख्यतः निर्मलः',
+    partlyCloudy: 'आंशिक-मेघावृतम्',
+    overcast: 'मेघाच्छन्नम्',
+    fog: 'कुहेलिका',
+    rimeFog: 'तुषार-कुहेलिका',
+    lightDrizzle: 'मन्दवृष्टिः',
+    modDrizzle: 'मध्यम-मन्दवृष्टिः',
+    denseDrizzle: 'सघन-मन्दवृष्टिः',
+    freezingDrizzle: 'शीत-मन्दवृष्टिः',
+    slightRain: 'अल्पवृष्टिः',
+    modRain: 'मध्यमवृष्टिः',
+    heavyRain: 'प्रबलवृष्टिः',
+    freezingRain: 'शीतवृष्टिः',
+    slightSnow: 'अल्पहिमपातः',
+    modSnow: 'मध्यमहिमपातः',
+    heavySnow: 'प्रबलहिमपातः',
+    snowGrains: 'हिमकणाः',
+    slightShowers: 'अल्प-वृष्टिवर्षणम्',
+    modShowers: 'मध्यम-वृष्टिवर्षणम्',
+    violentShowers: 'तीव्र-वृष्टिवर्षणम्',
+    thunderstorm: 'विद्युद्-मेघगर्जनम्',
+    thunderstormHail: 'करकासहित-मेघगर्जनम्',
+    unknown: 'अज्ञातम्'
   }
 };
+
+/**
+ * Creates a resilient translation proxy that falls back to English for any missing key or language.
+ */
+export function createTranslationProxy(targetObj) {
+  return new Proxy(targetObj, {
+    get(target, lang) {
+      if (typeof lang !== 'string') return target[lang];
+      const enDict = target.en || {};
+      const langDict = target[lang] || {};
+      return new Proxy(langDict, {
+        get(dict, key) {
+          if (dict[key] !== undefined) return dict[key];
+          return enDict[key];
+        }
+      });
+    }
+  });
+}
+
+export const UI_TRANSLATIONS = createTranslationProxy(rawTranslations);
+export const WEATHER_CONDITIONS_I18N = createTranslationProxy(rawWeatherConditions);

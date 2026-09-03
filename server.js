@@ -187,6 +187,12 @@ import {
   get_marine_weather
 } from './server/tools.js';
 
+import { 
+  detectIndianLanguage, 
+  translateToEnglish, 
+  batchTranslateFromEnglish 
+} from './server/bhashini.js';
+
 import mongoose from 'mongoose';
 import { Alert, Snapshot, AccuracyLog, SosRequest, CommunityReport, SmsRecipient, SmsLog, Review, UserSetting } from './server/models.js';
 
@@ -1233,6 +1239,24 @@ app.post('/api/chat', async (req, res) => {
     return res.status(500).json({ error: 'No AI API key configured. Add GEMINI_API_KEY or GROQ_API_KEY to .env file.' });
   }
 
+  // --- BHASHINI LANGUAGE AUTO-DETECTION & PRE-TRANSLATION ---
+  const rawLang = language || 'en';
+  const detectedLang = detectIndianLanguage(message, rawLang);
+  const targetLanguage = (rawLang !== 'en') ? rawLang : detectedLang;
+
+  // Skip translation for English and Hindi (both reliably supported natively in prompt)
+  const isRegionalLang = targetLanguage !== 'en' && targetLanguage !== 'hi';
+
+  let englishQuery = message;
+  if (isRegionalLang) {
+    try {
+      englishQuery = await translateToEnglish(message, targetLanguage);
+      console.log(`🌐 [BHASHINI NMT] Translated query (${targetLanguage} -> en): "${message}" -> "${englishQuery}"`);
+    } catch (nmtErr) {
+      console.warn('[BHASHINI NMT NOTICE] Pre-translation skipped:', nmtErr.message);
+    }
+  }
+
   // Select the active API — prefer GROQ (no quota limits on free tier), fall back to Gemini
   const useGroq = false; // Forcing Gemini permanently because Groq's 8K TPM / 200K TPD limit is being repeatedly hit
   const apiKey = useGroq ? groqKey : geminiKey;
@@ -1264,7 +1288,9 @@ app.post('/api/chat', async (req, res) => {
     }
     
     const locHint = weatherData?.location ? `\n(Hint: The user's location is generally ${weatherData.location}${weatherData.state ? ', ' + weatherData.state : ''}. Use tools to fetch precise data if needed.)${localContext}` : '';
-    const initialUserPrompt = `User question (language: ${language}): "${message}"${locHint}`;
+    const initialUserPrompt = isRegionalLang
+      ? `User question (translated to English for accurate tool-calling from ${targetLanguage}): "${englishQuery}"\n(Original native script query: "${message}")${locHint}\nIMPORTANT: Answer in clear English using the required JSON schema; the system will translate your response back to ${targetLanguage}.`
+      : `User question (language: ${targetLanguage}): "${message}"${locHint}`;
 
     let messages = [
       { role: 'system', content: SYSTEM_PROMPT + `\n\nActive User Profile: ${profile.toUpperCase()}` },
@@ -1548,6 +1574,30 @@ ${modelNote}`;
     // --- LOG CHAT PREDICTION FOR ACCURACY FEED ---
     logChatPrediction(contextData, message, finalJson);
 
+    // --- BHASHINI MULTILINGUAL POST-TRANSLATION ---
+    if (isRegionalLang && finalJson) {
+      try {
+        const toTranslate = [
+          finalJson.answer || '',
+          finalJson.advisory || '',
+          finalJson.followUp || '',
+          ...(Array.isArray(finalJson.suggestedQuestions) ? finalJson.suggestedQuestions : [])
+        ];
+        const translated = await batchTranslateFromEnglish(toTranslate, targetLanguage);
+        if (translated && translated.length >= 3) {
+          if (translated[0]) finalJson.answer = translated[0];
+          if (translated[1]) finalJson.advisory = translated[1];
+          if (translated[2]) finalJson.followUp = translated[2];
+          if (translated.length > 3) {
+            finalJson.suggestedQuestions = translated.slice(3).filter(Boolean);
+          }
+          console.log(`🌐 [BHASHINI NMT] Post-translated response back to ${targetLanguage}`);
+        }
+      } catch (backTransErr) {
+        console.warn('[BHASHINI NMT NOTICE] Post-translation failed:', backTransErr.message);
+      }
+    }
+
     return res.json(finalJson);
   } catch (parseErr) {
     console.error('[DEBUG-CRASH] JSON parsing or logChatPrediction crashed:', parseErr);
@@ -1563,6 +1613,31 @@ ${modelNote}`;
       severity: 'none',
       suggestedQuestions: req.body.language === 'hi' ? ['आने वाले दिनों का मौसम कैसा रहेगा?'] : req.body.language === 'bn' ? ['আগামী কয়েকদিনের আবহাওয়া কেমন থাকবে?'] : req.body.language === 'as' ? ['অহা কেইদিনমানৰ বতৰ কেনেকুৱা হ’ব?'] : ['What is the forecast for tomorrow?', 'Are there any active alerts?'],
     });
+  }
+});
+
+// Standalone Bhashini NMT Translation Endpoint
+app.post('/api/translate', async (req, res) => {
+  const { text, texts, sourceLang = 'en', targetLang } = req.body;
+  if (!targetLang) return res.status(400).json({ error: 'targetLang is required' });
+
+  try {
+    if (Array.isArray(texts)) {
+      const results = await batchTranslateFromEnglish(texts, targetLang);
+      return res.json({ translated: results });
+    }
+    if (text) {
+      if (sourceLang === 'en') {
+        const [result] = await batchTranslateFromEnglish([text], targetLang);
+        return res.json({ translated: result });
+      } else {
+        const result = await translateToEnglish(text, sourceLang);
+        return res.json({ translated: result });
+      }
+    }
+    return res.status(400).json({ error: 'text or texts required' });
+  } catch (err) {
+    res.status(500).json({ error: 'Translation error' });
   }
 });
 
