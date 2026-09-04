@@ -156,7 +156,8 @@ export async function geocodeLocation(name, lang = 'en') {
   // 3. Fall back to direct Open-Meteo geocoding filtered for India
   try {
     const res = await fetch(
-      `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(name)}&count=10&language=${lang}`
+      `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(name)}&count=10&language=${lang}`,
+      { signal: AbortSignal.timeout(2500) }
     );
     const data = await res.json();
     if (data.results && data.results.length > 0) {
@@ -180,7 +181,7 @@ export async function geocodeLocation(name, lang = 'en') {
   try {
     const nominatimRes = await fetch(
       `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(name)}&format=json&limit=1&countrycodes=in&accept-language=${lang}&addressdetails=1`,
-      { headers: { 'User-Agent': 'WeatherGPT-SIH2026' } }
+      { headers: { 'User-Agent': 'WeatherGPT-SIH2026' }, signal: AbortSignal.timeout(3500) }
     );
     const nominatimData = await nominatimRes.json();
     if (nominatimData && nominatimData.length > 0) {
@@ -272,7 +273,8 @@ export async function searchLocationSuggestions(name, lang = 'en') {
   if (!proxySuccess && results.length < 4) {
     try {
       const res = await fetch(
-        `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(name)}&count=6&language=${lang}`
+        `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(name)}&count=6&language=${lang}`,
+        { signal: AbortSignal.timeout(2500) }
       );
       const data = await res.json();
       if (data.results && data.results.length > 0) {
@@ -301,7 +303,7 @@ export async function searchLocationSuggestions(name, lang = 'en') {
     try {
       const nominatimRes = await fetch(
         `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(name)}&format=json&limit=5&countrycodes=in&accept-language=${lang}&addressdetails=1`,
-        { headers: { 'User-Agent': 'WeatherGPT-SIH2026' } }
+        { headers: { 'User-Agent': 'WeatherGPT-SIH2026' }, signal: AbortSignal.timeout(3500) }
       );
       const nominatimData = await nominatimRes.json();
       if (nominatimData && nominatimData.length > 0) {

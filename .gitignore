@@ -15,3 +15,5 @@ dev-archive/
 accuracy_log.json
 forecast_snapshots.json
 user_settings.json
+push_subscriptions.json
+vapid_keys.json

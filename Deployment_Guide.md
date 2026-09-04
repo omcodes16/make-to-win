@@ -31,6 +31,9 @@ Both Vercel and Render need your code to be on GitHub.
    - **Instance Type:** Free
 5. Scroll down to **Environment Variables**:
    - Add `GROQ_API_KEY` = `(Your actual Groq API Key)`
+   - Add `VAPID_PUBLIC_KEY` = `BBbK9hNpoPr4r9tfUNERfurJw-BQBKOp1E7H9zBCQpqzINorKvFmD9JAQrUWCbL42830gfS1Lmxzw0RGUUl6utU`
+   - Add `VAPID_PRIVATE_KEY` = `vsJiPHKStvs5USWUWlp5ilKuY32_EtOkElyFHmDn7EM`
+   - *(Optional)* Add `MONGODB_URI` = `(Your MongoDB connection string)`
 6. Click **Create Web Service**. 
 7. Once it says "Live", copy the URL (e.g., `https://weather-gpt-api.onrender.com`).
 
@@ -43,10 +46,30 @@ Both Vercel and Render need your code to be on GitHub.
    - Add Value: `(Paste your Render URL here, without the trailing slash)`
 5. Click **Deploy**.
 
-## Result
-Within 2 minutes, Vercel will give you a live, production-ready link (e.g., `weather-gpt.vercel.app`). 
-Since Vercel has a global CDN, your UI will load instantly, making it **super fast and responsive** for the SIH judges!
+## Option A: Split Deployment (Vercel Frontend + Render Backend)
+*(Follow Steps 2 & 3 above if you want your frontend hosted on Vercel and backend on Render)*
 
 ---
-> [!IMPORTANT]
-> Maine aapke API files (`chatApi.js` aur `AlertsScreen.jsx`) me zaroori changes kar diye hain taaki wo production me `VITE_API_URL` ko samajh sakein. Aapko bas ab GitHub par push karna hai. Boliye, kya main push karne me aapki madad karu?
+
+## Option B: Full-Stack Docker Deployment on Render (All-in-One)
+With Docker, the entire application (React frontend UI + Express backend + WebSockets + Web Push) is packaged into a single container running on Render at zero cost.
+
+### How to Deploy on Render using Docker:
+1. Push your latest code to GitHub.
+2. Go to [Render.com](https://render.com/) and sign in.
+3. Click **New +** -> **Web Service**.
+4. Select your GitHub repository.
+5. In the configuration page:
+   - **Name**: `weathergpt-sih`
+   - **Region**: `Singapore` (Fastest for India)
+   - **Runtime**: Select **Docker** (Render will automatically detect the `Dockerfile`)
+   - **Instance Type**: **Free**
+6. Scroll down to **Environment Variables** and add:
+   - `GROQ_API_KEY`: `(Your Groq API Key)`
+   - `GEMINI_API_KEY`: `(Your Gemini API Key)`
+   - `VAPID_PUBLIC_KEY`: `BBbK9hNpoPr4r9tfUNERfurJw-BQBKOp1E7H9zBCQpqzINorKvFmD9JAQrUWCbL42830gfS1Lmxzw0RGUUl6utU`
+   - `VAPID_PRIVATE_KEY`: `vsJiPHKStvs5USWUWlp5ilKuY32_EtOkElyFHmDn7EM`
+   - *(Optional)* `MONGODB_URI`: `(Your MongoDB connection string)`
+7. Click **Create Web Service**.
+
+Render will automatically build the multi-stage Docker container (compile the React Vite bundle, start the Express server, and expose everything on `https://weathergpt-sih.onrender.com`). All features—including PWA installation, offline shell caching, and Web Push notifications—work out of the box with zero CORS issues!

@@ -6,7 +6,17 @@ import { getWeatherInfo } from '../utils/weatherConditions';
 import { getSeasonalContext } from '../utils/climateSeasonal';
 import { EXTRA_I18N } from '../utils/translationsExtra';
 import { FEATURE_I18N } from '../utils/featureTranslations';
-import { requestPushPermission, notifyIfSevere, isPushDisabled, setPushDisabled, sendWeatherPush } from '../utils/pushNotifications';
+import { 
+  requestPushPermission, 
+  notifyIfSevere, 
+  isPushDisabled, 
+  setPushDisabled, 
+  sendWeatherPush,
+  subscribeToMobilePush,
+  unsubscribeFromMobilePush,
+  checkMobilePushSubscription,
+  triggerTestMobilePush
+} from '../utils/pushNotifications';
 import Header from './Header';
 import CycloneTracker from './CycloneTracker';
 
@@ -44,6 +54,17 @@ export default function AlertsScreen() {
     if (isPushDisabled()) return false;
     return typeof Notification !== 'undefined' && Notification.permission === 'granted';
   });
+  const [isTestingPush, setIsTestingPush] = useState(false);
+  const [pushStatusMessage, setPushStatusMessage] = useState(null);
+
+  // Sync mobile push status with ServiceWorker on mount
+  useEffect(() => {
+    checkMobilePushSubscription().then((isSubbed) => {
+      if (isSubbed && !isPushDisabled()) {
+        setPushEnabled(true);
+      }
+    });
+  }, []);
 
   // Lock body scroll when modal is active so user doesn't get scrolled out of view
   useEffect(() => {
@@ -61,20 +82,47 @@ export default function AlertsScreen() {
     if (pushEnabled) {
       // User tapped to turn OFF alerts
       setPushDisabled(true);
+      await unsubscribeFromMobilePush();
       setPushEnabled(false);
+      setPushStatusMessage("🔕 Alerts disabled for this device.");
+      setTimeout(() => setPushStatusMessage(null), 3000);
     } else {
       // User tapped to turn ON alerts
-      setPushDisabled(false);
-      const result = await requestPushPermission();
-      if (result === 'granted') {
+      setPushStatusMessage("⏳ Enabling alerts...");
+      const res = await subscribeToMobilePush();
+      if (res.success) {
         setPushEnabled(true);
-        sendWeatherPush("🔔 Alerts Enabled", "Real-time disaster and severe weather notifications are active.", "/favicon.ico", "alerts-toggle");
+        sendWeatherPush("🔔 Mobile Alerts Active", "You are subscribed to real-time disaster notifications.", "/logo_new.jpg", "alerts-toggle");
+        setPushStatusMessage("✅ Push alerts active! Phone will receive background warnings.");
       } else {
         setPushEnabled(false);
-        if (result === 'denied') {
-          alert("Notification permission is blocked in your browser settings. Please allow notifications in your site settings to enable live alerts.");
+        if (res.reason === 'denied') {
+          alert("Notification permission is blocked. Please allow notifications in your browser/device site settings to receive live emergency alerts.");
+        } else if (res.reason === 'unsupported') {
+          alert("Web Push is not supported by this browser. If on iPhone/iOS, please tap Share -> 'Add to Home Screen' to enable push notifications.");
+        } else {
+          setPushStatusMessage("❌ Could not activate push. Ensure you are connected to the network.");
         }
       }
+      setTimeout(() => setPushStatusMessage(null), 4000);
+    }
+  };
+
+  const handleTestPush = async () => {
+    setIsTestingPush(true);
+    setPushStatusMessage("📡 Dispatching test push to your phone/device...");
+    try {
+      const res = await triggerTestMobilePush();
+      if (res.success) {
+        setPushStatusMessage("📲 Test notification sent! Check your notification tray / lock screen.");
+      } else {
+        setPushStatusMessage("⚠️ " + (res.error || res.reason || "Unable to deliver test push. Please verify notification permission."));
+      }
+    } catch (e) {
+      setPushStatusMessage("⚠️ Failed to dispatch test push.");
+    } finally {
+      setIsTestingPush(false);
+      setTimeout(() => setPushStatusMessage(null), 5000);
     }
   };
 
@@ -356,43 +404,65 @@ export default function AlertsScreen() {
               <h2 className="text-2xl font-bold tracking-wide">{ex.liveHighAlerts}</h2>
             </div>
             
-            {/* Push Notifications Two-Way Toggle (ON / OFF) */}
-            <button 
-              onClick={handleTogglePush}
-              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold border transition-all duration-300 shadow-sm cursor-pointer select-none active:scale-95 ${
-                pushEnabled 
-                  ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400 dark:text-emerald-300 shadow-[0_0_15px_rgba(16,185,129,0.25)] hover:bg-emerald-500/25' 
-                  : 'bg-red-500/10 border-red-500/30 text-red-400 dark:text-red-300 hover:bg-red-500/20'
-              }`}
-              title={pushEnabled ? "Alerts are ACTIVE — Tap to turn OFF" : "Alerts are DISABLED — Tap to turn ON"}
-            >
-              {pushEnabled ? (
-                <>
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                  </span>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-400">
-                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                  </svg>
-                  <span>Alerts On</span>
-                </>
-              ) : (
-                <>
-                  <span className="w-2 h-2 rounded-full bg-red-400 opacity-80"></span>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="text-red-400">
-                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                    <path d="M18.63 13A17.89 17.89 0 0 1 18 8"></path>
-                    <path d="M6.26 6.26A5.86 5.86 0 0 0 6 8c0 7-3 9-3 9h14"></path>
-                    <path d="M18 8a6 6 0 0 0-9.33-5"></path>
-                    <line x1="1" y1="1" x2="23" y2="23"></line>
-                  </svg>
-                  <span>Alerts Off</span>
-                </>
+            <div className="flex items-center gap-2">
+              {/* Test Mobile Push Button (Direct real-device verification) */}
+              {pushEnabled && (
+                <button 
+                  onClick={handleTestPush}
+                  disabled={isTestingPush}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-sky-500/15 border border-sky-500/40 text-sky-300 hover:bg-sky-500/25 active:scale-95 transition-all cursor-pointer disabled:opacity-50 shadow-sm"
+                  title="Send a real test push notification to verify this device"
+                >
+                  <span>📲</span>
+                  <span>{isTestingPush ? 'Sending...' : 'Test Push'}</span>
+                </button>
               )}
-            </button>
+
+              {/* Push Notifications Two-Way Toggle (ON / OFF) */}
+              <button 
+                onClick={handleTogglePush}
+                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold border transition-all duration-300 shadow-sm cursor-pointer select-none active:scale-95 ${
+                  pushEnabled 
+                    ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400 dark:text-emerald-300 shadow-[0_0_15px_rgba(16,185,129,0.25)] hover:bg-emerald-500/25' 
+                    : 'bg-red-500/10 border-red-500/30 text-red-400 dark:text-red-300 hover:bg-red-500/20'
+                }`}
+                title={pushEnabled ? "Alerts are ACTIVE — Tap to turn OFF" : "Alerts are DISABLED — Tap to turn ON"}
+              >
+                {pushEnabled ? (
+                  <>
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-400">
+                      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                      <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                    </svg>
+                    <span>Alerts On</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="w-2 h-2 rounded-full bg-red-400 opacity-80"></span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="text-red-400">
+                      <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                      <path d="M18.63 13A17.89 17.89 0 0 1 18 8"></path>
+                      <path d="M6.26 6.26A5.86 5.86 0 0 0 6 8c0 7-3 9-3 9h14"></path>
+                      <path d="M18 8a6 6 0 0 0-9.33-5"></path>
+                      <line x1="1" y1="1" x2="23" y2="23"></line>
+                    </svg>
+                    <span>Alerts Off</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
+
+          {/* Real-time Push Status Indicator */}
+          {pushStatusMessage && (
+            <div className="px-3.5 py-2 rounded-xl bg-slate-900/85 border border-sky-500/30 text-xs font-medium text-slate-200 backdrop-blur-md animate-fadeIn flex items-center gap-2 shadow-lg">
+              <span>{pushStatusMessage}</span>
+            </div>
+          )}
 
           <div className="flex flex-col gap-4">
             {/* Live Cyclone Tracker (Only shows active cyclones if detected) */}

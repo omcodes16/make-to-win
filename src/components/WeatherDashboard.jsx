@@ -20,10 +20,12 @@ import { getUrbanPlanningAdvisory } from '../utils/urbanPlanningAdvisory';
 import { getSeasonalContext } from '../utils/climateSeasonal';
 import { FEATURE_I18N } from '../utils/featureTranslations';
 import ModelConfidence from './ModelConfidence';
+import OfficialBulletinModal from './OfficialBulletinModal';
 
 
 export default function WeatherDashboard() {
   const { state, dispatch } = useApp();
+  const [showBulletinModal, setShowBulletinModal] = useState(false);
   const [searchInput, setSearchInput] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -124,7 +126,17 @@ export default function WeatherDashboard() {
     setIsLoading(true);
     try {
       const data = await getWeather(loc.lat, loc.lng);
-      dispatch({ type: 'SET_WEATHER_STAGE_DATA', payload: { locationName: loc.name, lat: loc.lat, lng: loc.lng, weather: data } });
+      dispatch({ 
+        type: 'SET_WEATHER_STAGE_DATA', 
+        payload: { 
+          locationName: loc.name, 
+          district: loc.district || '',
+          state: loc.state || '',
+          lat: loc.lat, 
+          lng: loc.lng, 
+          weather: data 
+        } 
+      });
       setSelectedDay(0);
       
       const severityCheck = checkSeverity(data, loc.name);
@@ -152,7 +164,17 @@ export default function WeatherDashboard() {
       }
       if (loc) {
         const data = await getWeather(loc.lat, loc.lng);
-        dispatch({ type: 'SET_WEATHER_STAGE_DATA', payload: { locationName: loc.name, lat: loc.lat, lng: loc.lng, weather: data } });
+        dispatch({ 
+          type: 'SET_WEATHER_STAGE_DATA', 
+          payload: { 
+            locationName: loc.name, 
+            district: loc.district || '',
+            state: loc.state || '',
+            lat: loc.lat, 
+            lng: loc.lng, 
+            weather: data 
+          } 
+        });
         setSelectedDay(0); // Reset to today on new search
         
         const severityCheck = checkSeverity(data, loc.name);
@@ -358,6 +380,11 @@ return (
             <div className="flex items-center gap-2 text-white/90 mb-2 font-medium text-base sm:text-lg flex-wrap">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#E8A33D" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
               <span className="truncate max-w-[200px] sm:max-w-none">{typeof stageData.locationName === 'string' ? stageData.locationName : 'Unknown Location'}</span>
+              {(stageData.district || stageData.state) && (
+                <span className="text-white/70 text-xs sm:text-sm font-normal bg-white/10 backdrop-blur-md px-2 py-0.5 rounded-full border border-white/15">
+                  {[stageData.district, stageData.state].filter(Boolean).join(', ')}
+                </span>
+              )}
               {selectedDay > 0 && <span className="text-white/50 text-sm">({dailyData[selectedDay]?.day || 'Day ' + (selectedDay + 1)})</span>}
               <button
                 onClick={() => {
@@ -453,6 +480,49 @@ return (
           </div>
         )}
 
+
+        {/* Official Weather Bulletin Banner (Panchayat to State) */}
+        <div className="glass-panel border border-indigo-500/40 bg-gradient-to-r from-amber-500/10 via-indigo-600/15 to-emerald-500/10 rounded-3xl p-4 sm:p-5 mb-6 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-start gap-3.5">
+            <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-2xl shadow-inner shrink-0">
+              🏛️
+            </div>
+            <div>
+              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                  Official Decision Support
+                </span>
+                <span className="text-[10px] text-emerald-400 font-bold flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                  100% Real-Time
+                </span>
+                <span className="text-[10px] text-indigo-300 bg-indigo-500/20 px-2 py-0.5 rounded-full border border-indigo-500/30 font-medium">
+                  Village • Tehsil • District • State
+                </span>
+              </div>
+              <h3 className="text-sm sm:text-base font-black">
+                {state.language === 'hi' 
+                  ? 'पंचायत से राज्य स्तरीय मौसम एवं परामर्श बुलेटिन' 
+                  : 'Panchayat to State Multi-Sector Weather Bulletin'}
+              </h3>
+              <p className="text-xs opacity-85 mt-0.5 leading-relaxed">
+                {state.language === 'hi' 
+                  ? 'गाँव, तहसील, जिला एवं राज्य स्तर पर किसान, मछुआरा, नागरिक सुरक्षा व विमानन हेतु आधिकारिक बुलेटिन व पीडीएफ रिपोर्ट।'
+                  : 'Official printable report for Farmers, Fishermen, Urban & Aviation sectors across all Villages, Tehsils, Districts & States.'}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => setShowBulletinModal(true)}
+              className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:brightness-110 text-white font-black text-xs shadow-lg shadow-indigo-600/30 active:scale-95 transition-all flex items-center justify-center gap-2"
+            >
+              <span>📜 {state.language === 'hi' ? 'बुलेटिन देखें व प्रिंट करें' : 'Generate Official Bulletin'}</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </div>
+        </div>
 
         {/* 7-Day Forecast */}
         <div className="glass-panel border border-white/10 rounded-3xl p-4 sm:p-6 mb-6 sm:mb-8 shadow-xl">
@@ -746,7 +816,25 @@ return (
         <CommunityReports locationName={stageData.locationName} />
 
       </div>
+
+      {/* Official Bulletin Modal */}
+      {showBulletinModal && (
+        <OfficialBulletinModal
+          isOpen={showBulletinModal}
+          onClose={() => setShowBulletinModal(false)}
+          initialLocation={{
+            name: stageData.locationName || 'New Delhi',
+            district: stageData.district || '',
+            state: stageData.state || '',
+            lat: stageData.lat || 28.6139,
+            lng: stageData.lng || 77.2090,
+          }}
+          initialCategory={state.userProfile === 'general' ? 'master' : state.userProfile}
+          defaultLang={state.language}
+        />
+      )}
     </div>
   );
 }
+
 

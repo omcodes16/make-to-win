@@ -137,8 +137,8 @@ export default function ManagerDashboard() {
     if (token) {
       fetchAlerts();
       fetchSos();
-      // Auto-refresh SOS every 30 seconds
-      const interval = setInterval(fetchSos, 30000);
+      // Auto-refresh SOS every 4 seconds for live monitoring
+      const interval = setInterval(fetchSos, 4000);
       return () => clearInterval(interval);
     }
   }, [token]);
@@ -500,11 +500,21 @@ export default function ManagerDashboard() {
 
         {/* Live SOS Emergency Requests */}
         <div className="bg-red-950/30 border border-red-500/30 p-6 rounded-2xl ">
-          <h2 className="text-xl font-bold mb-4 flex justify-between items-center">
+          <h2 className="text-xl font-bold mb-4 flex justify-between items-center flex-wrap gap-2">
             <span className="flex items-center gap-2">🆘 Live SOS Requests</span>
-            <span className={`px-3 py-1 rounded-full text-sm font-bold ${sosRequests.length > 0 ? 'bg-red-500 text-white animate-pulse' : 'bg-white/10 text-white/50'}`}>
-              {sosRequests.length} Active
-            </span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={fetchSos}
+                className="text-xs bg-white/10 hover:bg-white/20 text-white/90 px-3 py-1.5 rounded-full font-semibold transition-all flex items-center gap-1.5 active:scale-95 border border-white/10"
+                title="Force refresh live SOS stream"
+              >
+                <span>🔄</span>
+                <span>Sync Now</span>
+              </button>
+              <span className={`px-3 py-1 rounded-full text-sm font-bold ${sosRequests.length > 0 ? 'bg-red-500 text-white animate-pulse' : 'bg-white/10 text-white/50'}`}>
+                {sosRequests.length} Active
+              </span>
+            </div>
           </h2>
           {sosRequests.length === 0 ? (
             <p className="text-white/40 text-sm">✅ No active SOS requests. All clear.</p>
@@ -514,11 +524,16 @@ export default function ManagerDashboard() {
                 <div key={sos._id || sos.id} className="bg-black/50 border border-red-500/30 p-4 rounded-xl space-y-3">
                   <div className="flex justify-between items-start">
                     <div>
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <p className="font-bold text-red-300">{sos.name || 'Anonymous'}</p>
                         <span className="bg-red-900/50 text-red-200 text-[10px] px-2 py-0.5 rounded border border-red-500/30">
                           {sos.helpType || 'General'}
                         </span>
+                        {sos.locationNote && (
+                          <span className="bg-amber-500/20 text-amber-300 text-[10px] px-2 py-0.5 rounded border border-amber-500/30 font-mono">
+                            📍 {sos.locationNote}
+                          </span>
+                        )}
                       </div>
                       {sos.phone && <p className="text-xs text-white/60">📞 {sos.phone}</p>}
                       {sos.message && <p className="text-sm text-white/80 mt-1">{sos.message}</p>}
@@ -536,12 +551,12 @@ export default function ManagerDashboard() {
                     </div>
                   )}
 
-                  <div className="flex flex-wrap gap-2 pt-1 border-t border-white/10 mt-2">
+                  <div className="flex flex-wrap gap-2 pt-1 border-t border-white/10 mt-2 items-center">
                     <a
                       href={`https://www.google.com/maps?q=${sos.lat},${sos.lng}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-xs bg-blue-600/40 hover:bg-blue-600/70 text-blue-300 px-3 py-1.5 rounded-lg transition-colors"
+                      className="text-xs bg-blue-600/40 hover:bg-blue-600/70 text-blue-300 px-3 py-1.5 rounded-lg transition-colors font-bold flex items-center gap-1"
                     >
                       📍 Open in Maps ({sos.lat?.toFixed(4)}, {sos.lng?.toFixed(4)})
                     </a>

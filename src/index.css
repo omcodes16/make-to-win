@@ -1017,3 +1017,109 @@ img, svg {
 .pb-safe {
   padding-bottom: max(1rem, env(safe-area-inset-bottom, 1rem));
 }
+
+/* ============================================================
+   OFFICIAL WEATHER & ADVISORY BULLETIN PRINT STYLES (A4)
+   ============================================================ */
+/* ============================================================
+   OFFICIAL WEATHER & ADVISORY BULLETIN PRINT STYLES (A4)
+   ============================================================ */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 8mm 10mm;
+  }
+
+  /* Completely eliminate #root and all app UI so they take 0 space/pages */
+  #root,
+  .mobile-bottom-bar,
+  .offline-banner,
+  .sos-button,
+  .no-print,
+  [data-no-print="true"] {
+    display: none !important;
+  }
+
+  /* Unconstrain html & body */
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .official-bulletin-modal-root {
+    position: static !important;
+    display: block !important;
+    background: #ffffff !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    width: 100% !important;
+    height: auto !important;
+    z-index: auto !important;
+  }
+
+  .official-bulletin-modal-root > div {
+    position: static !important;
+    display: block !important;
+    max-height: none !important;
+    height: auto !important;
+    max-width: 100% !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  #official-bulletin-print-area {
+    display: block !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+  }
+
+  #official-bulletin-print-area * {
+    color: #0f172a !important;
+    text-shadow: none !important;
+    box-shadow: none !important;
+  }
+
+  #official-bulletin-print-area .official-paper-header {
+    background: #f1f5f9 !important;
+    border: 2px solid #0f172a !important;
+    color: #0f172a !important;
+  }
+
+  #official-bulletin-print-area div[class*="border"] {
+    border-color: #cbd5e1 !important;
+    background: #f8fafc !important;
+    page-break-inside: avoid;
+  }
+
+  #official-bulletin-print-area table {
+    border: 1px solid #cbd5e1 !important;
+    background: #ffffff !important;
+    page-break-inside: avoid;
+  }
+
+  #official-bulletin-print-area th,
+  #official-bulletin-print-area td {
+    border: 1px solid #cbd5e1 !important;
+    color: #0f172a !important;
+  }
+}
+

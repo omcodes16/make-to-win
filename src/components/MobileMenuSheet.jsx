@@ -23,6 +23,7 @@ export default function MobileMenuSheet({
   onOpenGuide,
   onOpenReviews,
   onOpenManager,
+  onOpenBulletin,
 }) {
   const [mobileLangSearch, setMobileLangSearch] = useState('');
 
@@ -116,6 +117,52 @@ export default function MobileMenuSheet({
               <span>Hub</span>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
             </button>
+          </div>
+
+          {/* Official Weather & Advisory Bulletin Card (Gram Panchayat & Multi-Category) */}
+          <div className="p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-indigo-600/15 to-emerald-500/15 border border-indigo-500/40 shadow-sm space-y-2.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center justify-center text-lg shrink-0 shadow-inner">
+                  🏛️
+                </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-wider text-amber-400">Panchayat to State</p>
+                  <p className="text-xs font-extrabold text-white">पंचायत, तहसील, जिला व राज्य बुलेटिन</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  onClose();
+                  if (onOpenBulletin) onOpenBulletin('master');
+                }}
+                className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-xs shadow-md shadow-indigo-600/30 transition-all active:scale-95 flex items-center gap-1"
+              >
+                <span>View</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
+            </div>
+            {/* Sector quick pills */}
+            <div className="grid grid-cols-4 gap-1.5 pt-1 border-t border-white/10">
+              {[
+                { id: 'farmer', icon: '🌾', label: 'Kisan' },
+                { id: 'fisherman', icon: '🎣', label: 'Marine' },
+                { id: 'urban', icon: '🏙️', label: 'Urban' },
+                { id: 'aviation', icon: '✈️', label: 'Aviation' },
+              ].map(s => (
+                <button
+                  key={s.id}
+                  onClick={() => {
+                    onClose();
+                    if (onOpenBulletin) onOpenBulletin(s.id);
+                  }}
+                  className="py-1 px-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-[10px] font-bold text-slate-200 flex items-center justify-center gap-1 transition-colors"
+                >
+                  <span>{s.icon}</span>
+                  <span>{s.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Language Selector */}

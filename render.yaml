@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: weathergpt-sih
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: MONGODB_URI
+        sync: false
+      - key: VAPID_PUBLIC_KEY
+        value: BBbK9hNpoPr4r9tfUNERfurJw-BQBKOp1E7H9zBCQpqzINorKvFmD9JAQrUWCbL42830gfS1Lmxzw0RGUUl6utU
+      - key: VAPID_PRIVATE_KEY
+        sync: false

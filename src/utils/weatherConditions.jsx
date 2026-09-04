@@ -1,3 +1,4 @@
+import React from 'react';
 import { WEATHER_CONDITIONS_I18N } from './translations';
 
 /**
@@ -90,8 +91,8 @@ export function getWeatherInfo(code, lang = 'en', isDay = true) {
   // Clone to avoid mutating the constant
   const result = { ...info };
 
-  if (!isDay && result.icon && result.icon.props && result.icon.props.src) {
-    if (result.icon.props.src.includes('-day.svg')) {
+  if (!isDay && React.isValidElement(result.icon) && result.icon.props && result.icon.props.src) {
+    if (typeof result.icon.props.src === 'string' && result.icon.props.src.includes('-day.svg')) {
       const newSrc = result.icon.props.src.replace('-day.svg', '-night.svg');
       result.icon = React.cloneElement(result.icon, { src: newSrc });
     }
@@ -109,8 +110,9 @@ export function getWeatherInfo(code, lang = 'en', isDay = true) {
  * Determine if weather conditions are severe enough to trigger an alert.
  * Returns { isSevere, summary, detail, action } or null.
  */
-export function checkSeverity(weatherData, locationName) {
-  const { weatherCode, windSpeed, precipitation, rain, visibility } = weatherData;
+export function checkSeverity(weatherData, locationName = 'Current Location') {
+  if (!weatherData) return null;
+  const { weatherCode = 0, windSpeed = 0, precipitation = 0, rain = 0, visibility } = weatherData;
   const info = getWeatherInfo(weatherCode);
 
   // Severe thunderstorms

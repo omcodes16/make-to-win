@@ -10,6 +10,7 @@ import { sendMessage as sendChatMessage } from '../services/chatApi';
 import UserGuideModal from './UserGuideModal';
 import AccuracyFeedModal from './AccuracyFeedModal';
 import MobileMenuSheet from './MobileMenuSheet';
+import OfficialBulletinModal from './OfficialBulletinModal';
 
 export default function Header() {
   const { state, dispatch } = useApp();
@@ -17,6 +18,8 @@ export default function Header() {
   const [headerLangSearch, setHeaderLangSearch] = useState('');
   const [showGuide, setShowGuide] = useState(false);
   const [isHubOpen, setIsHubOpen] = useState(false);
+  const [isBulletinOpen, setIsBulletinOpen] = useState(false);
+  const [bulletinCategory, setBulletinCategory] = useState('master');
   const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
   const [showAccuracyModal, setShowAccuracyModal] = useState(false);
   const [showA11y, setShowA11y] = useState(false);
@@ -489,6 +492,20 @@ export default function Header() {
               )}
             </div>
 
+            {/* Official Weather & Advisory Bulletin Button (Desktop) */}
+            <button
+              onClick={() => {
+                setBulletinCategory('master');
+                setIsBulletinOpen(true);
+              }}
+              className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500/20 via-indigo-600/20 to-emerald-500/20 hover:from-amber-500/30 hover:to-emerald-500/30 border border-amber-400/40 text-xs font-bold text-amber-300 shadow-sm transition-all active:scale-95"
+              title="Official Panchayat to State Weather & Advisory Bulletin"
+            >
+              <span className="text-sm">📜</span>
+              <span>{currentLang.code === 'hi' ? 'सरकारी बुलेटिन' : currentLang.code === 'bn' ? 'বুলেটিন' : currentLang.code === 'as' ? 'বুলেটিন' : 'Bulletin'}</span>
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            </button>
+
             {/* Language Selector Pill */}
             <div className="relative">
               <button
@@ -615,6 +632,10 @@ export default function Header() {
         onOpenGuide={() => setShowGuide(true)}
         onOpenReviews={() => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'reviews' })}
         onOpenManager={() => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'manager' })}
+        onOpenBulletin={(cat) => {
+          setBulletinCategory(cat || 'master');
+          setIsBulletinOpen(true);
+        }}
       />
 
       {/* Mobile Expanded Full-Width Bottom Navigation Bar (5 Balanced Tabs) */}
@@ -712,6 +733,23 @@ export default function Header() {
           locationName={state.weatherStageData?.locationName || state.currentWeather?.locationName || 'New Delhi (Default)'}
           weather={state.weatherStageData?.weather || state.currentWeather || {}}
           onClose={() => setIsHubOpen(false)}
+        />
+      )}
+
+      {/* Official Weather & Advisory Bulletin Modal */}
+      {isBulletinOpen && (
+        <OfficialBulletinModal
+          isOpen={isBulletinOpen}
+          onClose={() => setIsBulletinOpen(false)}
+          initialLocation={{
+            name: state.weatherStageData?.locationName || state.currentWeather?.locationName || 'New Delhi',
+            district: state.weatherStageData?.district || state.currentWeather?.district || '',
+            state: state.weatherStageData?.state || state.currentWeather?.state || '',
+            lat: state.weatherStageData?.lat || state.currentWeather?.lat || 28.6139,
+            lng: state.weatherStageData?.lng || state.currentWeather?.lng || 77.2090,
+          }}
+          initialCategory={bulletinCategory}
+          defaultLang={state.language}
         />
       )}
     </>

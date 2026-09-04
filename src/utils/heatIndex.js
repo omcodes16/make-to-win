@@ -1,4 +1,4 @@
-import { FEATURE_I18N } from './featureTranslations';
+import { FEATURE_I18N } from './featureTranslations.js';
 
 export function computeHeatIndex(tempC, humidity) {
   if (tempC < 27) return tempC;

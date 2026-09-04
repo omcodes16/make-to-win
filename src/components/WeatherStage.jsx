@@ -48,7 +48,14 @@ export default function WeatherStage() {
       const weather = await getWeather(loc.lat, loc.lng);
       dispatch({ 
         type: 'SET_WEATHER_STAGE_DATA', 
-        payload: { locationName: loc.name, lat: loc.lat, lng: loc.lng, weather } 
+        payload: { 
+          locationName: loc.name, 
+          district: loc.district || '',
+          state: loc.state || '',
+          lat: loc.lat, 
+          lng: loc.lng, 
+          weather 
+        } 
       });
       // Fetch manager alerts for this location (radius + state + district matching)
       const baseUrl = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
@@ -84,7 +91,14 @@ export default function WeatherStage() {
       const weather = await getWeather(loc.lat, loc.lng);
       dispatch({ 
         type: 'SET_WEATHER_STAGE_DATA', 
-        payload: { locationName: loc.name, lat: loc.lat, lng: loc.lng, weather } 
+        payload: { 
+          locationName: loc.name, 
+          district: loc.district || '',
+          state: loc.state || '',
+          lat: loc.lat, 
+          lng: loc.lng, 
+          weather 
+        } 
       });
       setSearchInput('');
     } catch (err) {

@@ -23,6 +23,14 @@ import http from 'http';
 import { WebSocketServer } from 'ws';
 import { logChatPrediction, verifyChatPredictions, getChatAccuracyFeed } from './server/chatAccuracy.js';
 import { startNdmaPoller } from './server/ndmaPoller.js';
+import { 
+  getVapidPublicKey, 
+  addSubscription, 
+  removeSubscription, 
+  getSubscriptionsCount, 
+  sendNotificationToSub, 
+  broadcastPushNotification 
+} from './server/pushService.js';
 
 // Scheduled jobs will be started later
 
@@ -152,6 +160,12 @@ export function broadcastAuthorityAlert(alert) {
   });
 
   console.log(`📡 [WS BROADCAST] Alert "${alert.title}" delivered to ${dispatchedCount} client(s) (Target: ${alert.targetMode})`);
+
+  // Dispatch Web Push notification to registered mobile & desktop devices (works offline/background)
+  broadcastPushNotification(alert).catch((err) => {
+    console.warn('⚠️ [Push Service] Background push error:', err.message);
+  });
+
   return dispatchedCount;
 }
 
@@ -577,7 +591,7 @@ app.post('/api/community-reports', async (req, res) => {
 
 // POST /api/sos — Public: citizen sends GPS + message
 app.post("/api/sos", async (req, res) => {
-  const { name, phone, message, lat, lng, helpType, image } = req.body;
+  const { name, phone, message, lat, lng, helpType, image, locationSource, locationNote } = req.body;
   if (!lat || !lng) return res.status(400).json({ error: "Location coordinates are required" });
   const entry = { 
     name: name || 'Anonymous', 
@@ -586,6 +600,8 @@ app.post("/api/sos", async (req, res) => {
     lat, lng, 
     helpType: helpType || 'General Emergency',
     image: image || null,
+    locationSource: locationSource || 'live_gps',
+    locationNote: locationNote || '',
     status: 'pending', 
     timestamp: new Date() 
   };
@@ -1982,7 +1998,67 @@ app.post('/api/alerts/push', (req, res) => {
   };
 
   const clientsNotified = broadcastAuthorityAlert(alert);
-  res.json({ success: true, clientsNotified, message: "Alert disseminated via WebSocket" });
+  res.json({ success: true, clientsNotified, message: "Alert disseminated via WebSocket and Web Push" });
+});
+
+// ==========================================
+// Web Push Notification Endpoints (Free VAPID)
+// ==========================================
+
+// 1. Get VAPID Public Key for client subscription
+app.get('/api/push/vapid-public-key', (req, res) => {
+  const publicKey = getVapidPublicKey();
+  if (!publicKey) {
+    return res.status(500).json({ error: 'VAPID public key not configured' });
+  }
+  res.json({ publicKey });
+});
+
+// 2. Subscribe device to Web Push
+app.post('/api/push/subscribe', (req, res) => {
+  const subscription = req.body;
+  if (!subscription || !subscription.endpoint) {
+    return res.status(400).json({ error: 'Invalid push subscription payload' });
+  }
+  const added = addSubscription(subscription);
+  res.json({ success: added, totalSubscribers: getSubscriptionsCount() });
+});
+
+// 3. Unsubscribe device from Web Push
+app.post('/api/push/unsubscribe', (req, res) => {
+  const { endpoint } = req.body;
+  if (!endpoint) {
+    return res.status(400).json({ error: 'Endpoint required' });
+  }
+  const removed = removeSubscription(endpoint);
+  res.json({ success: removed, totalSubscribers: getSubscriptionsCount() });
+});
+
+// 4. Send test push notification to verify mobile receipt
+app.post('/api/push/test', async (req, res) => {
+  const { subscription, title, message } = req.body;
+  if (!subscription || !subscription.endpoint) {
+    return res.status(400).json({ error: 'Valid subscription required for test' });
+  }
+  
+  const testPayload = {
+    title: title || '🔔 WeatherGPT Alert System',
+    message: message || 'Mobile push alerts are active! You will receive critical disaster warnings here.',
+    tag: 'test-push-' + Date.now(),
+    url: '/alerts',
+    issuedAt: new Date().toISOString()
+  };
+
+  const result = await sendNotificationToSub(subscription, testPayload);
+  res.json(result);
+});
+
+// 5. Get push notification service status
+app.get('/api/push/status', (req, res) => {
+  res.json({
+    activeSubscribers: getSubscriptionsCount(),
+    vapidConfigured: !!getVapidPublicKey()
+  });
 });
 
 // Serve built React frontend in production (Docker)
@@ -1999,7 +2075,7 @@ if (process.env.NODE_ENV === 'production') {
 
 // Start server on Render or local (Vercel Serverless functions do not need app.listen)
 if (!process.env.VERCEL) {
-  server.listen(PORT, () => {
+  server.listen(PORT, '0.0.0.0', () => {
     console.log(`WeatherGPT server running on port ${PORT}`);
   });
 }

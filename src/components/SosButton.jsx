@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { useApp } from "../context/AppContext";
+import { saveSosOffline, getSosQueueCount, flushSosQueue } from "../utils/sosQueue";
 
 const API_URL = import.meta.env.VITE_API_URL || "";
 
 export default function SosButton() {
   const { state } = useApp();
-  const [phase, setPhase] = useState("idle"); // idle | confirm | locating | form | sending | success | error
+  const [phase, setPhase] = useState("idle"); // idle | confirm | locating | form | sending | success | queued-offline | error
   const [coords, setCoords] = useState(null);
   const [form, setForm] = useState({ name: "", phone: "", message: "", helpType: "Medical Emergency" });
   const [imageString, setImageString] = useState(null);
   const [errorMsg, setErrorMsg] = useState("");
+  const [offlineQueueCount, setOfflineQueueCount] = useState(0);
 
   const helpCategories = [
     "Medical Emergency",
@@ -66,7 +68,34 @@ export default function SosButton() {
       handleSosClick();
     };
     window.addEventListener('weathergpt-open-sos', handleOpenSos);
-    return () => window.removeEventListener('weathergpt-open-sos', handleOpenSos);
+
+    const refreshQueue = async () => {
+      try {
+        const count = await getSosQueueCount();
+        setOfflineQueueCount(count);
+      } catch (e) {}
+    };
+    refreshQueue();
+
+    const handleOnline = async () => {
+      try {
+        const result = await flushSosQueue(API_URL);
+        if (result.flushed > 0) {
+          refreshQueue();
+        }
+      } catch (e) {}
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('weathergpt-sos-queue-changed', refreshQueue);
+    window.addEventListener('weathergpt-sos-flushed', refreshQueue);
+
+    return () => {
+      window.removeEventListener('weathergpt-open-sos', handleOpenSos);
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('weathergpt-sos-queue-changed', refreshQueue);
+      window.removeEventListener('weathergpt-sos-flushed', refreshQueue);
+    };
   }, []);
 
   const handleImageUpload = (e) => {
@@ -92,47 +121,123 @@ export default function SosButton() {
     reader.readAsDataURL(file);
   };
 
-  const handleSubmit = (e) => {
+  // Multi-tier location resolver: Live Satellite GPS -> Cached GPS Fix -> Active Dashboard City -> Default
+  const resolveLocation = async () => {
+    // 1. Hardware Geolocation: Attempt high accuracy with 3.5s timeout (fails fast in Airplane mode)
+    if (typeof navigator !== "undefined" && navigator.geolocation) {
+      try {
+        const pos = await new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: true,
+            timeout: 3500,
+            maximumAge: 300000, // Accept any GPS fix from the last 5 minutes
+          });
+        });
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        try {
+          localStorage.setItem("weathergpt_last_known_gps", JSON.stringify({ lat, lng, time: Date.now() }));
+        } catch (e) {}
+        return { lat, lng, source: "live_gps", note: "Live Satellite GPS Fix" };
+      } catch (err) {
+        console.warn("Live GPS unavailable (normal in Airplane/offline mode):", err.message);
+      }
+    }
+
+    // 2. Fallback: Last known hardware GPS fix saved on this device
+    try {
+      const savedGps = JSON.parse(localStorage.getItem("weathergpt_last_known_gps") || "null");
+      if (savedGps && savedGps.lat && savedGps.lng) {
+        return {
+          lat: Number(savedGps.lat),
+          lng: Number(savedGps.lng),
+          source: "cached_gps",
+          note: `Cached Device GPS (${new Date(savedGps.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})`
+        };
+      }
+    } catch (e) {}
+
+    // 3. Fallback: Active Dashboard City Coordinates from App State
+    const activeCityLat = state.weatherStageData?.lat || state.currentWeather?.lat;
+    const activeCityLng = state.weatherStageData?.lng || state.currentWeather?.lng;
+    const cityName = state.weatherStageData?.locationName || state.currentWeather?.locationName;
+
+    if (activeCityLat && activeCityLng) {
+      return {
+        lat: Number(activeCityLat),
+        lng: Number(activeCityLng),
+        source: "cached_city",
+        note: `Session Location (${cityName || 'Active City'})`
+      };
+    }
+
+    // 4. Fallback: Default National Emergency Coordinates (New Delhi)
+    return {
+      lat: 28.6139,
+      lng: 77.2090,
+      source: "emergency_default",
+      note: "Offline Airplane Mode (Default Location)"
+    };
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setPhase("locating");
 
-    if (!navigator.geolocation) {
-      setErrorMsg("Your browser does not support GPS location.");
-      setPhase("error");
+    // Resolve location with zero-failure fallback
+    const loc = await resolveLocation();
+    setCoords(loc);
+
+    const sosPayload = {
+      ...form,
+      lat: loc.lat,
+      lng: loc.lng,
+      locationSource: loc.source,
+      locationNote: loc.note,
+      image: imageString,
+    };
+
+    // Proactive offline check: If browser is offline / airplane mode, immediately save to vault!
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      await saveSosOffline(sosPayload);
+      setPhase("queued-offline");
       return;
     }
 
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        const lat = pos.coords.latitude;
-        const lng = pos.coords.longitude;
-        setCoords({ lat, lng });
-        
-        // Now send data
-        setPhase("sending");
-        try {
-          const res = await fetch(`${API_URL}/api/sos`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ ...form, lat, lng, image: imageString }),
-          });
-          if (res.ok) {
-            setPhase("success");
-          } else {
-            setErrorMsg("Failed to send SOS. Please call emergency services directly.");
-            setPhase("error");
-          }
-        } catch (e) {
-          setErrorMsg("Cannot connect to server. Please call emergency services directly.");
-          setPhase("error");
-        }
-      },
-      (err) => {
-        setErrorMsg("Location access denied. Please allow GPS and try again.");
-        setPhase("error");
-      },
-      { timeout: 10000 }
-    );
+    // Live transmission
+    setPhase("sending");
+    try {
+      const res = await fetch(`${API_URL}/api/sos`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(sosPayload),
+      });
+      if (res.ok) {
+        setPhase("success");
+      } else {
+        // Server rejected or unreachable -> save to offline vault
+        await saveSosOffline(sosPayload);
+        setPhase("queued-offline");
+      }
+    } catch (e) {
+      // Network fetch error -> save to offline vault
+      await saveSosOffline(sosPayload);
+      setPhase("queued-offline");
+    }
+  };
+
+  const handleManualSync = async () => {
+    setPhase("sending");
+    try {
+      const result = await flushSosQueue(API_URL);
+      if (result.flushed > 0) {
+        setPhase("success");
+      } else {
+        setPhase("queued-offline");
+      }
+    } catch (err) {
+      setPhase("queued-offline");
+    }
   };
 
   const reset = () => {
@@ -147,11 +252,19 @@ export default function SosButton() {
     <>
       <button
         onClick={handleSosClick}
-        className="hidden md:flex fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-gradient-to-tr from-red-700 to-rose-600 hover:from-red-600 hover:to-rose-500 text-white font-bold text-xs shadow-2xl shadow-red-900/60 border-2 border-red-400/80 animate-pulse flex-col items-center justify-center gap-0.5 transition-transform hover:scale-110 active:scale-95"
-        title="Send Emergency SOS Alert"
+        className="hidden md:flex fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-gradient-to-tr from-red-700 to-rose-600 hover:from-red-600 hover:to-rose-500 text-white font-bold text-xs shadow-2xl shadow-red-900/60 border-2 border-red-400/80 animate-pulse flex-col items-center justify-center gap-0.5 transition-transform hover:scale-110 active:scale-95 relative"
+        title={offlineQueueCount > 0 ? `⚠️ ${offlineQueueCount} SOS Alert(s) Queued in Offline Vault` : "Send Emergency SOS Alert"}
       >
         <span className="text-lg">🆘</span>
         <span className="text-[10px] font-black tracking-wider">SOS</span>
+        {offlineQueueCount > 0 && (
+          <span 
+            className="absolute -top-1.5 -right-1.5 bg-amber-400 text-black font-black text-[9px] w-5 h-5 rounded-full flex items-center justify-center border-2 border-neutral-900 shadow-lg animate-bounce"
+            title={`${offlineQueueCount} pending offline SOS`}
+          >
+            {offlineQueueCount}
+          </span>
+        )}
       </button>
 
       {phase !== "idle" && (
@@ -287,6 +400,66 @@ export default function SosButton() {
                   </div>
                 )}
                 <button onClick={reset} className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 rounded-xl font-bold text-white transition-all shadow-lg shadow-emerald-600/30">OK</button>
+              </div>
+            )}
+
+            {phase === "queued-offline" && (
+              <div className="text-center space-y-4 py-4">
+                <div className="w-16 h-16 rounded-full bg-amber-500/20 border-2 border-amber-500/60 flex items-center justify-center text-3xl mx-auto shadow-lg shadow-amber-500/20 animate-pulse">
+                  🛡️
+                </div>
+                <div className="space-y-1">
+                  <span className="inline-block px-3 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-400 border border-amber-500/40">
+                    Offline SOS Vault Engaged
+                  </span>
+                  <h2 className="text-2xl font-black text-amber-500 tracking-tight">
+                    Saved Locally to Vault
+                  </h2>
+                </div>
+                <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-3 text-left space-y-2 text-xs">
+                  <div className="flex items-center justify-between font-bold text-amber-400">
+                    <span className="flex items-center gap-1.5">
+                      <span>📡</span>
+                      <span>Auto-Transmission Active</span>
+                    </span>
+                    <span className="text-[10px] bg-amber-500/20 px-2 py-0.5 rounded border border-amber-500/30">
+                      Vault Stored
+                    </span>
+                  </div>
+                  {coords && (
+                    <div className="bg-black/40 border border-amber-500/20 rounded-xl p-2 font-mono text-[11px] text-amber-200/90 space-y-0.5">
+                      <div className="flex items-center gap-1.5">
+                        <span>📍</span>
+                        <span className="font-bold">{coords.lat?.toFixed(4)}°, {coords.lng?.toFixed(4)}°</span>
+                      </div>
+                      <div className="text-[10px] text-amber-300/60 pl-4">
+                        Source: {coords.note || 'Hardware GPS Lock'}
+                      </div>
+                    </div>
+                  )}
+                  <p className="text-[var(--text-secondary)] text-[11px] leading-snug">
+                    WeatherGPT will automatically transmit this SOS and exact coordinates to disaster authorities the second any mobile signal (2G/3G/4G/5G) or Wi-Fi is restored.
+                  </p>
+                </div>
+                <div className="flex gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={handleManualSync}
+                    className="flex-1 py-3 bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-500 hover:to-yellow-500 rounded-xl font-bold text-xs text-white shadow-md transition-all active:scale-95"
+                  >
+                    🔄 Retry Send Now
+                  </button>
+                  <button
+                    type="button"
+                    onClick={reset}
+                    className="flex-1 py-3 bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-hover)] border border-[var(--theme-border)] rounded-xl font-bold text-xs text-[var(--text-primary)] transition-all active:scale-95"
+                  >
+                    Keep in Vault (OK)
+                  </button>
+                </div>
+                <p className="text-red-500 font-bold text-[11px]">
+                  📞 If telephone signal works, call 112 immediately!
+                </p>
               </div>
             )}
 

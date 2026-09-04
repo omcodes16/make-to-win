@@ -8,6 +8,7 @@ import { getFarmerAdvisory } from '../utils/farmerAdvisory';
 import { getFishermanAdvisory } from '../utils/fishermanAdvisory';
 import { getAviationAdvisory } from '../utils/aviationAdvisory';
 import { getUrbanPlanningAdvisory } from '../utils/urbanPlanningAdvisory';
+import OfficialBulletinModal from './OfficialBulletinModal';
 
 // --- TRANSLATIONS DICTIONARY ---
 const tHub = {
@@ -216,6 +217,7 @@ export default function ProfessionModal({ lat, lng, locationName, weather, onClo
   
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showBulletinModal, setShowBulletinModal] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -511,25 +513,36 @@ export default function ProfessionModal({ lat, lng, locationName, weather, onClo
         </div>
 
         {/* Tab Switcher */}
-        <div className="px-5 sm:px-6 py-2.5 bg-[var(--glass-bg)] border-b border-[var(--theme-border)] flex gap-2 overflow-x-auto hide-scrollbar">
-          {[
-            { id: 'farmer', icon: <FarmerIcon className="w-4 h-4"/>, label: lang === 'hi' ? 'कृषि' : 'Agriculture' },
-            { id: 'aviation', icon: <AviationIcon className="w-4 h-4"/>, label: lang === 'hi' ? 'उड़ान' : 'Aviation' },
-            { id: 'fisherman', icon: <FishermanIcon className="w-4 h-4"/>, label: lang === 'hi' ? 'समुद्री' : 'Marine' },
-            { id: 'urbanPlanning', icon: <UrbanIcon className="w-4 h-4"/>, label: lang === 'hi' ? 'शहर' : 'Urban' }
-          ].map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => switchProfile(tab.id)}
-              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 ${
-                displayProfile === tab.id
-                  ? 'bg-indigo-600 text-white shadow-sm dark:bg-indigo-500/30 dark:text-indigo-200'
-                  : 'bg-[var(--glass-bg)] text-[var(--text-secondary)] border border-[var(--theme-border)] hover:text-[var(--text-primary)] hover:bg-[var(--glass-bg-hover)]'
-              }`}
-            >
-              {tab.icon} {tab.label}
-            </button>
-          ))}
+        <div className="px-5 sm:px-6 py-2.5 bg-[var(--glass-bg)] border-b border-[var(--theme-border)] flex items-center justify-between gap-2 overflow-x-auto hide-scrollbar">
+          <div className="flex gap-2 shrink-0">
+            {[
+              { id: 'farmer', icon: <FarmerIcon className="w-4 h-4"/>, label: lang === 'hi' ? 'कृषि' : 'Agriculture' },
+              { id: 'aviation', icon: <AviationIcon className="w-4 h-4"/>, label: lang === 'hi' ? 'उड़ान' : 'Aviation' },
+              { id: 'fisherman', icon: <FishermanIcon className="w-4 h-4"/>, label: lang === 'hi' ? 'समुद्री' : 'Marine' },
+              { id: 'urbanPlanning', icon: <UrbanIcon className="w-4 h-4"/>, label: lang === 'hi' ? 'शहर' : 'Urban' }
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => switchProfile(tab.id)}
+                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 ${
+                  displayProfile === tab.id
+                    ? 'bg-indigo-600 text-white shadow-sm dark:bg-indigo-500/30 dark:text-indigo-200'
+                    : 'bg-[var(--glass-bg)] text-[var(--text-secondary)] border border-[var(--theme-border)] hover:text-[var(--text-primary)] hover:bg-[var(--glass-bg-hover)]'
+                }`}
+              >
+                {tab.icon} {tab.label}
+              </button>
+            ))}
+          </div>
+
+          <button
+            onClick={() => setShowBulletinModal(true)}
+            className="ml-auto px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500/20 via-indigo-600/20 to-emerald-500/20 hover:from-amber-500/30 hover:to-emerald-500/30 border border-amber-500/40 text-[11px] font-black text-amber-300 shadow-sm flex items-center gap-1.5 transition-all active:scale-95 shrink-0"
+            title="Open Official Printable Bulletin"
+          >
+            <span>📜</span>
+            <span className="hidden sm:inline">{lang === 'hi' ? 'सरकारी बुलेटिन' : 'Official Bulletin'}</span>
+          </button>
         </div>
         
         {/* Content */}
@@ -537,6 +550,23 @@ export default function ProfessionModal({ lat, lng, locationName, weather, onClo
           {renderContent()}
         </div>
       </div>
+
+      {/* Official Bulletin Modal */}
+      {showBulletinModal && (
+        <OfficialBulletinModal
+          isOpen={showBulletinModal}
+          onClose={() => setShowBulletinModal(false)}
+          initialLocation={{
+            name: locationName || 'Current Location',
+            district: '',
+            state: '',
+            lat: lat,
+            lng: lng,
+          }}
+          initialCategory={displayProfile === 'urbanPlanning' ? 'urban' : displayProfile}
+          defaultLang={lang}
+        />
+      )}
     </div>
   , document.body);
 }
