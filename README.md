@@ -320,3 +320,210 @@ $$ HI = -42.379 + 2.049T + 10.143R - 0.224TR - 0.006T^2 - 0.054R^2 + 0.001T^2R +
 
 *Built for Smart India Hackathon 2026 — Problem Statement PS 26068*  
 *Every claim in this README has been verified line-by-line against the codebase.*
+
+---
+
+## 🗺️ 6. Comprehensive End-to-End System Architecture & Tech Stack
+
+The unified master flowchart below encapsulates the end-to-end operation of the WeatherGPT platform — covering all multi-persona user interactions, React 18 UI components and widgets, Express REST APIs, real-time WebSocket telemetry, autonomous Gemini 3.6 Flash function calling loop with 6 weather tools, background cron workers, dual-tier MongoDB/JSON persistence, and external government/meteorological feeds.
+
+```mermaid
+flowchart TD
+    %% 1. USER ECOSYSTEM & ACCESS PROFILES
+    subgraph USERS ["👥 1. User Ecosystem & Personas"]
+        direction LR
+        U_Citizen["👨‍👩‍👧 General Citizen\n• Multilingual Local Weather & Forecasts\n• Voice & Audio Assistant (STT & TTS)\n• Location Search & Auto-Geocoding"]
+        U_Farmer["🌾 Farmer Profile\n• FAO-56 Penman-Monteith ET0 Soil Evaporation\n• Frost Alert (Temp ≤ 5°C) & Spray Drift Window\n• High Humidity Fungal Infection Risks"]
+        U_Fisherman["🛥️ Fisherman Profile\n• Marine Wave Height, Ocean Swell & Period\n• Wind Gusts & WMO Severe Sea Warnings\n• 50km Safe Fishing Distance Advisories"]
+        U_Aviator["✈️ Aviator Profile\n• Cloud Base Ceiling & Surface Visibility\n• CAPE Atmospheric Convective Energy\n• Altimeter Pressure & Wind Shear Checks"]
+        U_Planner["🏙️ Urban Planner Profile\n• Real-Time AQI (PM2.5 & PM10 Particulates)\n• NWS Rothfusz Heat Index Calculation\n• High Precipitation Urban Flood Risk"]
+        U_Authority["🛡️ Disaster Management Authority\n• Official Portal (NDMA & SDMA Officers)\n• Geo-Fenced Alert Authoring & Broadcast\n• Multilingual SMS Broadcast by District\n• Real-Time Emergency SOS Triage Queue"]
+    end
+
+    %% 2. FRONTEND CLIENT APPLICATION
+    subgraph FRONTEND ["🖥️ 2. Frontend Client Application (React 18.3.1 + Vite 5.4.2 + Tailwind CSS 3.4.10)"]
+        direction TB
+
+        subgraph FE_State ["State Management & Accessibility Core"]
+            AppContext["AppContext.jsx (React Context & useReducer)\n• 17 Dispatched Action Reducers\n• LocalStorage Cache & Silent Backend Sync"]
+            ThemeAccess["Themes & Universal Accessibility\n• Dark, Light, Amber & High-Contrast Themes\n• Scalable Text Sizing & Screen Reader Support\n• Offline Fallback Indicator (cache.js)"]
+            SocketHook["useAlertSocket.js (WebSocket Client)\n• Auto-Reconnecting Client to ws://localhost:3001\n• Instant Warning Badges & SOS Popups"]
+        end
+
+        subgraph FE_Screens ["Application Screens & Interactive Modules"]
+            NavHeader["Header.jsx & MobileMenuSheet.jsx\n• Pan-India Location Search & GPS Autodetect\n• 4-Language Switcher (EN, HI, BN, AS)\n• Comprehensive User Guide Modal (6 Sections)"]
+            DashScreen["WeatherDashboard.jsx & WeatherScene.jsx\n• Dynamic Sky Shaders (SkyBand.jsx)\n• Current Weather, 7-Day & 24h Hourly Metrics\n• Real-Time UV, Visibility, Humidity & Pressure"]
+            ChatScreen["ChatScreen.jsx & AssistantCard.jsx\n• Conversational Weather AI Interface\n• Web Speech STT & Google TTS Playback\n• Sector-Tailored Prompt Chips & Suggestions"]
+            AlertScreen["AlertsScreen.jsx & SevereAlertBanner.jsx\n• Live Disaster Alerts & Cyclone Tracker\n• Interactive India Risk Heatmap (Leaflet)"]
+            ManagerScreen["ManagerDashboard.jsx (Authority Portal)\n• Secure JWT-Authenticated Control Dashboard\n• Emergency Alert Creation & Instant Revocation\n• Live SOS Triage Queue & Status Updates\n• Multilingual SMS Dispatch Simulator"]
+            SosModule["SosButton.jsx (Emergency Lifeline)\n• 1-Click Geo-Coordinate Capture (HTML5 GPS)\n• Disaster Type Tagging & Photo Evidence Upload"]
+            ReportsModule["CommunityReports.jsx & ReviewsScreen.jsx\n• Citizen Crowdsourced Weather & Flood Reports\n• User Reviews & Platform Testimonial System"]
+            HistoryModule["HistoricalAnalytics.jsx\n• Long-Term Climate Trend Visualization\n• Current Weather vs 5-Year Climatological Average"]
+            AccuracyModule["AccuracyTracker.jsx & AccuracyFeedModal.jsx\n• Daily Prediction Accuracy Dashboard\n• Verification Scorecards & Error Drift Curves"]
+        end
+
+        subgraph FE_Gauges ["Meteorological Visualizations & Sensor Gauges"]
+            RechartsBox["WeatherCharts.jsx (Recharts 3.10.1)\n• Temp Curves, Rain Probabilities, Wind Speeds, UV & Barometer"]
+            CompassBox["LiveCompass.jsx (Sensor Compass)\n• 360° Dynamic Dial & Wind Heading (N, NE, E, SE, S, SW, W, NW)\n• Device Orientation Sensor Integration"]
+            RadarBox["RadarMap.jsx (Leaflet 1.9.4 & React-Leaflet 4.2.1)\n• Live RainViewer Precipitation Radar Overlay\n• Wind Particle Vectors & OpenStreetMap Basemap"]
+            ConfidenceBox["ModelConfidence.jsx (NWP Multi-Model Agreement)\n• GFS vs ICON vs ECMWF Delta Calculation\n• High (Diff <1°C), Med (≤2.5°C), Low (>2.5°C) Ratings"]
+        end
+    end
+
+    %% 3. BACKEND API & REAL-TIME GATEWAY
+    subgraph BACKEND ["⚙️ 3. Backend API Gateway & Server (Node.js + Express 4.21.0)"]
+        direction TB
+
+        subgraph Gateways ["Networking & Real-Time Gateway"]
+            WSServer["WebSocket Server (ws 8.21.3 on Port 3001)\n• Live Alert Broadcast to Connected Clients\n• Instant SOS Notification Push to Authorities"]
+            AuthJWTMiddleware["verifyToken Middleware (JWT Security)\n• Protects /api/manager/* Administrative Endpoints"]
+        end
+
+        subgraph RestAPIs ["Express REST Controllers (server.js)"]
+            API_Chat["POST /api/chat\n• AI Chat Engine with Function Calling Loop"]
+            API_Alerts["GET/POST /api/alerts & /api/extreme-alerts\n• NDMA Sachet CAP Alerts & Manager Broadcasts"]
+            API_RiskMap["GET /api/india-risk-map & /api/national-alerts\n• Pan-India Severity Heatmap Data"]
+            API_SOS["POST /api/sos & GET/PUT /api/manager/sos\n• Emergency Dispatch Intake & Lifecycle Management"]
+            API_SMS["POST /api/sms/send & /api/sms/register\n• 4-Language SMS Distribution Engine"]
+            API_Geocode["GET /api/location/search & geocode\n• 3-Tier Pan-India Hierarchical Geocoder"]
+            API_Reports["GET/POST /api/community-reports\n• Incident Ingestion & Geo-Tagged Hazard Logs"]
+            API_Settings["GET/POST /api/settings/:userId\n• User Preference Sync (Theme, Persona, Language)"]
+            API_Accuracy["GET /api/accuracy & /api/chat-accuracy\n• AI Answer Accuracy Scores & Trend Logs"]
+            API_NLP["POST /api/translate & /api/tts\n• Multilingual Neural Translation & Speech Audio"]
+            API_News["GET /api/news\n• Live Regional & Meteorological News Feeds"]
+        end
+    end
+
+    %% 4. AI ENGINE & INTELLIGENCE ORCHESTRATION
+    subgraph AI_ORCHESTRATION ["🤖 4. AI Engine & Function Calling Orchestration"]
+        direction TB
+
+        GeminiModel["Google Gemini 3.6 Flash Engine\n(@google/generative-ai 0.24.1 & OpenAI-Compatible Endpoint)"]
+        PromptEngine["System Prompt & Context Injector\n• Injects Persona: Farmer, Fisherman, Aviator, Urban Planner\n• Injects Lat/Lng, City Hierarchy, Current Time & Units\n• Strict Guardrails & Anti-Hallucination Constraints"]
+        ToolCallingLoop["Autonomous Multi-Turn Tool Loop (tools.js)\n• Tool Choice: auto | Up to 3 Recursive Turns\n• Concurrent Tool Execution via Promise.all()"]
+
+        subgraph ServerTools ["6 Server-Side Weather Tools (server/tools.js)"]
+            Tool1["get_current_weather(lat, lng)\n• Temp, Humidity, Wind, AQI, UV, Visibility, Pressure"]
+            Tool2["get_forecast(lat, lng, days)\n• 7-Day Daily & Hourly Forecast Arrays"]
+            Tool3["get_historical_trend(lat, lng, days)\n• Archive Data for Longitudinal Temperature & Rain Trends"]
+            Tool4["get_seasonal_comparison(lat, lng)\n• Current Weather vs 5-Year Climatological Average"]
+            Tool5["get_active_alerts(lat, lng)\n• Active NDMA CAP & Automated Threshold Warnings"]
+            Tool6["get_marine_weather(lat, lng)\n• Wave Height, Direction, Period & Marine Swell"]
+        end
+
+        BhashiniTTS["Bhashini AI / Google TTS (server/bhashini.js & google-tts-api 2.0.2)\n• Indic NLP Pipeline (English, Hindi, Bengali, Assamese)\n• High-Fidelity Regional Speech Audio Synthesis"]
+        RothfuszEngine["Heat Index Equation Engine (src/utils/heatIndex.js)\n• NWS Rothfusz Polynomial with Humid/Dry Adjustments"]
+    end
+
+    %% 5. AUTOMATED BACKGROUND WORKERS
+    subgraph BACKGROUND_JOBS ["⏱️ 5. Automated Background Workers & Verification Services"]
+        direction TB
+
+        NDMAPollerWorker["NDMA Sachet Poller (server/ndmaPoller.js)\n• Runs Automatically Every 5 Minutes\n• Fetches Indian Govt Common Alerting Protocol (CAP) XML\n• Parses via fast-xml-parser 5.11.1\n• Filters Severe/Extreme Warnings & Triggers WS/SMS"]
+
+        AccuracyWorker["Forecast Accuracy Verifier (server/chatAccuracy.js & accuracyEval.js)\n• 24-Hour Scheduled Verification Job\n• Regex Extracts Predictable Claims: Temp, Rain %, Wind km/h\n• Compares Against Actual Open-Meteo Historical Archive\n• Applies Strict SIH Tolerances: Temp ±2°C, Rain ±15%, Wind ±5 km/h"]
+    end
+
+    %% 6. PERSISTENCE & DUAL-STORAGE ARCHITECTURE
+    subgraph STORAGE_LAYER ["💾 6. Resilient Dual-Tier Data Persistence Layer"]
+        direction TB
+
+        subgraph PrimaryDB ["Primary Storage: MongoDB Atlas (Mongoose 9.9.4)"]
+            ColAlerts[("Alerts Collection\n• CAP XML & Authority Broadcasts")]
+            ColSos[("SosRequests Collection\n• Coordinates, Photo, Status, Dispatch")]
+            ColReports[("CommunityReports Collection\n• Citizen Crowdsourced Incidents")]
+            ColSMS[("SmsRecipients & SmsLogs\n• Phone, Language, District, Delivery Status")]
+            ColSettings[("UserSettings Collection\n• Persona, Theme, Units, Language")]
+            ColAccuracy[("ChatPredictions & AccuracyLogs\n• Daily AI Claims & Verification Scores")]
+            ColSnapshots[("Snapshots & Reviews Collection\n• Daily Forecast Caches & User Ratings")]
+        end
+
+        subgraph FallbackStore ["Resilient Fallback Storage: Local Flat JSON (Zero-Downtime Guarantee)"]
+            JSONAlerts[("manager_alerts.json")]
+            JSONSettings[("user_settings.json")]
+            JSONAccuracy[("chat_predictions.json & accuracy_log.json")]
+            JSONSnapshots[("forecast_snapshots.json")]
+        end
+    end
+
+    %% 7. EXTERNAL METEOROLOGICAL & GOVERNMENT DATA FEEDS
+    subgraph EXTERNAL_DATA ["🌐 7. External Meteorological, Government & Geographic Feeds"]
+        direction TB
+
+        OpenMeteoSuite["Open-Meteo Weather APIs (Free Tier — Zero API Key Dependency)\n• Forecast API (Hourly & Daily Weather Variables)\n• Marine API (Wave Heights, Swell Direction, Ocean Currents)\n• Air Quality API (PM2.5, PM10, European AQI Index)\n• Historical Weather Archive API (Past 5-Year Climatology)"]
+
+        NWPEnsemble["Global Numerical Weather Prediction (NWP) Tri-Model\n• NOAA GFS (Global Forecast System, USA)\n• DWD ICON (Deutscher Wetterdienst, Germany)\n• ECMWF IFS025 (European Centre for Medium-Range Weather Forecasts)"]
+
+        NDMAFeed["NDMA Sachet Disaster Feed\n• Indian National Disaster Management Authority CAP XML Feed\n• Official Early Warnings: Cyclone, Flood, Heatwave, Landslide"]
+
+        GeoEngine["3-Tier Pan-India Geocoding Hierarchy (locationExtractor.js & server.js)\n• Tier 1: Local Static INDIA_CITIES Dictionary (Zero Latency)\n• Tier 2: Open-Meteo Geocoding API (country_code=IN)\n• Tier 3: OpenStreetMap Nominatim API (High Resolution Tehsils/Villages)"]
+    end
+
+    %% INTER-LAYER RELATIONSHIPS & EXECUTION FLOWS
+    U_Citizen & U_Farmer & U_Fisherman & U_Aviator & U_Planner ==>|Query Weather & Advisories| NavHeader
+    U_Citizen & U_Farmer & U_Fisherman & U_Aviator & U_Planner ==>|Explore Forecasts & Gauges| DashScreen
+    U_Citizen & U_Farmer & U_Fisherman & U_Aviator & U_Planner ==>|Conversational Weather Queries| ChatScreen
+    U_Citizen & U_Farmer & U_Fisherman & U_Aviator & U_Planner -.->|Dispatches Emergency Incident| SosModule
+    U_Authority ==>|JWT Login & Emergency Management| ManagerScreen
+
+    NavHeader --> AppContext
+    DashScreen --> AppContext
+    ChatScreen --> AppContext
+    AlertScreen --> AppContext
+    ManagerScreen --> AppContext
+
+    DashScreen --> RechartsBox
+    DashScreen --> CompassBox
+    DashScreen --> ConfidenceBox
+    AlertScreen --> RadarBox
+
+    SocketHook -.->|Real-Time Warning Push| AlertScreen
+    SocketHook -.->|Live SOS Inflow Push| ManagerScreen
+    WSServer -.->|WebSocket Frames (Port 3001)| SocketHook
+    AuthJWTMiddleware -->|Protects Routes| ManagerScreen
+
+    NavHeader ==>|Search Location & Geocode| API_Geocode
+    ChatScreen ==>|User Prompt & Context| API_Chat
+    DashScreen ==>|Fetch Forecasts & Active Warnings| API_Alerts
+    AlertScreen ==>|Fetch Severity Heatmap| API_RiskMap
+    SosModule ==>|Submit SOS GPS & Photo| API_SOS
+    ManagerScreen ==>|Create Broadcast & Triage SOS| API_SOS
+    ManagerScreen ==>|Trigger Multilingual SMS| API_SMS
+    ReportsModule ==>|Submit Citizen Hazard Report| API_Reports
+    AccuracyModule ==>|Retrieve Accuracy Scores| API_Accuracy
+
+    API_Chat ==>|Context & Persona Injection| PromptEngine
+    PromptEngine --> GeminiModel
+    GeminiModel <==>|Function Calls & Arguments| ToolCallingLoop
+    ToolCallingLoop ==>|Parallel Execution via Promise.all| ServerTools
+
+    Tool1 & Tool2 & Tool3 & Tool4 & Tool6 ==>|Fetch Live & Archive Weather Data| OpenMeteoSuite
+    Tool1 & Tool2 ==>|Ensemble Model Discrepancy Checks| NWPEnsemble
+    Tool5 ==>|Active Disaster Warnings Feed| NDMAFeed
+    Tool1 -.->|Calculate Thermal Stress| RothfuszEngine
+
+    API_Geocode ==>|Hierarchical Fallback Resolution| GeoEngine
+    API_NLP ==>|Translation & Audio Speech Synthesis| BhashiniTTS
+
+    NDMAPollerWorker ==>|Every 5 Mins Fetches CAP XML| NDMAFeed
+    NDMAPollerWorker ==>|Ingests Severe Alerts| API_Alerts
+    API_Alerts ==>|Pushes Alerts in Real-Time| WSServer
+    API_Alerts ==>|Dispatches Multilingual SMS| API_SMS
+
+    API_Chat -.->|Logs Quantifiable Forecast Claims| AccuracyWorker
+    AccuracyWorker ==>|Next-Day Historical Verification| OpenMeteoSuite
+    AccuracyWorker ==>|Writes Verification Metrics| ColAccuracy
+
+    API_Alerts --> ColAlerts
+    API_SOS --> ColSos
+    API_Reports --> ColReports
+    API_SMS --> ColSMS
+    API_Settings --> ColSettings
+    API_Accuracy --> ColAccuracy
+
+    ColAlerts -.->|Zero-Downtime Failover| JSONAlerts
+    ColSettings -.->|Zero-Downtime Failover| JSONSettings
+    ColAccuracy -.->|Zero-Downtime Failover| JSONAccuracy
+    ColSnapshots -.->|Zero-Downtime Failover| JSONSnapshots
+```
+
