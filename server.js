@@ -191,6 +191,26 @@ export function broadcastSosUpdate(sosId, status) {
   return count;
 }
 
+/**
+ * Broadcast a newly received SOS incident (including offline vault flushes) to authorities
+ */
+export function broadcastNewSos(sos) {
+  const payload = JSON.stringify({
+    type: 'new_sos_alert',
+    sos
+  });
+
+  let count = 0;
+  wss.clients.forEach((client) => {
+    if (client.readyState === 1) {
+      client.send(payload);
+      count++;
+    }
+  });
+  console.log(`🆘 [WS NEW SOS] Alert from "${sos.name || 'Citizen'}" pushed to ${count} client(s)`);
+  return count;
+}
+
 import { 
   WEATHER_TOOLS, 
   get_current_weather, 
@@ -591,27 +611,48 @@ app.post('/api/community-reports', async (req, res) => {
 
 // POST /api/sos — Public: citizen sends GPS + message
 app.post("/api/sos", async (req, res) => {
-  const { name, phone, message, lat, lng, helpType, image, locationSource, locationNote } = req.body;
-  if (!lat || !lng) return res.status(400).json({ error: "Location coordinates are required" });
+  const { name, phone, message, lat, lng, helpType, image, locationSource, locationNote, isOfflineVault } = req.body;
+  const numLat = Number(lat);
+  const numLng = Number(lng);
+  if (isNaN(numLat) || isNaN(numLng)) return res.status(400).json({ error: "Location coordinates are required" });
+
+  const isOffline = isOfflineVault || 
+    (typeof locationNote === 'string' && locationNote.toLowerCase().includes('offline')) || 
+    (typeof message === 'string' && message.includes('Offline Vault')) ||
+    (typeof locationSource === 'string' && (locationSource.includes('cached') || locationSource.includes('default') || locationSource.includes('offline')));
+
+  const resolvedNote = locationNote || (isOffline ? 'Offline Device Cache' : `Live Coordinates (${numLat.toFixed(4)}°, ${numLng.toFixed(4)}°)`);
+
   const entry = { 
     name: name || 'Anonymous', 
     phone: phone || '', 
     message: message || '', 
-    lat, lng, 
+    lat: numLat, 
+    lng: numLng, 
     helpType: helpType || 'General Emergency',
     image: image || null,
-    locationSource: locationSource || 'live_gps',
-    locationNote: locationNote || '',
+    locationSource: locationSource || (isOffline ? 'offline_vault' : 'live_gps'),
+    locationNote: resolvedNote,
+    isOfflineVault: Boolean(isOffline),
     status: 'pending', 
     timestamp: new Date() 
   };
   if (USE_MONGODB) {
-    try { const saved = await SosRequest.create(entry); return res.json({ success: true, id: saved._id }); }
-    catch (e) { return res.status(500).json({ error: "Failed to save SOS" }); }
+    try { 
+      const saved = await SosRequest.create(entry);
+      const sosData = { ...entry, _id: saved._id, id: saved._id.toString() };
+      broadcastNewSos(sosData);
+      return res.json({ success: true, id: saved._id, sos: sosData }); 
+    }
+    catch (e) { 
+      console.error("Failed to save SOS in MongoDB:", e);
+      return res.status(500).json({ error: "Failed to save SOS" }); 
+    }
   } else {
     entry.id = 'sos-' + Date.now();
     sosFallback.push(entry);
-    return res.json({ success: true, id: entry.id });
+    broadcastNewSos(entry);
+    return res.json({ success: true, id: entry.id, sos: entry });
   }
 });
 

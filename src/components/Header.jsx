@@ -11,6 +11,7 @@ import UserGuideModal from './UserGuideModal';
 import AccuracyFeedModal from './AccuracyFeedModal';
 import MobileMenuSheet from './MobileMenuSheet';
 import OfficialBulletinModal from './OfficialBulletinModal';
+import { getSosQueueCount } from '../utils/sosQueue';
 
 export default function Header() {
   const { state, dispatch } = useApp();
@@ -28,9 +29,26 @@ export default function Header() {
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [savedWeather, setSavedWeather] = useState({}); // { [name]: { temp, icon } }
   const [loadingSaved, setLoadingSaved] = useState(false);
+  const [offlineSosCount, setOfflineSosCount] = useState(0);
   const savedRef = useRef(null);
   const moreMenuRef = useRef(null);
   const langPickerRef = useRef(null);
+
+  useEffect(() => {
+    const updateCount = async () => {
+      try {
+        const count = await getSosQueueCount();
+        setOfflineSosCount(count);
+      } catch (e) {}
+    };
+    updateCount();
+    window.addEventListener('weathergpt-sos-queue-changed', updateCount);
+    window.addEventListener('weathergpt-sos-flushed', updateCount);
+    return () => {
+      window.removeEventListener('weathergpt-sos-queue-changed', updateCount);
+      window.removeEventListener('weathergpt-sos-flushed', updateCount);
+    };
+  }, []);
 
   const currentLang = LANGUAGES.find(l => l.code === state.language) || LANGUAGES[0];
   const t = UI_TRANSLATIONS[state.language] || UI_TRANSLATIONS['en'];
@@ -712,9 +730,14 @@ export default function Header() {
             onClick={() => {
               window.dispatchEvent(new CustomEvent('weathergpt-open-sos'));
             }}
-            className="flex flex-col items-center justify-center py-1.5 px-0.5 rounded-xl bottom-tab-sos gap-0.5 active:scale-95 transition-all duration-200"
-            title="Emergency SOS"
+            className="flex flex-col items-center justify-center py-1.5 px-0.5 rounded-xl bottom-tab-sos gap-0.5 active:scale-95 transition-all duration-200 relative"
+            title={offlineSosCount > 0 ? `⚠️ ${offlineSosCount} SOS Alert(s) in Offline Vault` : "Emergency SOS"}
           >
+            {offlineSosCount > 0 && (
+              <span className="absolute -top-1 right-1 bg-amber-400 text-black font-black text-[9px] w-4 h-4 rounded-full flex items-center justify-center border border-neutral-900 shadow animate-bounce">
+                {offlineSosCount}
+              </span>
+            )}
             <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
               <line x1="12" y1="8" x2="12" y2="12"/>

@@ -132,7 +132,7 @@ export async function removeSosFromQueue(id) {
 
 /**
  * Auto-Flush Engine:
- * Attempts to transmit all pending SOS alerts to the server when connection is restored
+ * Attempts to transmit all pending SOS alerts to the server with retries
  */
 export async function flushSosQueue(apiUrl = "") {
   const items = await getQueuedSos();
@@ -144,28 +144,50 @@ export async function flushSosQueue(apiUrl = "") {
   const baseUrl = (apiUrl || "").replace(/\/+$/, "");
 
   for (const item of items) {
-    try {
-      const { id, queuedAt, status, ...payload } = item;
-      const res = await fetch(`${baseUrl}/api/sos`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...payload,
-          message: payload.message 
-            ? `[Offline Vault Alert — ${payload.locationNote || 'Queued at ' + new Date(queuedAt).toLocaleTimeString()}] ${payload.message}`
-            : `[Offline Vault Alert — ${payload.locationNote || 'Queued at ' + new Date(queuedAt).toLocaleTimeString()}]`,
-        }),
-      });
+    const { id, queuedAt, status, ...payload } = item;
 
-      if (res.ok) {
-        await removeSosFromQueue(item.id);
-        successCount++;
-      } else {
-        console.warn(`Server responded with ${res.status} for SOS ${item.id}`);
-        break;
+    const formattedMsg = typeof payload.message === 'string' && payload.message.startsWith('[Offline Vault Alert')
+      ? payload.message
+      : `[Offline Vault Alert — ${payload.locationNote || 'Queued at ' + new Date(queuedAt).toLocaleTimeString()}] ${payload.message || ''}`.trim();
+
+    const transmitPayload = {
+      ...payload,
+      message: formattedMsg,
+      locationNote: payload.locationNote || 'Offline Device Fix',
+      locationSource: payload.locationSource || 'offline_vault',
+      isOfflineVault: true,
+      queuedAt
+    };
+
+    let sent = false;
+    // Retry up to 3 times per item if network is sluggish
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const res = await fetch(`${baseUrl}/api/sos`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(transmitPayload),
+        });
+
+        if (res.ok) {
+          await removeSosFromQueue(item.id);
+          successCount++;
+          sent = true;
+          break;
+        } else {
+          console.warn(`Server responded with ${res.status} for SOS ${item.id}`);
+          break; // Server explicitly rejected; don't loop endlessly
+        }
+      } catch (netErr) {
+        console.warn(`Network glitch transmitting SOS ${item.id} (Attempt ${attempt + 1}/3):`, netErr.message);
+        if (attempt < 2) {
+          await new Promise((r) => setTimeout(r, 1200 * (attempt + 1)));
+        }
       }
-    } catch (err) {
-      console.warn("Network error during SOS queue flush:", err.message);
+    }
+
+    if (!sent) {
+      // Stop flushing remaining items to preserve sequential delivery if network dropped again
       break;
     }
   }
@@ -179,4 +201,57 @@ export async function flushSosQueue(apiUrl = "") {
     );
   }
   return { flushed: successCount, remaining };
+}
+
+let isSyncing = false;
+let autoSyncInitialized = false;
+
+/**
+ * Initializes continuous multi-trigger background synchronization for offline SOS alerts.
+ * Triggers:
+ * 1. Startup if online
+ * 2. Device 'online' event with stabilization delay
+ * 3. Document visibility change (user switching back to tab/app)
+ * 4. Periodic 8s background heartbeat
+ */
+export function initSosAutoSync(apiUrl = "") {
+  if (typeof window === "undefined" || autoSyncInitialized) return;
+  autoSyncInitialized = true;
+
+  const triggerFlush = async () => {
+    if (isSyncing || !navigator.onLine) return;
+    try {
+      const count = await getSosQueueCount();
+      if (count > 0) {
+        isSyncing = true;
+        await flushSosQueue(apiUrl);
+      }
+    } catch (e) {
+      // Ignore background sync errors
+    } finally {
+      isSyncing = false;
+    }
+  };
+
+  // 1. Initial flush on page load if online
+  if (navigator.onLine) {
+    setTimeout(triggerFlush, 1500);
+  }
+
+  // 2. Hardware connection restored
+  window.addEventListener("online", () => {
+    setTimeout(triggerFlush, 1200);
+    setTimeout(triggerFlush, 3500); // Secondary retry
+  });
+
+  // 3. User switches back to tab or screen wakes up
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") {
+      triggerFlush();
+    }
+  });
+  window.addEventListener("focus", triggerFlush);
+
+  // 4. Background heartbeat every 8 seconds
+  setInterval(triggerFlush, 8000);
 }

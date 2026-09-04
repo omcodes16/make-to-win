@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useApp } from "../context/AppContext";
-import { saveSosOffline, getSosQueueCount, flushSosQueue } from "../utils/sosQueue";
+import { saveSosOffline, getSosQueueCount, flushSosQueue, initSosAutoSync } from "../utils/sosQueue";
+import SosQrModal from "./SosQrModal";
 
 const API_URL = import.meta.env.VITE_API_URL || "";
 
@@ -12,6 +13,7 @@ export default function SosButton() {
   const [imageString, setImageString] = useState(null);
   const [errorMsg, setErrorMsg] = useState("");
   const [offlineQueueCount, setOfflineQueueCount] = useState(0);
+  const [showQrModal, setShowQrModal] = useState(false);
 
   const helpCategories = [
     "Medical Emergency",
@@ -64,6 +66,9 @@ export default function SosButton() {
   };
 
   useEffect(() => {
+    // Initialize background auto-sync engine
+    initSosAutoSync(API_URL);
+
     const handleOpenSos = () => {
       handleSosClick();
     };
@@ -76,6 +81,11 @@ export default function SosButton() {
       } catch (e) {}
     };
     refreshQueue();
+
+    // Trigger initial flush on load if already online
+    if (typeof navigator !== 'undefined' && navigator.onLine) {
+      flushSosQueue(API_URL).then(refreshQueue).catch(() => {});
+    }
 
     const handleOnline = async () => {
       try {
@@ -233,7 +243,12 @@ export default function SosButton() {
       if (result.flushed > 0) {
         setPhase("success");
       } else {
-        setPhase("queued-offline");
+        const remaining = await getSosQueueCount();
+        if (remaining === 0) {
+          setPhase("success");
+        } else {
+          setPhase("queued-offline");
+        }
       }
     } catch (err) {
       setPhase("queued-offline");
@@ -441,22 +456,45 @@ export default function SosButton() {
                     WeatherGPT will automatically transmit this SOS and exact coordinates to disaster authorities the second any mobile signal (2G/3G/4G/5G) or Wi-Fi is restored.
                   </p>
                 </div>
-                <div className="flex gap-2 pt-1">
+
+                <div className="space-y-2 pt-1">
                   <button
                     type="button"
-                    onClick={handleManualSync}
-                    className="flex-1 py-3 bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-500 hover:to-yellow-500 rounded-xl font-bold text-xs text-white shadow-md transition-all active:scale-95"
+                    onClick={() => setShowQrModal(true)}
+                    className="w-full py-3 px-3 bg-gradient-to-r from-red-600 via-rose-600 to-red-700 hover:from-red-500 hover:to-rose-500 text-white rounded-xl font-black text-xs flex items-center justify-center gap-1.5 transition-all shadow-lg shadow-red-600/30 active:scale-95 border border-red-400/40"
                   >
-                    🔄 Retry Send Now
+                    <span>⚡</span>
+                    <span>Direct Air Optical Transfer (Rescue QR)</span>
                   </button>
-                  <button
-                    type="button"
-                    onClick={reset}
-                    className="flex-1 py-3 bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-hover)] border border-[var(--theme-border)] rounded-xl font-bold text-xs text-[var(--text-primary)] transition-all active:scale-95"
+
+                  <a
+                    href={`sms:112?body=${encodeURIComponent(
+                      `EMERGENCY SOS [${form.helpType}]: Name: ${form.name || 'Citizen'}, GPS: ${coords?.lat?.toFixed(4)}, ${coords?.lng?.toFixed(4)} (https://maps.google.com/?q=${coords?.lat},${coords?.lng}). ${form.message || ''}`
+                    )}`}
+                    className="w-full py-2.5 px-3 bg-red-600/20 hover:bg-red-600/30 border border-red-500/40 text-red-300 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all active:scale-95"
                   >
-                    Keep in Vault (OK)
-                  </button>
+                    <span>💬</span>
+                    <span>Send via Cellular SMS (112 ERSS)</span>
+                  </a>
+
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={handleManualSync}
+                      className="flex-1 py-3 bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-500 hover:to-yellow-500 rounded-xl font-bold text-xs text-white shadow-md transition-all active:scale-95"
+                    >
+                      🔄 Sync to Portal Now
+                    </button>
+                    <button
+                      type="button"
+                      onClick={reset}
+                      className="flex-1 py-3 bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-hover)] border border-[var(--theme-border)] rounded-xl font-bold text-xs text-[var(--text-primary)] transition-all active:scale-95"
+                    >
+                      Keep in Vault (OK)
+                    </button>
+                  </div>
                 </div>
+
                 <p className="text-red-500 font-bold text-[11px]">
                   📞 If telephone signal works, call 112 immediately!
                 </p>
@@ -475,6 +513,19 @@ export default function SosButton() {
 
           </div>
         </div>
+      )}
+
+      {showQrModal && (
+        <SosQrModal
+          sosData={{
+            ...form,
+            lat: coords?.lat,
+            lng: coords?.lng,
+            locationNote: coords?.note,
+            locationSource: coords?.source,
+          }}
+          onClose={() => setShowQrModal(false)}
+        />
       )}
     </>
   );

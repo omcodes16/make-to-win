@@ -148,6 +148,11 @@ export function useAlertSocket() {
           } else if (data.type === 'sos_status_update') {
             // Live SOS rescue status updated by disaster officer
             dispatch({ type: 'UPDATE_SOS_STATUS', payload: data });
+          } else if (data.type === 'new_sos_alert') {
+            // Real-time SOS incident delivered to connected clients/portal
+            if (data.sos) {
+              window.dispatchEvent(new CustomEvent('weathergpt-new-sos', { detail: data.sos }));
+            }
           }
         } catch (e) {
           console.warn('[WS Parse Error]:', e);

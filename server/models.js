@@ -53,6 +53,9 @@ const sosSchema = new mongoose.Schema({
   image: { type: String },
   lat: { type: Number, required: true },
   lng: { type: Number, required: true },
+  locationSource: { type: String, default: 'live_gps' },
+  locationNote: { type: String, default: '' },
+  isOfflineVault: { type: Boolean, default: false },
   status: { type: String, enum: ['pending', 'dispatched', 'resolved'], default: 'pending' },
   timestamp: { type: Date, default: Date.now }
 });

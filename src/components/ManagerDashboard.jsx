@@ -3,6 +3,7 @@ import { INDIA_DISTRICTS } from "../utils/districtData";
 import { geocodeLocation, searchLocationSuggestions } from "../services/weatherApi";
 import SmsSimulatorModal from "./SmsSimulatorModal";
 import SmsRegistryPanel from "./SmsRegistryPanel";
+import AuthorityQrScannerModal from "./AuthorityQrScannerModal";
 import { useApp } from "../context/AppContext";
 
 const API_URL = import.meta.env.VITE_API_URL || "";
@@ -18,6 +19,7 @@ export default function ManagerDashboard() {
   const [passcode, setPasscode] = useState("");
   const [alerts, setAlerts] = useState([]);
   const [sosRequests, setSosRequests] = useState([]);
+  const [showQrScanner, setShowQrScanner] = useState(false);
   
   const [activeTab, setActiveTab] = useState('alerts');
   const [simulatingAlert, setSimulatingAlert] = useState(null);
@@ -139,7 +141,51 @@ export default function ManagerDashboard() {
       fetchSos();
       // Auto-refresh SOS every 4 seconds for live monitoring
       const interval = setInterval(fetchSos, 4000);
-      return () => clearInterval(interval);
+
+      // Instant push notification when a new SOS arrives via WebSocket
+      const handleNewSos = (e) => {
+        const incoming = e.detail;
+        if (!incoming) return;
+        setSosRequests((prev) => {
+          const exists = prev.some((s) => (s._id && s._id === incoming._id) || (s.id && s.id === incoming.id));
+          if (exists) return prev;
+          return [incoming, ...prev];
+        });
+
+        // Audible alert tone for disaster officers
+        try {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (AudioCtx) {
+            const ctx = new AudioCtx();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.frequency.setValueAtTime(880, ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.5);
+            gain.gain.setValueAtTime(0.3, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.5);
+          }
+        } catch {}
+      };
+
+      const handleFocus = () => {
+        fetchSos();
+        fetchAlerts();
+      };
+
+      window.addEventListener('weathergpt-new-sos', handleNewSos);
+      window.addEventListener('focus', handleFocus);
+      window.addEventListener('online', handleFocus);
+
+      return () => {
+        clearInterval(interval);
+        window.removeEventListener('weathergpt-new-sos', handleNewSos);
+        window.removeEventListener('focus', handleFocus);
+        window.removeEventListener('online', handleFocus);
+      };
     }
   }, [token]);
 
@@ -504,6 +550,14 @@ export default function ManagerDashboard() {
             <span className="flex items-center gap-2">🆘 Live SOS Requests</span>
             <div className="flex items-center gap-2">
               <button
+                onClick={() => setShowQrScanner(true)}
+                className="text-xs bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-300 border border-emerald-500/40 px-3 py-1.5 rounded-full font-bold transition-all flex items-center gap-1.5 active:scale-95 shadow-sm"
+                title="Direct optical camera scan of offline victim SOS (works in Airplane Mode)"
+              >
+                <span>📷</span>
+                <span>Direct Air Intake (Scan QR)</span>
+              </button>
+              <button
                 onClick={fetchSos}
                 className="text-xs bg-white/10 hover:bg-white/20 text-white/90 px-3 py-1.5 rounded-full font-semibold transition-all flex items-center gap-1.5 active:scale-95 border border-white/10"
                 title="Force refresh live SOS stream"
@@ -529,8 +583,14 @@ export default function ManagerDashboard() {
                         <span className="bg-red-900/50 text-red-200 text-[10px] px-2 py-0.5 rounded border border-red-500/30">
                           {sos.helpType || 'General'}
                         </span>
+                        {(sos.isOfflineVault || (typeof sos.locationNote === 'string' && sos.locationNote.toLowerCase().includes('offline')) || (typeof sos.message === 'string' && sos.message.includes('Offline Vault'))) && (
+                          <span className="bg-amber-500/20 text-amber-300 text-[10px] font-bold px-2 py-0.5 rounded border border-amber-500/40 flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                            🛡️ OFFLINE VAULT SYNCED
+                          </span>
+                        )}
                         {sos.locationNote && (
-                          <span className="bg-amber-500/20 text-amber-300 text-[10px] px-2 py-0.5 rounded border border-amber-500/30 font-mono">
+                          <span className="bg-amber-500/10 text-amber-200 text-[10px] px-2 py-0.5 rounded border border-amber-500/30 font-mono">
                             📍 {sos.locationNote}
                           </span>
                         )}
@@ -577,6 +637,15 @@ export default function ManagerDashboard() {
         </>
         )}
       </div>
+      {showQrScanner && (
+        <AuthorityQrScannerModal
+          onClose={() => setShowQrScanner(false)}
+          onScanSuccess={(newSos) => {
+            setSosRequests((prev) => [newSos, ...prev]);
+            setTimeout(fetchSos, 1200);
+          }}
+        />
+      )}
     </div>
   );
 }
