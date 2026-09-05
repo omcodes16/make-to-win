@@ -10,6 +10,7 @@ export default function MobileMenuSheet({
   onSelectTheme,
   userProfile,
   onOpenHub,
+  onOpenResearch,
   savedLocations,
   savedWeather,
   loadingSaved,
@@ -380,16 +381,27 @@ export default function MobileMenuSheet({
           </div>
 
           {/* Quick Links Section */}
-          <div className="grid grid-cols-3 gap-2 pt-1 pb-4">
+          <div className="grid grid-cols-4 gap-2 pt-1 pb-4">
+            <button
+              onClick={() => {
+                onClose();
+                if (onOpenResearch) onOpenResearch();
+              }}
+              className="p-2 rounded-xl bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-hover)] border border-[var(--modal-border)] flex flex-col items-center gap-1 text-center transition-all active:scale-95 cursor-pointer"
+            >
+              <span className="text-indigo-400 text-base">🔬</span>
+              <span className="text-[10px] font-bold text-[var(--text-primary)]">Research</span>
+            </button>
+
             <button
               onClick={() => {
                 onClose();
                 onOpenGuide();
               }}
-              className="p-2.5 rounded-xl bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-hover)] border border-[var(--modal-border)] flex flex-col items-center gap-1 text-center transition-all active:scale-95"
+              className="p-2 rounded-xl bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-hover)] border border-[var(--modal-border)] flex flex-col items-center gap-1 text-center transition-all active:scale-95 cursor-pointer"
             >
               <span className="text-teal-400 text-base">📖</span>
-              <span className="text-[11px] font-bold text-[var(--text-primary)]">User Guide</span>
+              <span className="text-[10px] font-bold text-[var(--text-primary)]">Guide</span>
             </button>
 
             <button
@@ -397,10 +409,10 @@ export default function MobileMenuSheet({
                 onClose();
                 onOpenReviews();
               }}
-              className="p-2.5 rounded-xl bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-hover)] border border-[var(--modal-border)] flex flex-col items-center gap-1 text-center transition-all active:scale-95"
+              className="p-2 rounded-xl bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-hover)] border border-[var(--modal-border)] flex flex-col items-center gap-1 text-center transition-all active:scale-95 cursor-pointer"
             >
               <span className="text-amber-400 text-base">⭐</span>
-              <span className="text-[11px] font-bold text-[var(--text-primary)]">Reviews</span>
+              <span className="text-[10px] font-bold text-[var(--text-primary)]">Reviews</span>
             </button>
 
             <button
@@ -408,10 +420,10 @@ export default function MobileMenuSheet({
                 onClose();
                 onOpenManager();
               }}
-              className="p-2.5 rounded-xl bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-hover)] border border-[var(--modal-border)] flex flex-col items-center gap-1 text-center transition-all active:scale-95"
+              className="p-2 rounded-xl bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-hover)] border border-[var(--modal-border)] flex flex-col items-center gap-1 text-center transition-all active:scale-95 cursor-pointer"
             >
               <span className="text-red-400 text-base">🛡️</span>
-              <span className="text-[11px] font-bold text-[var(--text-primary)]">Portal</span>
+              <span className="text-[10px] font-bold text-[var(--text-primary)]">Portal</span>
             </button>
           </div>
 

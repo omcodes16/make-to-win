@@ -26,7 +26,7 @@ const LOCATION_COLORS = ['#38bdf8', '#f97316', '#10b981'];
 const CURRENT_YEAR = new Date().getFullYear();
 
 export default function ResearchPanel() {
-  const { state } = useApp();
+  const { state, dispatch } = useApp();
   const isLight = state.uiTheme === 'light';
 
   // Location comparison state: up to 3 locations
@@ -456,10 +456,25 @@ export default function ResearchPanel() {
   };
 
   return (
-    <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 md:pt-32 pb-24 space-y-6 animate-fade-in text-[var(--text-primary)]">
-      
-      {/* HEADER SECTION */}
-      <div className="glass-panel border border-[var(--theme-border)] rounded-3xl p-6 shadow-xl relative overflow-hidden">
+    <div className="min-h-[100dvh] overflow-y-auto pb-28 md:pb-24 relative font-body transition-colors duration-1000" style={{ color: 'var(--text-primary)' }}>
+      <div className="relative z-10 max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-20 sm:pt-28 md:pt-32 pb-20 space-y-6 animate-fade-in">
+        
+        {/* Quick Back Navigation Bar */}
+        <div className="flex items-center justify-between mb-1">
+          <button
+            onClick={() => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'chat' })}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-[var(--text-primary)] font-bold text-xs backdrop-blur-md border border-[var(--theme-border)] transition-all shadow-sm active:scale-95 cursor-pointer"
+          >
+            <span>←</span>
+            <span>Back to Chat</span>
+          </button>
+          <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-indigo-500/15 text-indigo-400 border border-indigo-500/25">
+            ERA5 Climate Analytics
+          </span>
+        </div>
+
+        {/* HEADER SECTION */}
+        <div className="glass-panel border border-[var(--theme-border)] rounded-3xl p-6 shadow-xl relative overflow-hidden">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
             <div className="flex items-center gap-2.5">
@@ -1006,5 +1021,6 @@ export default function ResearchPanel() {
       </div>
 
     </div>
+  </div>
   );
 }

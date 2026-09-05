@@ -647,6 +647,7 @@ export default function Header() {
         onSelectTheme={(themeKey) => dispatch({ type: 'SET_UI_THEME', payload: themeKey })}
         userProfile={state.userProfile}
         onOpenHub={() => setIsHubOpen(true)}
+        onOpenResearch={() => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'research' })}
         savedLocations={state.savedLocations}
         savedWeather={savedWeather}
         loadingSaved={loadingSaved}
@@ -704,24 +705,24 @@ export default function Header() {
           {/* Tab 3: Research & Climate Analytics */}
           <button
             onClick={() => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'research' })}
-            className={`flex flex-col items-center justify-center py-1 px-0.5 rounded-xl gap-0.5 active:scale-95 transition-all ${
+            className={`flex flex-col items-center justify-center py-1.5 px-0.5 rounded-xl gap-0.5 active:scale-95 transition-all ${
               state.activeTab === 'research'
-                ? 'bottom-tab-active font-bold text-emerald-400'
-                : 'text-emerald-400/80 hover:text-emerald-300 font-semibold'
+                ? 'bottom-tab-active font-bold text-indigo-400'
+                : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] opacity-75 hover:opacity-100'
             }`}
             title="Research & Climate Analytics"
           >
             <div className={`w-7 h-7 rounded-full flex items-center justify-center shadow-md transition-all ${
               state.activeTab === 'research'
-                ? 'bg-gradient-to-tr from-emerald-500 to-teal-500 text-white shadow-emerald-500/40 scale-105'
-                : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                ? 'bg-gradient-to-tr from-indigo-500 to-sky-400 text-white shadow-indigo-500/40 scale-105'
+                : 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30'
             }`}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M10 2v7.31M14 2v7.31M8.5 2h7M14 9.3a6.5 6.5 0 1 1-4 0"/>
                 <path d="M5.52 16h12.96"/>
               </svg>
             </div>
-            <span className="text-[9px] tracking-tight font-black uppercase text-emerald-400">Research</span>
+            <span className="text-[10px] tracking-tight font-semibold">Research</span>
           </button>
 
           {/* Tab 4: Alerts */}
