@@ -91,6 +91,9 @@ function appReducer(state, action) {
     case 'SET_ONBOARDED':
       return { ...state, isOnboarded: true };
 
+    case 'RESET_ONBOARDING':
+      return { ...state, isOnboarded: false };
+
     case 'ADD_USER_MESSAGE':
       return {
         ...state,

@@ -25,6 +25,7 @@ export default function MobileMenuSheet({
   onOpenReviews,
   onOpenManager,
   onOpenBulletin,
+  onResetOnboarding,
 }) {
   const [mobileLangSearch, setMobileLangSearch] = useState('');
 
@@ -378,6 +379,34 @@ export default function MobileMenuSheet({
                 />
               </button>
             </div>
+          </div>
+
+          {/* Restart to Welcome Screen Card */}
+          <div className="p-3.5 rounded-2xl bg-gradient-to-r from-indigo-600/20 via-sky-600/15 to-purple-600/20 border border-indigo-400/40 shadow-sm space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-indigo-500/25 border border-indigo-400/30 text-indigo-300 flex items-center justify-center text-lg shadow-inner">
+                  🚀
+                </div>
+                <div>
+                  <p className="text-xs font-black text-white">Go to Welcome Screen</p>
+                  <p className="text-[10px] text-indigo-300 font-medium">वेलकम पेज पर जाएं व शुरू से शुरू करें</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  onClose();
+                  if (onResetOnboarding) onResetOnboarding();
+                }}
+                className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-sky-600 hover:from-indigo-500 hover:to-sky-500 text-white font-bold text-xs shadow-md shadow-indigo-600/30 transition-all active:scale-95 flex items-center gap-1 shrink-0"
+              >
+                <span>Restart</span>
+                <span className="text-[10px]">➔</span>
+              </button>
+            </div>
+            <p className="text-[11px] text-white/60 leading-relaxed">
+              Reset app and re-select your Category (Farmer, Marine, Aviation, City) and primary Language.
+            </p>
           </div>
 
           {/* Quick Links Section */}

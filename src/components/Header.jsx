@@ -547,6 +547,31 @@ export default function Header() {
                     </svg>
                     <span>{currentLang.code === 'hi' ? 'गाइड' : currentLang.code === 'bn' ? 'গাইড' : currentLang.code === 'as' ? 'গাইড' : 'User Guide'}</span>
                   </button>
+
+                  {/* Go to Welcome Page & Restart Setup */}
+                  <div className="p-1 border-t border-[var(--modal-border)]">
+                    <button
+                      onClick={() => {
+                        dispatch({ type: 'RESET_ONBOARDING' });
+                        setShowMoreMenu(false);
+                      }}
+                      className="w-full text-left p-2.5 rounded-xl bg-gradient-to-r from-indigo-600/20 via-sky-600/15 to-purple-600/20 hover:from-indigo-600/30 hover:to-purple-600/30 border border-indigo-400/30 transition-all flex items-center justify-between group text-white shadow-sm"
+                      title="Go to Welcome Page & Restart Setup"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <span className="text-base p-1.5 rounded-lg bg-indigo-500/20 text-indigo-300">🚀</span>
+                        <div>
+                          <div className="text-xs font-bold text-white group-hover:text-indigo-200">
+                            {currentLang.code === 'hi' ? 'वेलकम पेज पर जाएं (रीस्टार्ट)' : 'Welcome Screen (Restart Setup)'}
+                          </div>
+                          <div className="text-[10px] text-white/60">
+                            {currentLang.code === 'hi' ? 'श्रेणी व भाषा शुरू से चुनें' : 'Reset Category & Language'}
+                          </div>
+                        </div>
+                      </div>
+                      <span className="text-indigo-400 group-hover:translate-x-0.5 transition-transform text-xs font-bold">➔</span>
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
@@ -696,6 +721,7 @@ export default function Header() {
           setBulletinCategory(cat || 'master');
           setIsBulletinOpen(true);
         }}
+        onResetOnboarding={() => dispatch({ type: 'RESET_ONBOARDING' })}
       />
 
       {/* Mobile Expanded Full-Width Bottom Navigation Bar (5 Balanced Tabs) */}

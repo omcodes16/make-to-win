@@ -1,1 +1,17 @@
-[]
+[
+  {
+    "id": "mgr-1788636153307",
+    "state": "Tamil Nadu",
+    "district": "Chennai",
+    "lat": 13.08507,
+    "lng": 80.2086038,
+    "radius": 50,
+    "targetMode": "radius",
+    "severity": "extreme",
+    "title": "flood warning",
+    "description": "x y z ",
+    "issuedAt": 1788636153307,
+    "expiresAt": 1788722553307,
+    "source": "Authority Alert"
+  }
+]

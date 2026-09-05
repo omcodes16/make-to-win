@@ -496,11 +496,12 @@ export default function ResearchPanel() {
   const activeMeta = variableMeta[selectedVariable] || variableMeta.meanTemp;
 
   // Chart styling colors
-  const gridColor = isLight ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.08)';
-  const axisColor = isLight ? '#63574f' : '#94a3b8';
-  const tooltipBg = isLight ? 'rgba(255, 255, 255, 0.95)' : 'rgba(15, 23, 42, 0.95)';
-  const tooltipBorder = isLight ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.15)';
-  const tooltipText = isLight ? '#191412' : '#ffffff';
+  const gridColor = isLight ? 'rgba(15, 23, 42, 0.12)' : 'rgba(255, 255, 255, 0.08)';
+  const axisColor = isLight ? '#0f172a' : '#f8fafc';
+  const axisLineColor = isLight ? '#334155' : 'rgba(255, 255, 255, 0.45)';
+  const tooltipBg = isLight ? 'rgba(255, 255, 255, 0.98)' : 'rgba(15, 23, 42, 0.95)';
+  const tooltipBorder = isLight ? '1px solid #cbd5e1' : '1px solid rgba(255,255,255,0.15)';
+  const tooltipText = isLight ? '#0f172a' : '#ffffff';
 
   // Handle CSV export trigger using actual displayed live data
   const handleExportCSVClick = () => {
@@ -885,20 +886,25 @@ export default function ResearchPanel() {
             </div>
           ) : chartData.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData} margin={{ top: 10, right: 20, left: -10, bottom: 0 }}>
+              <LineChart data={chartData} margin={{ top: 15, right: 25, left: 10, bottom: 15 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
                 <XAxis 
                   dataKey="year" 
-                  stroke={axisColor} 
+                  stroke={axisLineColor} 
+                  tickLine={{ stroke: axisLineColor, strokeWidth: 1.5 }}
+                  axisLine={{ stroke: axisLineColor, strokeWidth: 1.5 }}
                   fontSize={11} 
                   tickMargin={8} 
-                  tick={{ fill: axisColor, fontSize: 11, fontWeight: 600 }}
+                  tick={{ fill: axisColor, fontSize: 11, fontWeight: 700 }}
                 />
                 <YAxis 
-                  stroke={axisColor} 
+                  stroke={axisLineColor} 
+                  tickLine={{ stroke: axisLineColor, strokeWidth: 1.5 }}
+                  axisLine={{ stroke: axisLineColor, strokeWidth: 1.5 }}
+                  width={55}
                   fontSize={11} 
                   tickFormatter={(val) => `${val}${activeMeta.unit}`} 
-                  tick={{ fill: axisColor, fontSize: 11, fontWeight: 600 }}
+                  tick={{ fill: axisColor, fontSize: 11, fontWeight: 700 }}
                 />
                 <Tooltip
                   contentStyle={{

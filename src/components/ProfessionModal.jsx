@@ -549,6 +549,23 @@ export default function ProfessionModal({ lat, lng, locationName, weather, onClo
         <div className="p-5 sm:p-6 overflow-y-auto custom-scrollbar flex-1">
           {renderContent()}
         </div>
+
+        {/* Footer with Welcome Setup restart */}
+        <div className="p-3 px-5 border-t border-[var(--modal-border)] bg-[var(--header-bg)] flex items-center justify-between text-xs">
+          <span className="text-[var(--text-secondary)] text-[11px] sm:text-xs">
+            {lang === 'hi' ? 'श्रेणी या भाषा शुरू से बदलना चाहते हैं?' : 'Want to re-configure category or language?'}
+          </span>
+          <button
+            onClick={() => {
+              dispatch({ type: 'RESET_ONBOARDING' });
+              onClose();
+            }}
+            className="px-3 py-1 rounded-xl bg-indigo-600/25 hover:bg-indigo-600/40 text-indigo-300 hover:text-white border border-indigo-400/30 font-bold transition-all flex items-center gap-1 active:scale-95 text-xs"
+          >
+            <span>🚀</span>
+            <span>{lang === 'hi' ? 'वेलकम सेटअप' : 'Welcome Setup'}</span>
+          </button>
+        </div>
       </div>
 
       {/* Official Bulletin Modal */}

@@ -146,12 +146,16 @@ export default function HistoricalAnalytics({ lat, lon }) {
     }
   };
 
-  const isLight = state.theme === 'light';
-  const axisColor = isLight ? '#63574f' : 'rgba(255, 255, 255, 0.65)';
-  const gridColor = isLight ? 'rgba(90, 70, 60, 0.15)' : 'rgba(255, 255, 255, 0.12)';
-  const tooltipBg = isLight ? '#faf7f4' : '#11131c';
-  const tooltipBorder = isLight ? '1px solid rgba(90, 70, 60, 0.20)' : '1px solid rgba(255, 255, 255, 0.15)';
-  const tooltipText = isLight ? '#191412' : '#ffffff';
+  const currentTheme = state.uiTheme || state.theme || 'dark';
+  const isLight = currentTheme === 'light';
+  
+  // High-contrast axis colors: Pitch black in light theme (#0f172a), luminous white in dark/glass (#f8fafc)
+  const axisTextColor = isLight ? '#0f172a' : '#f8fafc';
+  const axisLineColor = isLight ? '#334155' : 'rgba(255, 255, 255, 0.45)';
+  const gridColor = isLight ? 'rgba(15, 23, 42, 0.12)' : 'rgba(255, 255, 255, 0.12)';
+  const tooltipBg = isLight ? '#ffffff' : '#0f172a';
+  const tooltipBorder = isLight ? '1px solid #cbd5e1' : '1px solid rgba(255, 255, 255, 0.2)';
+  const tooltipText = isLight ? '#0f172a' : '#ffffff';
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mt-6">
@@ -159,13 +163,13 @@ export default function HistoricalAnalytics({ lat, lon }) {
       {/* LEFT PART: Graph */}
       <div className="glass-panel border border-[var(--theme-border)] rounded-3xl p-5 shadow-xl relative overflow-hidden">
         <div className="absolute top-0 right-0 p-4 opacity-10 text-6xl pointer-events-none">📈</div>
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 relative z-10">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 relative z-10">
           <div>
             <h3 className="text-xl font-black text-[var(--text-primary)] tracking-tight flex items-center gap-2">
               {t.historicalTrends}
             </h3>
             <p className="text-xs text-[var(--text-secondary)] font-medium mt-1">
-              {timeRange === '30d' ? t.past30Days : timeRange === '1y' ? 'Past 1 Year' : 'Past 5 Years'}
+              {timeRange === '30d' ? t.past30Days : timeRange === '1y' ? (lang === 'hi' ? 'पिछले 1 वर्ष का स्थानीय मौसम डेटा' : 'Past 1 Year local climate analytics') : (lang === 'hi' ? 'पिछले 5 वर्षों का स्थानीय मौसम डेटा' : 'Past 5 Years local climate analytics')}
             </p>
           </div>
           
@@ -230,7 +234,72 @@ export default function HistoricalAnalytics({ lat, lon }) {
           </div>
         </div>
 
-        <div className="h-64 w-full">
+        {/* COMPARISON METRIC INDICATOR BANNER */}
+        <div className="mb-4 p-3 rounded-2xl bg-[var(--glass-bg)] border border-[var(--theme-border)] flex flex-wrap items-center justify-between gap-2.5 shadow-sm">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-wider bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border border-indigo-500/30">
+              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M18 20V10M12 20V4M6 20v-6" />
+              </svg>
+              {lang === 'hi' ? 'तुलना (Comparison)' : 'Data Comparison'}
+            </span>
+            <span className="text-xs sm:text-sm font-extrabold text-[var(--text-primary)]">
+              {chartType === 'temp' ? (
+                lang === 'hi' ? (
+                  <>
+                    <span className="text-orange-600 dark:text-orange-400 font-black">दैनिक तापमान (°C)</span>
+                    <span className="mx-1.5 text-[var(--text-secondary)] font-medium">बनाम (vs)</span>
+                    <span className="text-[var(--text-primary)] font-black">समय / दिनांक (Date)</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-orange-600 dark:text-orange-400 font-black">Daily Max Temp (°C)</span>
+                    <span className="mx-1.5 text-[var(--text-secondary)] font-medium">vs</span>
+                    <span className="text-[var(--text-primary)] font-black">Date / Timeline</span>
+                  </>
+                )
+              ) : (
+                lang === 'hi' ? (
+                  <>
+                    <span className="text-blue-600 dark:text-blue-400 font-black">दैनिक वर्षा (Rainfall in mm)</span>
+                    <span className="mx-1.5 text-[var(--text-secondary)] font-medium">बनाम (vs)</span>
+                    <span className="text-[var(--text-primary)] font-black">समय / दिनांक (Date)</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-blue-600 dark:text-blue-400 font-black">Daily Rainfall (mm)</span>
+                    <span className="mx-1.5 text-[var(--text-secondary)] font-medium">vs</span>
+                    <span className="text-[var(--text-primary)] font-black">Date / Timeline</span>
+                  </>
+                )
+              )}
+            </span>
+          </div>
+
+          {/* Explicit Axis Mapping Labels */}
+          <div className="flex items-center gap-3 text-xs font-bold text-[var(--text-secondary)]">
+            <div className="flex items-center gap-1.5">
+              <span className={`w-3 h-3 rounded-full shrink-0 ${chartType === 'temp' ? 'bg-orange-500 shadow-sm shadow-orange-500/50' : 'bg-blue-600 shadow-sm shadow-blue-600/50'}`}></span>
+              <span className="text-[var(--text-primary)] font-black">
+                Y-Axis ({lang === 'hi' ? 'खड़ा अक्ष' : 'Vertical'}):
+              </span>
+              <span className="text-[var(--text-secondary)] font-extrabold">
+                {chartType === 'temp' ? (lang === 'hi' ? 'तापमान (°C)' : 'Temp (°C)') : (lang === 'hi' ? 'वर्षा (mm)' : 'Rain (mm)')}
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-3 h-3 rounded-full shrink-0 bg-slate-500 shadow-sm"></span>
+              <span className="text-[var(--text-primary)] font-black">
+                X-Axis ({lang === 'hi' ? 'आड़ा अक्ष' : 'Horizontal'}):
+              </span>
+              <span className="text-[var(--text-secondary)] font-extrabold">
+                {lang === 'hi' ? 'दिनांक (Date)' : 'Date / Time'}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="h-72 sm:h-80 w-full">
           {loading ? (
             <div className="w-full h-full flex items-center justify-center">
               <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-500"></div>
@@ -238,7 +307,7 @@ export default function HistoricalAnalytics({ lat, lon }) {
           ) : data.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
               {chartType === 'temp' ? (
-                <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <AreaChart data={data} margin={{ top: 15, right: 25, left: 10, bottom: 25 }}>
                   <defs>
                     <linearGradient id="colorTemp" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#ea580c" stopOpacity={0.4}/>
@@ -248,17 +317,39 @@ export default function HistoricalAnalytics({ lat, lon }) {
                   <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
                   <XAxis 
                     dataKey="date" 
-                    stroke={axisColor} 
-                    fontSize={11} 
+                    stroke={axisLineColor} 
+                    tickLine={{ stroke: axisLineColor, strokeWidth: 1.5 }}
+                    axisLine={{ stroke: axisLineColor, strokeWidth: 1.5 }}
                     tickMargin={10} 
                     minTickGap={20} 
-                    tick={{ fill: axisColor, fontSize: 11, fontWeight: 600 }}
+                    tick={{ fill: axisTextColor, fontSize: 11, fontWeight: 700 }}
+                    label={{ 
+                      value: lang === 'hi' ? '📅 दिनांक / समय अवधि (Date Timeline) ➔' : '📅 Date Timeline ➔', 
+                      position: 'insideBottom', 
+                      offset: -18, 
+                      fill: axisTextColor, 
+                      fontSize: 11, 
+                      fontWeight: 800 
+                    }}
                   />
                   <YAxis 
-                    stroke={axisColor} 
-                    fontSize={11} 
-                    tickFormatter={(val) => `${val}°`} 
-                    tick={{ fill: axisColor, fontSize: 11, fontWeight: 600 }}
+                    stroke={axisLineColor} 
+                    tickLine={{ stroke: axisLineColor, strokeWidth: 1.5 }}
+                    axisLine={{ stroke: axisLineColor, strokeWidth: 1.5 }}
+                    tickMargin={6}
+                    width={55}
+                    tickFormatter={(val) => `${val}°C`} 
+                    tick={{ fill: axisTextColor, fontSize: 11, fontWeight: 700 }}
+                    label={{ 
+                      value: lang === 'hi' ? '🌡️ तापमान (°C)' : '🌡️ Temperature (°C)', 
+                      angle: -90, 
+                      position: 'insideLeft', 
+                      fill: axisTextColor, 
+                      fontSize: 11, 
+                      fontWeight: 800,
+                      style: { textAnchor: 'middle' },
+                      offset: 5
+                    }}
                   />
                   <Tooltip 
                     contentStyle={{ 
@@ -266,29 +357,54 @@ export default function HistoricalAnalytics({ lat, lon }) {
                       border: tooltipBorder, 
                       borderRadius: '12px',
                       color: tooltipText,
-                      fontWeight: 600,
-                      boxShadow: '0 8px 30px rgba(0,0,0,0.12)'
+                      fontWeight: 700,
+                      boxShadow: '0 8px 30px rgba(0,0,0,0.18)'
                     }}
+                    labelStyle={{ color: tooltipText, fontWeight: 800, marginBottom: '4px' }}
                     itemStyle={{ color: '#ea580c', fontWeight: 'bold' }}
+                    formatter={(value) => [`${value}°C`, lang === 'hi' ? 'अधिकतम तापमान' : 'Max Temperature']}
+                    labelFormatter={(label) => `${lang === 'hi' ? 'दिनांक' : 'Date'}: ${label}`}
                   />
                   <Area type="monotone" dataKey="temp" name="Max Temp" stroke="#ea580c" strokeWidth={3} fillOpacity={1} fill="url(#colorTemp)" />
                 </AreaChart>
               ) : (
-                <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <BarChart data={data} margin={{ top: 15, right: 25, left: 10, bottom: 25 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
                   <XAxis 
                     dataKey="date" 
-                    stroke={axisColor} 
-                    fontSize={11} 
+                    stroke={axisLineColor} 
+                    tickLine={{ stroke: axisLineColor, strokeWidth: 1.5 }}
+                    axisLine={{ stroke: axisLineColor, strokeWidth: 1.5 }}
                     tickMargin={10} 
                     minTickGap={20} 
-                    tick={{ fill: axisColor, fontSize: 11, fontWeight: 600 }}
+                    tick={{ fill: axisTextColor, fontSize: 11, fontWeight: 700 }}
+                    label={{ 
+                      value: lang === 'hi' ? '📅 दिनांक / समय अवधि (Date Timeline) ➔' : '📅 Date Timeline ➔', 
+                      position: 'insideBottom', 
+                      offset: -18, 
+                      fill: axisTextColor, 
+                      fontSize: 11, 
+                      fontWeight: 800 
+                    }}
                   />
                   <YAxis 
-                    stroke={axisColor} 
-                    fontSize={11} 
+                    stroke={axisLineColor} 
+                    tickLine={{ stroke: axisLineColor, strokeWidth: 1.5 }}
+                    axisLine={{ stroke: axisLineColor, strokeWidth: 1.5 }}
+                    tickMargin={6}
+                    width={55}
                     tickFormatter={(val) => `${val}mm`} 
-                    tick={{ fill: axisColor, fontSize: 11, fontWeight: 600 }}
+                    tick={{ fill: axisTextColor, fontSize: 11, fontWeight: 700 }}
+                    label={{ 
+                      value: lang === 'hi' ? '🌧️ वर्षा (Rainfall mm)' : '🌧️ Rainfall (mm)', 
+                      angle: -90, 
+                      position: 'insideLeft', 
+                      fill: axisTextColor, 
+                      fontSize: 11, 
+                      fontWeight: 800,
+                      style: { textAnchor: 'middle' },
+                      offset: 5
+                    }}
                   />
                   <Tooltip 
                     contentStyle={{ 
@@ -296,11 +412,14 @@ export default function HistoricalAnalytics({ lat, lon }) {
                       border: tooltipBorder, 
                       borderRadius: '12px',
                       color: tooltipText,
-                      fontWeight: 600,
-                      boxShadow: '0 8px 30px rgba(0,0,0,0.12)'
+                      fontWeight: 700,
+                      boxShadow: '0 8px 30px rgba(0,0,0,0.18)'
                     }}
+                    labelStyle={{ color: tooltipText, fontWeight: 800, marginBottom: '4px' }}
                     itemStyle={{ color: '#2563eb', fontWeight: 'bold' }}
-                    cursor={{ fill: isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)' }}
+                    formatter={(value) => [`${value} mm`, lang === 'hi' ? 'दैनिक वर्षा' : 'Daily Rainfall']}
+                    labelFormatter={(label) => `${lang === 'hi' ? 'दिनांक' : 'Date'}: ${label}`}
+                    cursor={{ fill: isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)' }}
                   />
                   <Bar dataKey="rain" name="Rainfall" fill="#2563eb" radius={[4, 4, 0, 0]} />
                 </BarChart>
