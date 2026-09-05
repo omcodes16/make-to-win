@@ -30,6 +30,7 @@ RUN npm ci --omit=dev
 COPY server.js ./
 COPY server/ ./server/
 COPY src/services/weatherApi.js ./src/services/weatherApi.js
+COPY src/services/locationExtractor.js ./src/services/locationExtractor.js
 
 # Copy VAPID keys if present (or will be provided via environment variables)
 COPY vapid_keys.json* ./
