@@ -363,6 +363,9 @@ export async function searchLocationSuggestions(name, lang = 'en') {
   return finalResults;
 }
 
+const WEATHER_CACHE = new Map();
+const WEATHER_CACHE_TTL = 5 * 60 * 1000; // 5 minutes TTL
+
 /**
  * Fetch current weather + 7-day forecast from Open-Meteo.
  * URL matches the exact spec:
@@ -372,21 +375,25 @@ export async function searchLocationSuggestions(name, lang = 'en') {
  *          uv_index_max, sunrise, sunset
  * timezone: Asia/Kolkata, forecast_days: 7
  */
-export async function getWeather(lat, lng) {
+export async function getWeather(lat, lng, forceRefresh = false) {
+  const cacheKey = `${Number(lat).toFixed(2)}_${Number(lng).toFixed(2)}`;
+  if (!forceRefresh && WEATHER_CACHE.has(cacheKey)) {
+    const cached = WEATHER_CACHE.get(cacheKey);
+    if (Date.now() - cached.timestamp < WEATHER_CACHE_TTL) {
+      return cached.data;
+    }
+  }
+
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,rain,weather_code,wind_speed_10m,wind_direction_10m,uv_index,visibility,is_day&hourly=temperature_2m,precipitation_probability,wind_speed_10m,wind_direction_10m,weather_code,is_day&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,uv_index_max,sunrise,sunset,weather_code&timezone=auto&forecast_days=7`;
   const aqiUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lng}&current=us_aqi&timezone=auto`;
 
-  // NWP Multi-Model URLs — fetching GFS, ICON, ECMWF separately for real model consensus
-  const gfsUrl   = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&daily=temperature_2m_max,precipitation_probability_max&timezone=auto&forecast_days=7&models=gfs_global`;
-  const iconUrl  = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&daily=temperature_2m_max,precipitation_probability_max&timezone=auto&forecast_days=7&models=icon_global`;
-  const ecmwfUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&daily=temperature_2m_max,precipitation_probability_max&timezone=auto&forecast_days=7&models=ecmwf_ifs025`;
+  // NWP Multi-Model Combined URL — fetching GFS, ICON, ECMWF in parallel with full metrics
+  const multiModelUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&daily=temperature_2m_max,precipitation_probability_max,precipitation_sum,wind_speed_10m_max&timezone=auto&forecast_days=7&models=gfs_global,icon_global,ecmwf_ifs025`;
 
-  const [res, aqiRes, gfsRes, iconRes, ecmwfRes] = await Promise.all([
+  const [res, aqiRes, multiRes] = await Promise.all([
     fetch(url),
     fetch(aqiUrl),
-    fetch(gfsUrl).catch(() => null),
-    fetch(iconUrl).catch(() => null),
-    fetch(ecmwfUrl).catch(() => null),
+    fetch(multiModelUrl).catch(() => null),
   ]);
   
   if (!res.ok) throw new Error(`Weather API error: ${res.status}`);
@@ -401,31 +408,132 @@ export async function getWeather(lat, lng) {
     }
   }
 
-  // Parse real NWP model data — gracefully fall back to null if any model is unavailable
-  let gfsModelData   = { maxTemp: null, precipProbMax: null };
-  let iconModelData  = { maxTemp: null, precipProbMax: null };
-  let ecmwfModelData = { maxTemp: null, precipProbMax: null };
+  // Parse real NWP model data with 4 core meteorological dimensions
+  let gfsModelData   = { maxTemp: null, precipProbMax: null, precipSum: null, windSpeedMax: null };
+  let iconModelData  = { maxTemp: null, precipProbMax: null, precipSum: null, windSpeedMax: null };
+  let ecmwfModelData = { maxTemp: null, precipProbMax: null, precipSum: null, windSpeedMax: null };
 
   try {
-    if (gfsRes && gfsRes.ok) {
-      const j = await gfsRes.json();
-      if (j.daily) gfsModelData = { maxTemp: j.daily.temperature_2m_max || null, precipProbMax: j.daily.precipitation_probability_max || null };
+    if (multiRes && multiRes.ok) {
+      const j = await multiRes.json();
+      if (j.daily) {
+        gfsModelData = {
+          maxTemp: j.daily.temperature_2m_max_gfs_global || null,
+          precipProbMax: j.daily.precipitation_probability_max_gfs_global || null,
+          precipSum: j.daily.precipitation_sum_gfs_global || null,
+          windSpeedMax: j.daily.wind_speed_10m_max_gfs_global || null,
+        };
+        iconModelData = {
+          maxTemp: j.daily.temperature_2m_max_icon_global || null,
+          precipProbMax: j.daily.precipitation_probability_max_icon_global || null,
+          precipSum: j.daily.precipitation_sum_icon_global || null,
+          windSpeedMax: j.daily.wind_speed_10m_max_icon_global || null,
+        };
+        ecmwfModelData = {
+          maxTemp: j.daily.temperature_2m_max_ecmwf_ifs025 || null,
+          precipProbMax: j.daily.precipitation_probability_max_ecmwf_ifs025 || null,
+          precipSum: j.daily.precipitation_sum_ecmwf_ifs025 || null,
+          windSpeedMax: j.daily.wind_speed_10m_max_ecmwf_ifs025 || null,
+        };
+      }
     }
-  } catch (e) { /* GFS unavailable */ }
+  } catch (e) {
+    console.warn("NWP multi-model fetch notice:", e.message);
+  }
 
-  try {
-    if (iconRes && iconRes.ok) {
-      const j = await iconRes.json();
-      if (j.daily) iconModelData = { maxTemp: j.daily.temperature_2m_max || null, precipProbMax: j.daily.precipitation_probability_max || null };
-    }
-  } catch (e) { /* ICON unavailable */ }
+  // Calculate day-by-day ensemble consensus & divergence metrics
+  const dailyConsensus = [];
+  const dailyDivergence = [];
+  for (let d = 0; d < 7; d++) {
+    const t_ec = ecmwfModelData.maxTemp?.[d] ?? null;
+    const t_gf = gfsModelData.maxTemp?.[d] ?? null;
+    const t_ic = iconModelData.maxTemp?.[d] ?? null;
 
-  try {
-    if (ecmwfRes && ecmwfRes.ok) {
-      const j = await ecmwfRes.json();
-      if (j.daily) ecmwfModelData = { maxTemp: j.daily.temperature_2m_max || null, precipProbMax: j.daily.precipitation_probability_max || null };
+    const p_ec = ecmwfModelData.precipProbMax?.[d] ?? null;
+    const p_gf = gfsModelData.precipProbMax?.[d] ?? null;
+    const p_ic = iconModelData.precipProbMax?.[d] ?? null;
+
+    const s_ec = ecmwfModelData.precipSum?.[d] ?? 0;
+    const s_gf = gfsModelData.precipSum?.[d] ?? 0;
+    const s_ic = iconModelData.precipSum?.[d] ?? 0;
+
+    const w_ec = ecmwfModelData.windSpeedMax?.[d] ?? 12;
+    const w_gf = gfsModelData.windSpeedMax?.[d] ?? 12;
+    const w_ic = iconModelData.windSpeedMax?.[d] ?? 12;
+
+    const validTemps = [t_ec, t_gf, t_ic].filter(v => v !== null);
+    const validPrecips = [p_ec, p_gf, p_ic].filter(v => v !== null);
+
+    let tempSpread = 0;
+    let precipSpread = 0;
+    if (validTemps.length >= 2) {
+      tempSpread = Math.round((Math.max(...validTemps) - Math.min(...validTemps)) * 10) / 10;
     }
-  } catch (e) { /* ECMWF unavailable */ }
+    if (validPrecips.length >= 2) {
+      precipSpread = Math.max(...validPrecips) - Math.min(...validPrecips);
+    }
+
+    // Dynamic Consensus Weighting
+    // Baseline: ECMWF 45% (Skill Score #1), GFS 30%, ICON 25%
+    let w_ecmwf = 0.45;
+    let w_gfs = 0.30;
+    let w_icon = 0.25;
+
+    // Outlier penalty in rain probability
+    if (validPrecips.length === 3) {
+      const avgP = (p_ec + p_gf + p_ic) / 3;
+      const d_ec = Math.abs(p_ec - avgP);
+      const d_gf = Math.abs(p_gf - avgP);
+      const d_ic = Math.abs(p_ic - avgP);
+
+      if (d_gf > 25 && d_gf > d_ec + 15) {
+        w_gfs = 0.15;
+        w_ecmwf = 0.55;
+        w_icon = 0.30;
+      } else if (d_ec > 25 && d_ec > d_gf + 15) {
+        w_ecmwf = 0.25;
+        w_gfs = 0.45;
+        w_icon = 0.30;
+      } else if (d_ic > 25 && d_ic > d_ec + 15) {
+        w_icon = 0.10;
+        w_ecmwf = 0.55;
+        w_gfs = 0.35;
+      }
+    }
+
+    const cTemp = t_ec !== null && t_gf !== null && t_ic !== null
+      ? Math.round((t_ec * w_ecmwf + t_gf * w_gfs + t_ic * w_icon) * 10) / 10
+      : (data.daily?.temperature_2m_max?.[d] ?? 27);
+
+    const cPrecipProb = p_ec !== null && p_gf !== null && p_ic !== null
+      ? Math.round(p_ec * w_ecmwf + p_gf * w_gfs + p_ic * w_icon)
+      : (data.daily?.precipitation_probability_max?.[d] ?? 0);
+
+    const cPrecipSum = Math.round((s_ec * w_ecmwf + s_gf * w_gfs + s_ic * w_icon) * 10) / 10;
+    const cWindSpeed = Math.round((w_ec * w_ecmwf + w_gf * w_gfs + w_ic * w_icon) * 10) / 10;
+
+    let agreementLevel = 'high';
+    if (tempSpread > 2.5 || precipSpread > 30) {
+      agreementLevel = 'low';
+    } else if (tempSpread > 1.2 || precipSpread > 15) {
+      agreementLevel = 'medium';
+    }
+
+    dailyConsensus.push({
+      maxTemp: cTemp,
+      precipProbMax: cPrecipProb,
+      precipSum: cPrecipSum,
+      windSpeedMax: cWindSpeed,
+      weights: { ecmwf: Math.round(w_ecmwf * 100), gfs: Math.round(w_gfs * 100), icon: Math.round(w_icon * 100) }
+    });
+
+    dailyDivergence.push({
+      day: d,
+      tempSpread,
+      precipSpread,
+      agreementLevel
+    });
+  }
 
   const current = data.current;
 
@@ -474,6 +582,8 @@ export async function getWeather(lat, lng) {
         gfs: gfsModelData,
         icon: iconModelData,
         ecmwf: ecmwfModelData,
+        consensus: dailyConsensus,
+        divergence: dailyDivergence,
       }
     },
 
@@ -502,6 +612,7 @@ export async function getWeather(lat, lng) {
     weatherData.confidence = 'high';
   }
 
+  WEATHER_CACHE.set(cacheKey, { data: weatherData, timestamp: Date.now() });
   return weatherData;
 }
 

@@ -25,6 +25,12 @@ import { exportToCSV } from '../utils/csvExport';
 const LOCATION_COLORS = ['#38bdf8', '#f97316', '#10b981'];
 const CURRENT_YEAR = new Date().getFullYear();
 
+const ERA5_CLIMATE_CACHE = new Map();
+
+function getClimateCacheKey(loc, sY, eY) {
+  return `${Number(loc.lat).toFixed(2)}_${Number(loc.lng).toFixed(2)}_${sY}_${eY}`;
+}
+
 export default function ResearchPanel() {
   const { state, dispatch } = useApp();
   const isLight = state.uiTheme === 'light';
@@ -39,7 +45,7 @@ export default function ResearchPanel() {
       };
     }
     return { name: 'New Delhi', lat: 28.6139, lng: 77.2090 };
-  }, [state.weatherStageData]);
+  }, [state.weatherStageData?.lat, state.weatherStageData?.lng, state.weatherStageData?.locationName]);
 
   const [locations, setLocations] = useState([initialLoc]);
   const [activeTableLocIndex, setActiveTableLocIndex] = useState(0);
@@ -47,6 +53,19 @@ export default function ResearchPanel() {
   // Year range state
   const [startYear, setStartYear] = useState(1990);
   const [endYear, setEndYear] = useState(CURRENT_YEAR);
+
+  // Synchronize locations if initialLoc changes (e.g., location updated in weather stage)
+  const prevInitLocRef = useRef(initialLoc);
+  useEffect(() => {
+    if (
+      Math.abs(prevInitLocRef.current.lat - initialLoc.lat) > 0.01 ||
+      Math.abs(prevInitLocRef.current.lng - initialLoc.lng) > 0.01
+    ) {
+      prevInitLocRef.current = initialLoc;
+      setLocations([initialLoc]);
+      setActiveTableLocIndex(0);
+    }
+  }, [initialLoc]);
 
   // Autocomplete search state
   const [searchQuery, setSearchQuery] = useState('');
@@ -64,8 +83,16 @@ export default function ResearchPanel() {
   const [sortField, setSortField] = useState('year');
   const [sortAsc, setSortAsc] = useState(true);
 
-  // Data fetching state
-  const [locationsData, setLocationsData] = useState([]); // Array of { loc, data, indices, trend }
+  // Data fetching state initialized from cache if available
+  const [locationsData, setLocationsData] = useState(() => {
+    const sY = 1990;
+    const eY = CURRENT_YEAR;
+    const key = getClimateCacheKey(initialLoc, sY, eY);
+    if (ERA5_CLIMATE_CACHE.has(key)) {
+      return [ERA5_CLIMATE_CACHE.get(key)];
+    }
+    return [];
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [fetchError, setFetchError] = useState(null);
 
@@ -281,35 +308,66 @@ export default function ResearchPanel() {
   // Live data fetcher for all selected locations (incremental & sequential)
   const fetchAllClimateData = async (forceRefetchAll = false) => {
     if (locations.length === 0) return;
+
+    const sY = Math.max(1990, Number(startYear) || 1990);
+    let eY = Math.min(CURRENT_YEAR, Number(endYear) || CURRENT_YEAR);
+    if (eY < sY) eY = sY;
+
+    const startStr = `${sY}-01-01`;
+    // Cap at 5 days ago for official ERA5 reanalysis availability & avoid rate limits
+    const maxDate = new Date();
+    maxDate.setDate(maxDate.getDate() - 5);
+    const maxDateStr = maxDate.toISOString().split('T')[0];
+    let endStr = `${eY}-12-31`;
+    if (endStr > maxDateStr) endStr = maxDateStr;
+
+    // Fast check: if not forcing refetch, can all locations be resolved from cache or locationsData?
+    if (!forceRefetchAll) {
+      const allCached = [];
+      let allFound = true;
+      for (const loc of locations) {
+        const key = getClimateCacheKey(loc, sY, eY);
+        const cached = ERA5_CLIMATE_CACHE.get(key) || locationsData.find(d => 
+          Math.abs(d.coordinates.lat - loc.lat) < 0.05 && 
+          Math.abs(d.coordinates.lng - loc.lng) < 0.05 &&
+          d.startYear === sY && d.endYear === eY
+        );
+        if (cached) {
+          allCached.push(cached);
+        } else {
+          allFound = false;
+          break;
+        }
+      }
+      if (allFound && allCached.length === locations.length) {
+        setLocationsData(allCached);
+        setFetchError(null);
+        return;
+      }
+    }
+
     setIsLoading(true);
     setFetchError(null);
 
     try {
-      const sY = Math.max(1990, Number(startYear) || 1990);
-      let eY = Math.min(CURRENT_YEAR, Number(endYear) || CURRENT_YEAR);
-      if (eY < sY) eY = sY;
-
-      const startStr = `${sY}-01-01`;
-      // Cap at 5 days ago for official ERA5 reanalysis availability & avoid rate limits
-      const maxDate = new Date();
-      maxDate.setDate(maxDate.getDate() - 5);
-      const maxDateStr = maxDate.toISOString().split('T')[0];
-      let endStr = `${eY}-12-31`;
-      if (endStr > maxDateStr) endStr = maxDateStr;
-
       const results = [];
       const errors = [];
 
       for (let locIdx = 0; locIdx < locations.length; locIdx++) {
         const loc = locations[locIdx];
+        const cacheKey = getClimateCacheKey(loc, sY, eY);
 
-        // If not forcing full refetch, reuse already-fetched location data for the same year range
+        if (forceRefetchAll) {
+          ERA5_CLIMATE_CACHE.delete(cacheKey);
+        }
+
+        // If not forcing full refetch, reuse cached data or locationsData
         const existing = !forceRefetchAll
-          ? locationsData.find(d => 
+          ? (ERA5_CLIMATE_CACHE.get(cacheKey) || locationsData.find(d => 
               Math.abs(d.coordinates.lat - loc.lat) < 0.05 && 
               Math.abs(d.coordinates.lng - loc.lng) < 0.05 &&
               d.startYear === sY && d.endYear === eY
-            )
+            ))
           : null;
 
         if (existing) {
@@ -324,6 +382,7 @@ export default function ResearchPanel() {
 
         try {
           const locResult = await fetchClimateDataForLocation(loc, sY, eY, startStr, endStr);
+          ERA5_CLIMATE_CACHE.set(cacheKey, locResult);
           results.push(locResult);
         } catch (locErr) {
           errors.push(locErr.message);
@@ -512,9 +571,9 @@ export default function ResearchPanel() {
               Export CSV
             </button>
             <button
-              onClick={fetchAllClimateData}
+              onClick={() => fetchAllClimateData(true)}
               disabled={isLoading}
-              title="Refresh Live Data"
+              title="Force Refresh Climate Data (Bypasses Cache)"
               className="p-2 rounded-xl glass-panel border border-[var(--glass-border)] text-[var(--text-primary)] hover:bg-[var(--glass-bg-hover)] transition-all cursor-pointer"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" className={isLoading ? 'animate-spin text-indigo-400' : ''}>

@@ -21,6 +21,8 @@ const I18N = {
     actual:       'Actual',
     claims:       'Claims Verified',
     noAnswer:     'Full answer not available for this entry.',
+    showMore:     (count) => `View ${count} More Questions`,
+    showLess:     'Show Less',
     claimLabels: {
       rain_probability: 'Rain Chance',
       rain_mm:          'Rainfall',
@@ -55,6 +57,8 @@ const I18N = {
     actual:       'वास्तविक',
     claims:       'सत्यापित दावे',
     noAnswer:     'इस एंट्री के लिए पूर्ण उत्तर उपलब्ध नहीं है।',
+    showMore:     (count) => `अन्य ${count} प्रश्न देखें`,
+    showLess:     'कम दिखाएं',
     claimLabels: {
       rain_probability: 'वर्षा संभावना',
       rain_mm:          'वर्षा',
@@ -89,6 +93,8 @@ const I18N = {
     actual:       'প্রকৃত',
     claims:       'যাচাইকৃত দাবি',
     noAnswer:     'এই এন্ট্রির জন্য পূর্ণ উত্তর পাওয়া যায়নি।',
+    showMore:     (count) => `আরও ${count}টি প্রশ্ন দেখুন`,
+    showLess:     'কম দেখান',
     claimLabels: {
       rain_probability: 'বৃষ্টির সম্ভাবনা',
       rain_mm:          'বৃষ্টিপাত',
@@ -123,6 +129,8 @@ const I18N = {
     actual:       'প্ৰকৃত',
     claims:       'প্ৰমাণিত দাবী',
     noAnswer:     `এই এণ্ট্ৰিৰ বাবে সম্পূৰ্ণ উত্তৰ পোৱা নগ\u2019ল।`,
+    showMore:     (count) => `আৰু ${count}টা প্ৰশ্ন চাওক`,
+    showLess:     'কম দেখুৱাওক',
     claimLabels: {
       rain_probability: 'বৰষুণৰ সম্ভাৱনা',
       rain_mm:          'বৰষুণ',
@@ -338,6 +346,7 @@ export default function AccuracyTracker({ locationName, language }) {
   const [feed,    setFeed]    = useState([]);
   const [stats,   setStats]   = useState({ totalVerified: 0, accuratePercent: 0 });
   const [loading, setLoading] = useState(true);
+  const [showAll, setShowAll] = useState(false);
 
   const fetchFeed = useCallback(() => {
     const baseUrl = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
@@ -374,6 +383,9 @@ export default function AccuracyTracker({ locationName, language }) {
 
   if (feed.length === 0) return null;
 
+  const visibleFeed = showAll ? feed : feed.slice(0, 3);
+  const hasMore = feed.length > 3;
+
   return (
     <div className="glass-panel border border-white/10 rounded-2xl p-4 sm:p-6 shadow-xl mt-6 mb-6 sm:mb-8 transition-colors">
       {/* ── Header ── */}
@@ -397,12 +409,35 @@ export default function AccuracyTracker({ locationName, language }) {
         )}
       </div>
 
-      {/* ── Cards ── */}
+      {/* ── Cards (limited to 3 by default) ── */}
       <div className="space-y-3">
-        {feed.map((item) => (
+        {visibleFeed.map((item) => (
           <AccuracyCard key={item.id || item._id} item={item} t={t} />
         ))}
       </div>
+
+      {/* ── View More / Show Less Toggle ── */}
+      {hasMore && (
+        <div className="mt-4 flex justify-center">
+          <button
+            onClick={() => setShowAll(prev => !prev)}
+            className="flex items-center gap-2 px-5 py-2 rounded-full text-xs font-bold bg-white/10 hover:bg-white/20 active:scale-95 transition-all border border-white/15 text-white/90 shadow-sm cursor-pointer"
+          >
+            <span>{showAll ? (t.showLess || 'Show Less') : (t.showMore ? t.showMore(feed.length - 3) : `View ${feed.length - 3} More Questions`)}</span>
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              className={`transition-transform duration-300 ${showAll ? 'rotate-180' : ''}`}
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </button>
+        </div>
+      )}
 
       {/* ── Footer ── */}
       <div className="mt-5 pt-4 border-t border-white/10">

@@ -5,17 +5,31 @@ import {
   LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar 
 } from 'recharts';
 
+const HISTORICAL_CACHE = new Map();
+
 export default function HistoricalAnalytics({ lat, lon }) {
   const { state } = useApp();
   const lang = state.language || 'en';
   const t = EXTRA_I18N[lang] || EXTRA_I18N.en;
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [chartType, setChartType] = useState('temp');
+
   const [timeRange, setTimeRange] = useState('30d');
+  const [chartType, setChartType] = useState('temp');
+
+  const cacheKey = (lat != null && lon != null) ? `${Number(lat).toFixed(2)}_${Number(lon).toFixed(2)}_${timeRange}` : null;
+  const initialCached = cacheKey && HISTORICAL_CACHE.has(cacheKey) ? HISTORICAL_CACHE.get(cacheKey) : null;
+
+  const [data, setData] = useState(initialCached || []);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!lat || !lon) return;
+
+    const currentKey = `${Number(lat).toFixed(2)}_${Number(lon).toFixed(2)}_${timeRange}`;
+    if (HISTORICAL_CACHE.has(currentKey)) {
+      setData(HISTORICAL_CACHE.get(currentKey));
+      setLoading(false);
+      return;
+    }
     
     const fetchHistory = async () => {
       setLoading(true);
@@ -47,6 +61,7 @@ export default function HistoricalAnalytics({ lat, lon }) {
               temp: json.daily.temperature_2m_max[idx],
               rain: json.daily.precipitation_sum[idx]
             }));
+            HISTORICAL_CACHE.set(currentKey, formatted);
             setData(formatted);
           } else {
             const monthlyData = {};
@@ -73,6 +88,7 @@ export default function HistoricalAnalytics({ lat, lon }) {
                 temp: m.tempCount > 0 ? parseFloat((m.tempSum / m.tempCount).toFixed(1)) : null,
                 rain: parseFloat(m.rainSum.toFixed(1))
               }));
+            HISTORICAL_CACHE.set(currentKey, formatted);
             setData(formatted);
           }
         }

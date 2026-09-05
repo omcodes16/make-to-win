@@ -21,8 +21,13 @@ import Header from './Header';
 import CycloneTracker from './CycloneTracker';
 
 
+let newsCache = null;
+let newsCacheTime = 0;
+let nationalAlertsCache = null;
+const NEWS_CACHE_TTL = 15 * 60 * 1000; // 15 minutes
+
 export default function AlertsScreen() {
-  const { state } = useApp();
+  const { state, dispatch } = useApp();
   
   // Derive active location and weather data
   const stageData = state.weatherStageData || {};
@@ -39,16 +44,19 @@ export default function AlertsScreen() {
   const weatherInfo = weather ? getWeatherInfo(weather) : null;
   const theme = weather ? getTheme(weather, weatherInfo) : getTheme({ temperature: 20 }, { key: 'severeStorm' });
   
-  const [news, setNews] = useState([]);
-  const [nationalAlerts, setNationalAlerts] = useState([
+  const isCacheFresh = newsCache && (Date.now() - newsCacheTime < NEWS_CACHE_TTL);
+  const [news, setNews] = useState(isCacheFresh ? newsCache : []);
+  const [nationalAlerts, setNationalAlerts] = useState(isCacheFresh && nationalAlertsCache ? nationalAlertsCache : [
     { state: "Assam", level: "High" },
     { state: "West Bengal", level: "High" },
     { state: "Bihar", level: "Moderate" }
   ]);
-  const [isLoadingNews, setIsLoadingNews] = useState(true);
+  const [isLoadingNews, setIsLoadingNews] = useState(!isCacheFresh);
   const [activeModal, setActiveModal] = useState(null);
   const [newsFilter, setNewsFilter] = useState('All');
   const [safetyTab, setSafetyTab] = useState('all');
+  const [refreshCount, setRefreshCount] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [pushEnabled, setPushEnabled] = useState(() => {
     if (typeof window === 'undefined') return false;
     if (isPushDisabled()) return false;
@@ -126,59 +134,78 @@ export default function AlertsScreen() {
     }
   };
 
-  // Fetch real-time news and alerts from backend
-  useEffect(() => {
-    let isMounted = true;
-    
-    const fetchNewsAndAlerts = async () => {
-      setIsLoadingNews(true);
-      try {
-        const baseUrl = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
-        
-        // Fetch Real News
-        const newsRes = await fetch(`${baseUrl}/api/news`);
-        if (newsRes.ok && isMounted) {
-          const data = await newsRes.json();
-          if (data.news && data.news.length > 0) {
-            setNews(data.news);
-          }
+  // Fetch real-time news and alerts from backend with caching
+  const fetchNewsAndAlerts = async (force = false) => {
+    const isStillFresh = !force && newsCache && (Date.now() - newsCacheTime < NEWS_CACHE_TTL);
+    if (isStillFresh) {
+      setIsLoadingNews(false);
+      return;
+    }
+    setIsLoadingNews(true);
+    try {
+      const baseUrl = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
+      
+      // Fetch Real News
+      const newsRes = await fetch(`${baseUrl}/api/news`);
+      if (newsRes.ok) {
+        const data = await newsRes.json();
+        if (data.news && data.news.length > 0) {
+          setNews(data.news);
+          newsCache = data.news;
+          newsCacheTime = Date.now();
         }
-        
-        // Fetch National Alerts
-        const alertsRes = await fetch(`${baseUrl}/api/national-alerts`);
-        if (alertsRes.ok && isMounted) {
-          const alertsData = await alertsRes.json();
-          if (Array.isArray(alertsData)) {
-            setNationalAlerts(alertsData);
-          }
-        }
-
-        // Fetch Manager/Government Alerts for current active location
-        if (stageData.lat && stageData.lng) {
-          const govRes = await fetch(`${baseUrl}/api/alerts?state=${encodeURIComponent(stageData.state || locationName)}&district=${encodeURIComponent(stageData.district || '')}&lat=${stageData.lat}&lng=${stageData.lng}`);
-          if (govRes.ok && isMounted) {
-            const govData = await govRes.json();
-            dispatch({ type: 'SET_GOVERNMENT_ALERTS', payload: Array.isArray(govData) ? govData : [] });
-          }
-        } else if (state.currentWeather?.lat && state.currentWeather?.lng) {
-          const govRes = await fetch(`${baseUrl}/api/alerts?state=${encodeURIComponent(state.currentWeather.state || state.currentWeather.locationName)}&district=${encodeURIComponent(state.currentWeather.district || '')}&lat=${state.currentWeather.lat}&lng=${state.currentWeather.lng}`);
-          if (govRes.ok && isMounted) {
-            const govData = await govRes.json();
-            dispatch({ type: 'SET_GOVERNMENT_ALERTS', payload: Array.isArray(govData) ? govData : [] });
-          }
-        }
-
-      } catch (err) {
-        console.error('Failed to fetch real-time news/alerts:', err);
-      } finally {
-        if (isMounted) setIsLoadingNews(false);
       }
-    };
+      
+      // Fetch National Alerts
+      const alertsRes = await fetch(`${baseUrl}/api/national-alerts`);
+      if (alertsRes.ok) {
+        const alertsData = await alertsRes.json();
+        if (Array.isArray(alertsData)) {
+          setNationalAlerts(alertsData);
+          nationalAlertsCache = alertsData;
+        }
+      }
 
+      // Fetch Manager/Government Alerts for current active location
+      if (stageData.lat && stageData.lng) {
+        const govRes = await fetch(`${baseUrl}/api/alerts?state=${encodeURIComponent(stageData.state || locationName)}&district=${encodeURIComponent(stageData.district || '')}&lat=${stageData.lat}&lng=${stageData.lng}`);
+        if (govRes.ok) {
+          const govData = await govRes.json();
+          dispatch({ type: 'SET_GOVERNMENT_ALERTS', payload: Array.isArray(govData) ? govData : [] });
+        }
+      } else if (state.currentWeather?.lat && state.currentWeather?.lng) {
+        const govRes = await fetch(`${baseUrl}/api/alerts?state=${encodeURIComponent(state.currentWeather.state || state.currentWeather.locationName)}&district=${encodeURIComponent(state.currentWeather.district || '')}&lat=${state.currentWeather.lat}&lng=${state.currentWeather.lng}`);
+        if (govRes.ok) {
+          const govData = await govRes.json();
+          dispatch({ type: 'SET_GOVERNMENT_ALERTS', payload: Array.isArray(govData) ? govData : [] });
+        }
+      }
+
+    } catch (err) {
+      console.error('Failed to fetch real-time news/alerts:', err);
+    } finally {
+      setIsLoadingNews(false);
+    }
+  };
+
+  useEffect(() => {
     fetchNewsAndAlerts();
-
-    return () => { isMounted = false; };
   }, [stageData.lat, stageData.lng, state.currentWeather?.lat, state.currentWeather?.lng]);
+
+  const handleManualRefresh = async () => {
+    setIsRefreshing(true);
+    setPushStatusMessage("🔄 Refreshing live disaster data & alerts...");
+    try {
+      await fetchNewsAndAlerts(true);
+      setRefreshCount(c => c + 1);
+      setPushStatusMessage("✅ Alerts and disaster data updated!");
+    } catch {
+      setPushStatusMessage("⚠️ Failed to refresh alerts.");
+    } finally {
+      setIsRefreshing(false);
+      setTimeout(() => setPushStatusMessage(null), 3000);
+    }
+  };
 
   // Compute live alerts based on actual location data
   const computeAlerts = () => {
@@ -405,6 +432,21 @@ export default function AlertsScreen() {
             </div>
             
             <div className="flex items-center gap-2">
+              {/* Manual Refresh Alerts & Disasters Button */}
+              <button
+                onClick={handleManualRefresh}
+                disabled={isRefreshing}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-white/10 hover:bg-white/20 border border-white/20 text-white active:scale-95 transition-all cursor-pointer disabled:opacity-50 shadow-sm"
+                title="Refresh Live Alerts & Disaster Data"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" className={isRefreshing ? 'animate-spin text-amber-400' : ''}>
+                  <polyline points="23 4 23 10 17 10"/>
+                  <polyline points="1 20 1 14 7 14"/>
+                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                </svg>
+                <span>{isRefreshing ? 'Refreshing...' : 'Refresh'}</span>
+              </button>
+
               {/* Test Mobile Push Button (Direct real-device verification) */}
               {pushEnabled && (
                 <button 
@@ -466,7 +508,7 @@ export default function AlertsScreen() {
 
           <div className="flex flex-col gap-4">
             {/* Live Cyclone Tracker (Only shows active cyclones if detected) */}
-            <CycloneTracker lat={stageData.lat || state.currentWeather?.lat} lon={stageData.lng || state.currentWeather?.lng} locationName={stageData.locationName || state.currentWeather?.locationName || "Unknown Location"} />
+            <CycloneTracker lat={stageData.lat || state.currentWeather?.lat} lon={stageData.lng || state.currentWeather?.lng} locationName={stageData.locationName || state.currentWeather?.locationName || "Unknown Location"} refreshTrigger={refreshCount} />
 
             {state.governmentAlerts && state.governmentAlerts.length > 0 && state.governmentAlerts.map((govAlert, idx) => (
               <div key={`gov-${idx}`} className="relative bg-red-900/20 border border-red-500 rounded-xl p-5 shadow-[0_0_40px_rgba(239,68,68,0.2)] overflow-hidden">

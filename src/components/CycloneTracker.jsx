@@ -5,21 +5,41 @@ const SEVERITY_COLOR = { severe: "text-red-400", high: "text-red-400", moderate:
 const SEVERITY_DOT   = { severe: "bg-red-500 animate-pulse", high: "bg-red-500 animate-pulse", moderate: "bg-orange-500" };
 const WINDY_OVERLAY  = { cyclone: "wind", flood: "rain", heatwave: "temp", thunderstorm: "thunder", storm: "wind", default: "wind" };
 
-export default function CycloneTracker({ lat, lon, locationName = "your area" }) {
-  const [alerts, setAlerts]     = useState([]);
-  const [loading, setLoading]   = useState(true);
+const EXTREME_ALERTS_CACHE = new Map();
+const EXTREME_ALERTS_TTL = 10 * 60 * 1000; // 10 minutes
+
+export default function CycloneTracker({ lat, lon, locationName = "your area", refreshTrigger }) {
+  const cacheKey = (lat != null && lon != null) ? `${Number(lat).toFixed(2)}_${Number(lon).toFixed(2)}` : null;
+  const initialCached = cacheKey && EXTREME_ALERTS_CACHE.has(cacheKey) ? EXTREME_ALERTS_CACHE.get(cacheKey) : null;
+  const isCacheFresh = initialCached && (Date.now() - initialCached.timestamp < EXTREME_ALERTS_TTL);
+
+  const [alerts, setAlerts]     = useState(isCacheFresh ? initialCached.data : []);
+  const [loading, setLoading]   = useState(isCacheFresh ? false : true);
   const [error, setError]       = useState(null);
   const [selected, setSelected] = useState(0);
 
-  const fetchAlerts = async () => {
+  const fetchAlerts = async (force = false) => {
     if (!lat || !lon) return;
+    if (!force && cacheKey && EXTREME_ALERTS_CACHE.has(cacheKey)) {
+      const cached = EXTREME_ALERTS_CACHE.get(cacheKey);
+      if (Date.now() - cached.timestamp < EXTREME_ALERTS_TTL) {
+        setAlerts(cached.data);
+        setLoading(false);
+        return;
+      }
+    }
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/extreme-alerts?lat=${lat}&lon=${lon}`);
+      const baseUrl = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
+      const res = await fetch(`${baseUrl}/api/extreme-alerts?lat=${lat}&lon=${lon}`);
       if (!res.ok) throw new Error("Server error");
       const data = await res.json();
-      setAlerts(data.alerts || []);
+      const newAlerts = data.alerts || [];
+      setAlerts(newAlerts);
+      if (cacheKey) {
+        EXTREME_ALERTS_CACHE.set(cacheKey, { data: newAlerts, timestamp: Date.now() });
+      }
       setSelected(0);
     } catch (e) {
       setError("Could not load live alerts. Retrying...");
@@ -30,9 +50,9 @@ export default function CycloneTracker({ lat, lon, locationName = "your area" })
 
   useEffect(() => {
     fetchAlerts();
-    const interval = setInterval(fetchAlerts, 10 * 60 * 1000);
+    const interval = setInterval(() => fetchAlerts(true), 10 * 60 * 1000);
     return () => clearInterval(interval);
-  }, [lat, lon]);
+  }, [lat, lon, refreshTrigger]);
 
   if (loading) {
     return (

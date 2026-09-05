@@ -519,6 +519,48 @@ app.post('/api/reviews', async (req, res) => {
   }
 });
 
+// --- AAWAZ-E-MAUSAM TTS AUDIO SYNTHESIS API ---
+app.post('/api/tts', async (req, res) => {
+  try {
+    const { text, lang = 'hi' } = req.body;
+    if (!text || typeof text !== 'string') {
+      return res.status(400).json({ error: 'Text is required for TTS synthesis' });
+    }
+
+    const langCodeMap = {
+      hi: 'hi',
+      en: 'en',
+      bn: 'bn',
+      as: 'bn', // Google TTS uses Bengali phonetic engine for Assamese text
+      mr: 'mr',
+      ta: 'ta',
+      te: 'te',
+      gu: 'gu',
+      kn: 'kn',
+      ml: 'ml',
+      pa: 'pa',
+      ur: 'ur'
+    };
+    const targetLang = langCodeMap[lang] || 'hi';
+
+    const audioList = await googleTTS.getAllAudioBase64(text, {
+      lang: targetLang,
+      slow: false,
+      host: 'https://translate.google.com',
+      timeout: 10000,
+    });
+
+    res.json({
+      success: true,
+      audioChunks: audioList.map(item => item.base64),
+      lang: targetLang
+    });
+  } catch (error) {
+    console.error('❌ [TTS API ERROR]:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // --- SETTINGS API ---
 const SETTINGS_FILE = join(__dirname, "user_settings.json");
 let localUserSettings = {};

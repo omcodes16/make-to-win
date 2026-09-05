@@ -10,10 +10,15 @@ import Header from './Header';
 // API Endpoint
 const API_URL = '/api/reviews'; 
 
+let REVIEWS_CACHE = null;
+let REVIEWS_CACHE_TIME = 0;
+const REVIEWS_CACHE_TTL = 10 * 60 * 1000; // 10 mins
+
 export default function ReviewsScreen() {
   const { state, dispatch } = useApp();
-  const [reviews, setReviews] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const isCacheFresh = REVIEWS_CACHE && (Date.now() - REVIEWS_CACHE_TIME < REVIEWS_CACHE_TTL);
+  const [reviews, setReviews] = useState(isCacheFresh ? REVIEWS_CACHE : []);
+  const [isLoading, setIsLoading] = useState(!isCacheFresh);
   
   // Form State
   const [rating, setRating] = useState(0);
@@ -30,13 +35,22 @@ export default function ReviewsScreen() {
   const [likedReviews, setLikedReviews] = useState([]);
 
   useEffect(() => {
+    if (REVIEWS_CACHE && (Date.now() - REVIEWS_CACHE_TIME < REVIEWS_CACHE_TTL)) {
+      setReviews(REVIEWS_CACHE);
+      setIsLoading(false);
+      return;
+    }
+
     const fetchReviews = async () => {
       try {
         setIsLoading(true);
         const response = await fetch(API_URL);
         if (response.ok) {
           const data = await response.json();
-          setReviews(Array.isArray(data) ? data : []);
+          const list = Array.isArray(data) ? data : [];
+          setReviews(list);
+          REVIEWS_CACHE = list;
+          REVIEWS_CACHE_TIME = Date.now();
         } else {
           throw new Error('Failed to fetch from backend');
         }

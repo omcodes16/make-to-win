@@ -21,6 +21,7 @@ import { getSeasonalContext } from '../utils/climateSeasonal';
 import { FEATURE_I18N } from '../utils/featureTranslations';
 import ModelConfidence from './ModelConfidence';
 import OfficialBulletinModal from './OfficialBulletinModal';
+import AawazEMausam from './AawazEMausam';
 
 
 export default function WeatherDashboard() {
@@ -31,6 +32,7 @@ export default function WeatherDashboard() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const debounceRef = useRef(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isRefreshingWeather, setIsRefreshingWeather] = useState(false);
 
   // Initialize WebSocket and Service Worker for Live Alerts
   useEffect(() => {
@@ -187,6 +189,35 @@ export default function WeatherDashboard() {
       setSearchInput('');
     } catch (err) {} finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleRefreshCurrentWeather = async () => {
+    if (!stageData?.lat || !stageData?.lng) return;
+    setIsRefreshingWeather(true);
+    try {
+      const freshData = await getWeather(stageData.lat, stageData.lng, true);
+      dispatch({ 
+        type: 'SET_WEATHER_STAGE_DATA', 
+        payload: { 
+          locationName: stageData.locationName, 
+          district: stageData.district || '',
+          state: stageData.state || '',
+          lat: stageData.lat, 
+          lng: stageData.lng, 
+          weather: freshData 
+        } 
+      });
+      const severityCheck = checkSeverity(freshData, stageData.locationName);
+      if (severityCheck && severityCheck.isSevere) {
+        dispatch({ type: 'SET_SEVERE_ALERT', payload: severityCheck });
+      } else {
+        dispatch({ type: 'DISMISS_ALERT' });
+      }
+    } catch (err) {
+      console.error('Failed to refresh live weather:', err);
+    } finally {
+      setTimeout(() => setIsRefreshingWeather(false), 500);
     }
   };
 
@@ -395,6 +426,7 @@ return (
                     dispatch({ type: 'SAVE_LOCATION', payload: { name: stageData.locationName, lat: stageData.lat, lng: stageData.lng } });
                   }
                 }}
+                title={state.savedLocations.some(l => l.name === stageData.locationName) ? "Saved location" : "Save location"}
                 className={`ml-1 w-7 h-7 flex items-center justify-center rounded-full transition-all ${
                   state.savedLocations.some(l => l.name === stageData.locationName)
                     ? 'text-amber-400 bg-amber-500/20 border border-amber-500/30'
@@ -402,6 +434,20 @@ return (
                 }`}
               >
                 <svg width="13" height="13" viewBox="0 0 24 24" fill={state.savedLocations.some(l => l.name === stageData.locationName) ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+              </button>
+
+              {/* Refresh Live Weather Button */}
+              <button
+                onClick={handleRefreshCurrentWeather}
+                disabled={isRefreshingWeather}
+                title="Refresh Live Weather"
+                className="ml-1 w-7 h-7 flex items-center justify-center rounded-full text-white/50 glass-panel border border-white/10 hover:text-indigo-400 hover:border-indigo-400/30 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" className={isRefreshingWeather ? 'animate-spin text-indigo-400' : ''}>
+                  <polyline points="23 4 23 10 17 10"/>
+                  <polyline points="1 20 1 14 7 14"/>
+                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                </svg>
               </button>
             </div>
             <div className="flex items-center gap-2.5 sm:gap-4 mb-2 flex-wrap">
@@ -417,6 +463,15 @@ return (
                 <span className="font-mono text-xs sm:text-sm font-black tracking-wider text-[var(--text-primary)] tabular-nums">
                   {currentTime.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}
                 </span>
+              </div>
+
+              {/* Aawaz-e-Mausam Voice-First Rural Audio Radio Bulletin */}
+              <div className="self-center ml-1">
+                <AawazEMausam 
+                  stageData={stageData} 
+                  weatherInfo={weatherInfo} 
+                  language={state.language} 
+                />
               </div>
             </div>
             <div className="flex items-center gap-2 sm:gap-3 mt-1 sm:mt-2 flex-wrap">
@@ -459,8 +514,13 @@ return (
           </div>
         </div>
 
-        {/* Model Confidence Panel */}
-        <ModelConfidence modelData={weather?.modelData} selectedDay={selectedDay} language={state.language} />
+        {/* Model Confidence Panel with NWP Multi-Model Consensus Engine */}
+        <ModelConfidence 
+          modelData={weather?.modelData} 
+          selectedDay={selectedDay} 
+          language={state.language} 
+          confidence={weather?.confidence} 
+        />
 
         {/* Hourly Forecast */}
         {isToday && (

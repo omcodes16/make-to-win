@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import Onboarding from './components/Onboarding';
 import ChatScreen from './components/ChatScreen';
@@ -44,13 +44,32 @@ function AppContent() {
   }
   else if (state.userProfile === 'urbanPlanning') customBg = '/backgrounds/urban.jpg';
 
-  // Sync URL and browser history stack whenever activeTab changes
+  // Track visited tabs to lazily mount components when first navigated to,
+  // and keep them alive in the DOM afterwards so switching tabs is instant without re-fetching!
+  const [visitedTabs, setVisitedTabs] = useState(() => new Set([state.activeTab || 'chat']));
+
+  // Sync URL, browser history stack, and visited tabs whenever activeTab changes
   useEffect(() => {
     if (!state.isSettingsLoaded) return;
-    const targetPath = state.activeTab === 'chat' ? '/' : `/${state.activeTab}`;
+    const tab = state.activeTab || 'chat';
+    setVisitedTabs(prev => {
+      if (prev.has(tab)) return prev;
+      const next = new Set(prev);
+      next.add(tab);
+      return next;
+    });
+
+    // Trigger synthetic resize so Recharts and canvas containers measure dimensions properly upon un-hiding
+    const resizeTimer = setTimeout(() => {
+      window.dispatchEvent(new Event('resize'));
+    }, 50);
+
+    const targetPath = tab === 'chat' ? '/' : `/${tab}`;
     if (window.location.pathname !== targetPath) {
-      window.history.pushState({ tab: state.activeTab }, '', targetPath);
+      window.history.pushState({ tab }, '', targetPath);
     }
+
+    return () => clearTimeout(resizeTimer);
   }, [state.activeTab, state.isSettingsLoaded]);
 
   // Prevent flash of onboarding before backend settings are loaded
@@ -97,12 +116,32 @@ function AppContent() {
       <Header />
       <OfflineBanner />
       
-      <div key={state.activeTab} className="animate-fade-in relative z-10 h-full">
-        {state.activeTab === 'alerts' ? <AlertsScreen /> : 
-         state.activeTab === 'stage' ? <WeatherDashboard /> : 
-         state.activeTab === 'reviews' ? <ReviewsScreen /> : 
-         state.activeTab === 'research' ? <ResearchPanel /> :
-         <ChatScreen />}
+      <div className="relative z-10 h-full">
+        {visitedTabs.has('chat') && (
+          <div style={{ display: state.activeTab === 'chat' ? 'block' : 'none' }} className="h-full">
+            <ChatScreen />
+          </div>
+        )}
+        {visitedTabs.has('stage') && (
+          <div style={{ display: state.activeTab === 'stage' ? 'block' : 'none' }} className="h-full">
+            <WeatherDashboard />
+          </div>
+        )}
+        {visitedTabs.has('alerts') && (
+          <div style={{ display: state.activeTab === 'alerts' ? 'block' : 'none' }} className="h-full">
+            <AlertsScreen />
+          </div>
+        )}
+        {visitedTabs.has('research') && (
+          <div style={{ display: state.activeTab === 'research' ? 'block' : 'none' }} className="h-full">
+            <ResearchPanel />
+          </div>
+        )}
+        {visitedTabs.has('reviews') && (
+          <div style={{ display: state.activeTab === 'reviews' ? 'block' : 'none' }} className="h-full">
+            <ReviewsScreen />
+          </div>
+        )}
       </div>
 
       {/* Global SOS Button — visible on all screens */}
