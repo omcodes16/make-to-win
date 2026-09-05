@@ -267,11 +267,13 @@ export default function SosButton() {
     <>
       <button
         onClick={handleSosClick}
-        className="hidden md:flex fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-gradient-to-tr from-red-700 to-rose-600 hover:from-red-600 hover:to-rose-500 text-white font-bold text-xs shadow-2xl shadow-red-900/60 border-2 border-red-400/80 animate-pulse flex-col items-center justify-center gap-0.5 transition-transform hover:scale-110 active:scale-95 relative"
+        className="hidden md:flex fixed bottom-6 right-6 z-[60] w-14 h-14 rounded-full bg-gradient-to-tr from-red-700 to-rose-600 hover:from-red-600 hover:to-rose-500 text-white font-bold text-xs shadow-2xl shadow-red-900/60 border-2 border-red-400/80 animate-pulse flex-col items-center justify-center gap-0.5 transition-transform hover:scale-110 active:scale-95 cursor-pointer"
+        style={{ position: 'fixed', bottom: '24px', right: '24px', zIndex: 60 }}
         title={offlineQueueCount > 0 ? `⚠️ ${offlineQueueCount} SOS Alert(s) Queued in Offline Vault` : "Send Emergency SOS Alert"}
+        aria-label="Send Emergency SOS Alert"
       >
-        <span className="text-lg">🆘</span>
-        <span className="text-[10px] font-black tracking-wider">SOS</span>
+        <span className="text-lg leading-none">🆘</span>
+        <span className="text-[10px] font-black tracking-wider leading-none">SOS</span>
         {offlineQueueCount > 0 && (
           <span 
             className="absolute -top-1.5 -right-1.5 bg-amber-400 text-black font-black text-[9px] w-5 h-5 rounded-full flex items-center justify-center border-2 border-neutral-900 shadow-lg animate-bounce"

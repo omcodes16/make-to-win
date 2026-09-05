@@ -166,24 +166,45 @@ export default function AssistantCard({ message, isLatest }) {
         )}
 
         {/* Suggested Follow-up Questions (Chips) */}
-        {suggestedQuestions?.length > 0 && (
-          <div className="flex flex-wrap gap-2 mt-3 px-1 animate-slide-up" style={{ animationFillMode: 'both' }}>
-            {suggestedQuestions.map((q, i) => (
-              <button
-                key={i}
-                onClick={() => handleChipClick(q)}
-                disabled={clickedChip !== null}
-                className={`text-xs px-3.5 py-2 rounded-full border transition-all text-left max-w-full truncate shimmer-hover ${
-                  clickedChip === q
-                    ? 'bg-indigo-600/50 border-indigo-400 text-white scale-95 shadow-[0_0_15px_rgba(99,102,241,0.4)]'
-                    : 'glass-panel border-theme-border text-theme-muted hover:bg-white/10 hover:text-theme-primary hover:border-indigo-400/30 hover:scale-105'
-                }`}
-              >
-                {q}
-              </button>
-            ))}
-          </div>
-        )}
+        {(() => {
+          const cardLoc = message.location || data?.location || data?.locationName || message.weatherData?.locationName || state.currentWeather?.locationName || '';
+          const formattedQuestions = (suggestedQuestions || []).map(q => {
+            if (!q || typeof q !== 'string') return q;
+            const trimmed = q.trim();
+            if (cardLoc && !trimmed.toLowerCase().includes(cardLoc.toLowerCase())) {
+              if (/this area|the area/i.test(trimmed)) {
+                return trimmed.replace(/this area|the area/gi, cardLoc);
+              }
+              if (/\bhere\b/i.test(trimmed)) {
+                return trimmed.replace(/\bhere\b/gi, `in ${cardLoc}`);
+              }
+              const base = trimmed.endsWith('?') ? trimmed.slice(0, -1) : trimmed;
+              return `${base} in ${cardLoc}?`;
+            }
+            return trimmed;
+          });
+
+          if (formattedQuestions.length === 0) return null;
+
+          return (
+            <div className="flex flex-wrap gap-2 mt-3 px-1 animate-slide-up" style={{ animationFillMode: 'both' }}>
+              {formattedQuestions.map((q, i) => (
+                <button
+                  key={i}
+                  onClick={() => handleChipClick(q)}
+                  disabled={clickedChip !== null}
+                  className={`text-xs px-3.5 py-2 rounded-full border transition-all text-left max-w-full truncate shimmer-hover ${
+                    clickedChip === q
+                      ? 'bg-indigo-600/50 border-indigo-400 text-white scale-95 shadow-[0_0_15px_rgba(99,102,241,0.4)]'
+                      : 'glass-panel border-theme-border text-theme-muted hover:bg-white/10 hover:text-theme-primary hover:border-indigo-400/30 hover:scale-105'
+                  }`}
+                >
+                  {q}
+                </button>
+              ))}
+            </div>
+          );
+        })()}
       </div>
     </div>
   );

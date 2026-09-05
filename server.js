@@ -31,6 +31,7 @@ import {
   sendNotificationToSub, 
   broadcastPushNotification 
 } from './server/pushService.js';
+import { extractLocation } from './src/services/locationExtractor.js';
 
 // Scheduled jobs will be started later
 
@@ -218,8 +219,21 @@ import {
   get_historical_trend, 
   get_seasonal_comparison, 
   get_active_alerts,
-  get_marine_weather
+  get_marine_weather,
+  get_climate_indices
 } from './server/tools.js';
+
+import { geocodeLocation } from './src/services/weatherApi.js';
+
+import {
+  linearTrend,
+  zScoreAnomaly,
+  consecutiveDryDays,
+  consecutiveWetDays,
+  heatwaveDays,
+  extremeRainDays,
+  growingDegreeDays
+} from './server/climateStats.js';
 
 import { 
   detectIndianLanguage, 
@@ -268,13 +282,22 @@ ACTIVITY AND HEAT RISK AWARENESS:
 
 FOLLOW-UP SUGGESTIONS:
 9. Generate exactly 2-3 natural follow-up questions based on the user's question, your answer, and recent conversation history.
+   - MANDATORY LOCATION INCLUSION: EVERY SINGLE suggested question MUST explicitly include the specific location name being discussed (e.g. "What is the forecast for tomorrow in Loktak Lake?", "Will it rain later today in Guwahati?", "Are there any active alerts in Bhopal?").
+   - NEVER EVER output generic questions like "What is the forecast for tomorrow?" or "Are there any active alerts?" without the location.
+   - NEVER use vague words like "here", "this area", "the city", or omit the location name. The specific location name MUST appear in EVERY suggestion.
    - Follow-ups must represent genuinely different next steps a real user would take — not just rephrasing the same question.
    - If the current answer fully resolves the query (or user said thanks), return an empty array.
    - Never repeat a question from the conversation history.
-   - Each suggestion must be under 8 words, in the EXACT same language as the user, phrased as the user (first person).
+   - Each suggestion must be in the EXACT same language as the user, phrased as the user (first person).
 
 WEATHER WIDGET CONTROL:
 10. You control whether the UI displays a live weather widget. Set "showWeatherWidget" to TRUE *only* if the user's question is about current/live weather conditions or forecasting for their location. Set it to FALSE if they ask about a past event (like yesterday's flood), a general fact, or a different location entirely.
+
+EFFICIENCY & ONE-SHOT TOOL RESOLUTION:
+11. Be decisive: Call whatever tool(s) you need in parallel in your VERY FIRST turn.
+12. For standard queries (e.g. "weather today", "will it rain?", "current temp", upcoming forecast), calling get_current_weather or get_forecast alone provides all the necessary temperature, rain, wind, humidity, AQI, UV, and weather codes.
+13. NEVER make secondary follow-up tool calls for seasonal comparisons or historical archives unless the user explicitly asked about past climate records or historical trends.
+14. Once you receive your tool results, immediately output the final JSON response in that turn. Do NOT loop for additional data.
 
 RESPOND ONLY IN THIS EXACT JSON FORMAT, no markdown fences:
 {
@@ -285,7 +308,7 @@ RESPOND ONLY IN THIS EXACT JSON FORMAT, no markdown fences:
   "severity": "none or caution or severe",
   "confidence": "high | medium | low",
   "showWeatherWidget": true,
-  "suggestedQuestions": ["Question 1?", "Question 2?"]
+  "suggestedQuestions": ["What is the 3-day forecast in [Location]?", "Are there any active alerts in [Location]?"]
 }`;
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -1326,6 +1349,7 @@ app.post('/api/chat', async (req, res) => {
 
   let finalContent = null;
   let lastWeatherData = null;
+  let toolLocation = null;
 
   try {
     // ---------------------------------------------------------
@@ -1377,7 +1401,7 @@ app.post('/api/chat', async (req, res) => {
             tools: WEATHER_TOOLS,
             tool_choice: 'auto',
             temperature: 0.7,
-            max_tokens: 1024
+            max_tokens: 2048
           }),
         });
       } catch (e) {
@@ -1404,7 +1428,7 @@ app.post('/api/chat', async (req, res) => {
               tools: WEATHER_TOOLS,
               tool_choice: 'auto',
               temperature: 0.7,
-              max_tokens: 1024
+              max_tokens: 2048
             }),
           });
         }
@@ -1435,24 +1459,45 @@ app.post('/api/chat', async (req, res) => {
           try {
             const args = JSON.parse(tc.function.arguments);
             console.log(`[TOOL CALLED] ${funcName} with args:`, args);
+            if (args.location) {
+              toolLocation = args.location;
+            }
             if (funcName === 'get_current_weather') {
                resultData = await get_current_weather(args);
                lastWeatherData = { locationName: args.location, ...resultData };
             }
             else if (funcName === 'get_forecast') {
               resultData = await get_forecast(args);
-              // Record snapshot for accuracy tracking (day 1 = tomorrow)
+              if (!lastWeatherData) lastWeatherData = { locationName: args.location, ...resultData };
+              // Record snapshot asynchronously in the background so it never slows down the AI response
               if (args.daysAhead === 1 && resultData && !resultData.error) {
-                try {
-                  const locData = await import('./src/services/weatherApi.js').then(m => m.geocodeLocation(args.location, 'en'));
-                  if (locData) await recordForecastSnapshot(args.location, locData.lat, locData.lng, resultData.maxTemp, resultData.precipProbMax);
-                } catch (snapshotErr) { /* non-critical, skip */ }
+                geocodeLocation(args.location, 'en')
+                  .then(locData => {
+                    if (locData) recordForecastSnapshot(args.location, locData.lat, locData.lng, resultData.maxTemp, resultData.precipProbMax);
+                  })
+                  .catch(() => {});
               }
             }
-            else if (funcName === 'get_historical_trend') resultData = await get_historical_trend(args);
-            else if (funcName === 'get_seasonal_comparison') resultData = await get_seasonal_comparison(args);
-            else if (funcName === 'get_active_alerts') resultData = await get_active_alerts(args);
-            else if (funcName === 'get_marine_weather') resultData = await get_marine_weather(args);
+            else if (funcName === 'get_historical_trend') {
+              resultData = await get_historical_trend(args);
+              if (!lastWeatherData) lastWeatherData = { locationName: args.location, ...resultData };
+            }
+            else if (funcName === 'get_seasonal_comparison') {
+              resultData = await get_seasonal_comparison(args);
+              if (!lastWeatherData) lastWeatherData = { locationName: args.location, ...resultData };
+            }
+            else if (funcName === 'get_active_alerts') {
+              resultData = await get_active_alerts(args);
+              if (!lastWeatherData) lastWeatherData = { locationName: args.location, ...resultData };
+            }
+            else if (funcName === 'get_marine_weather') {
+              resultData = await get_marine_weather(args);
+              if (!lastWeatherData) lastWeatherData = { locationName: args.location, ...resultData };
+            }
+            else if (funcName === 'get_climate_indices') {
+              resultData = await get_climate_indices(args);
+              if (!lastWeatherData) lastWeatherData = { locationName: args.location, ...resultData };
+            }
             else resultData = { error: 'Unknown function' };
           } catch (err) {
             resultData = { error: err.message };
@@ -1532,7 +1577,7 @@ ${modelNote}`;
               { role: 'user', content: fallbackPrompt }
             ],
             temperature: 0.7,
-            max_tokens: 1024
+            max_tokens: 2048
           }),
         });
       } catch (e) {
@@ -1558,7 +1603,7 @@ ${modelNote}`;
                 { role: 'user', content: fallbackPrompt }
               ],
               temperature: 0.7,
-              max_tokens: 1024
+              max_tokens: 2048
             }),
           });
         }
@@ -1600,18 +1645,55 @@ ${modelNote}`;
     finalJson.confidence = calculateConfidence(contextData);
     // ------------------------------------------
 
-      // Fallback for missing suggested questions
-      if (!Array.isArray(finalJson.suggestedQuestions) || finalJson.suggestedQuestions.length === 0) {
-        const lang = req.body.language || 'en';
-        if (lang === 'hi') {
-          finalJson.suggestedQuestions = ['आने वाले दिनों का मौसम कैसा रहेगा?', 'क्या कोई अलर्ट है?'];
-        } else if (lang === 'bn') {
-          finalJson.suggestedQuestions = ['আগামী কয়েকদিনের আবহাওয়া কেমন থাকবে?', 'কোনো সতর্কতা আছে কি?'];
-        } else if (lang === 'as') {
-          finalJson.suggestedQuestions = ['অহা কেইদিনমানৰ বতৰ কেনেকুৱা হ’ব?', 'কিবা সতৰ্কবাণী আছে নেকি?'];
-        } else {
-          finalJson.suggestedQuestions = ['What is the forecast for tomorrow?', 'Are there any active alerts?'];
+      // Active location resolution across toolLocation, contextData, weatherData, message extraction, and history
+      let extractedLoc = extractLocation(message);
+      if (!extractedLoc && Array.isArray(history) && history.length > 0) {
+        for (let i = history.length - 1; i >= 0; i--) {
+          const pastText = history[i]?.content;
+          if (pastText) {
+            extractedLoc = extractLocation(pastText);
+            if (extractedLoc) break;
+          }
         }
+      }
+
+      const activeLoc = toolLocation || contextData?.locationName || contextData?.location || weatherData?.location || extractedLoc || 'Guwahati';
+      finalJson.location = activeLoc;
+
+      // Fallback for missing suggested questions
+      const lang = req.body.language || 'en';
+      const locSuffix = ` in ${activeLoc}`;
+      const locHindi = ` ${activeLoc} में`;
+      const locBengali = ` ${activeLoc}-এ`;
+      const locAssamese = ` ${activeLoc}ত`;
+
+      if (!Array.isArray(finalJson.suggestedQuestions) || finalJson.suggestedQuestions.length === 0) {
+        if (lang === 'hi') {
+          finalJson.suggestedQuestions = [`आने वाले दिनों का मौसम${locHindi} कैसा रहेगा?`, `क्या कोई अलर्ट${locHindi} है?`];
+        } else if (lang === 'bn') {
+          finalJson.suggestedQuestions = [`আগামী কয়েকদিনের আবহাওয়া${locBengali} কেমন থাকবে?`, `কোনো সতর্কতা${locBengali} আছে কি?`];
+        } else if (lang === 'as') {
+          finalJson.suggestedQuestions = [`অহা কেইদিনমানৰ বতৰ${locAssamese} কেনেকুৱা হ’ব?`, `কিবা সতৰ্কবাণী${locAssamese} আছে নেকি?`];
+        } else {
+          finalJson.suggestedQuestions = [`What is the forecast for tomorrow${locSuffix}?`, `Are there any active alerts${locSuffix}?`];
+        }
+      } else {
+        // Enforce: Every single follow-up question MUST include the specific location name
+        finalJson.suggestedQuestions = finalJson.suggestedQuestions.map(q => {
+          if (typeof q !== 'string') return q;
+          const trimmed = q.trim();
+          if (!trimmed.toLowerCase().includes(activeLoc.toLowerCase())) {
+            if (/this area|the area/i.test(trimmed)) {
+              return trimmed.replace(/this area|the area/gi, activeLoc);
+            }
+            if (/\bhere\b/i.test(trimmed)) {
+              return trimmed.replace(/\bhere\b/gi, `in ${activeLoc}`);
+            }
+            const base = trimmed.endsWith('?') ? trimmed.slice(0, -1) : trimmed;
+            return `${base} in ${activeLoc}?`;
+          }
+          return trimmed;
+        });
       }
     
     // Forcefully remove temperature from relevantStat to prevent UI duplication
@@ -1659,16 +1741,29 @@ ${modelNote}`;
   } catch (parseErr) {
     console.error('[DEBUG-CRASH] JSON parsing or logChatPrediction crashed:', parseErr);
     let partialAnswer = finalContent;
-    const answerMatch = finalContent.match(/"answer"\s*:\s*"([^"]*)/);
+    const answerMatch = finalContent ? finalContent.match(/"answer"\s*:\s*"([^"]*)/) : null;
     if (answerMatch && answerMatch[1]) partialAnswer = answerMatch[1];
-    else partialAnswer = finalContent.replace(/[{}"\\]/g, '').replace(/answer\s*:/, '').trim();
+    else if (finalContent) partialAnswer = finalContent.replace(/[{}"\\]/g, '').replace(/answer\s*:/, '').trim();
     
+    const errActiveLoc = toolLocation || lastWeatherData?.locationName || weatherData?.location || extractLocation(message) || 'Guwahati';
+    const locSuffix = ` in ${errActiveLoc}`;
+    const locHindi = ` ${errActiveLoc} में`;
+    const locBengali = ` ${errActiveLoc}-এ`;
+    const locAssamese = ` ${errActiveLoc}ত`;
+
     return res.json({
       answer: partialAnswer || 'The response was cut off. Please try again.',
       followUp: '',
       advisory: '',
       severity: 'none',
-      suggestedQuestions: req.body.language === 'hi' ? ['आने वाले दिनों का मौसम कैसा रहेगा?'] : req.body.language === 'bn' ? ['আগামী কয়েকদিনের আবহাওয়া কেমন থাকবে?'] : req.body.language === 'as' ? ['অহা কেইদিনমানৰ বতৰ কেনেকুৱা হ’ব?'] : ['What is the forecast for tomorrow?', 'Are there any active alerts?'],
+      location: errActiveLoc,
+      suggestedQuestions: req.body.language === 'hi' 
+        ? [`आने वाले दिनों का मौसम${locHindi} कैसा रहेगा?`, `क्या कोई अलर्ट${locHindi} है?`] 
+        : req.body.language === 'bn' 
+        ? [`আগামী কয়েকদিনের আবহাওয়া${locBengali} কেমন থাকবে?`, `কোনো সতর্কতা${locBengali} আছে কি?`] 
+        : req.body.language === 'as' 
+        ? [`অহা কেইদিনমানৰ বতৰ${locAssamese} কেনেকুৱা হ’ব?`, `কিবা সতৰ্কবাণী${locAssamese} আছে নেকি?`] 
+        : [`What is the forecast for tomorrow${locSuffix}?`, `Are there any active alerts${locSuffix}?`],
     });
   }
 });
@@ -1928,6 +2023,56 @@ app.get('/api/news', async (req, res) => {
   }
 });
 
+// --- HISTORICAL CLIMATE TRENDS ---
+app.get('/api/historical', async (req, res) => {
+  try {
+    const lat = parseFloat(req.query.lat);
+    const lon = parseFloat(req.query.lon || req.query.lng);
+    const mode = req.query.mode || '30d';
+    let days = 30;
+    if (mode === '5y') days = 365 * 5;
+    else if (mode === '1y') days = 365;
+    else if (req.query.days) days = parseInt(req.query.days, 10);
+
+    if (isNaN(lat) || isNaN(lon)) {
+      return res.status(400).json({ error: 'Valid lat and lon query parameters required.' });
+    }
+
+    const endDate = new Date();
+    endDate.setDate(endDate.getDate() - 1);
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    const endStr = endDate.toISOString().split('T')[0];
+    const startStr = startDate.toISOString().split('T')[0];
+
+    const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${startStr}&end_date=${endStr}&daily=temperature_2m_max,precipitation_sum&timezone=auto`;
+    const response = await fetch(url);
+    const json = await response.json();
+
+    if (!json || !json.daily) {
+      return res.status(502).json({ error: 'Failed to fetch historical archive data' });
+    }
+
+    const formatted = json.daily.time.map((time, idx) => ({
+      date: time,
+      temp: json.daily.temperature_2m_max[idx],
+      rain: json.daily.precipitation_sum[idx]
+    }));
+
+    res.json({
+      latitude: lat,
+      longitude: lon,
+      period: `${startStr} to ${endStr}`,
+      mode,
+      daily: formatted
+    });
+  } catch (err) {
+    console.error('Error in /api/historical:', err.message);
+    res.status(500).json({ error: 'Internal server error fetching historical data' });
+  }
+});
+
 // --- EXTREME WEATHER ALERTS ---
 // Sources: GDACS RSS (free) + Open-Meteo (free)
 app.get('/api/extreme-alerts', async (req, res) => {
@@ -2100,6 +2245,254 @@ app.get('/api/push/status', (req, res) => {
     activeSubscribers: getSubscriptionsCount(),
     vapidConfigured: !!getVapidPublicKey()
   });
+});
+
+// ------------------------------------------------------------------
+// RESEARCH & CLIMATE ANALYTICS API (SIH PS-26068)
+// ------------------------------------------------------------------
+
+// Basic sliding-window rate limiter: 60 req/min per IP
+const researchRateLimitMap = new Map();
+function researchRateLimiter(req, res, next) {
+  const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket?.remoteAddress || 'unknown';
+  const now = Date.now();
+  const windowMs = 60 * 1000;
+  const maxReqs = 60;
+
+  let record = researchRateLimitMap.get(ip);
+  if (!record || now > record.resetAt) {
+    record = { count: 1, resetAt: now + windowMs };
+    researchRateLimitMap.set(ip, record);
+  } else {
+    record.count++;
+    if (record.count > maxReqs) {
+      const retryAfter = Math.ceil((record.resetAt - now) / 1000);
+      res.setHeader('Retry-After', retryAfter);
+      return res.status(429).json({
+        error: 'Too many requests. Research API rate limit is 60 requests per minute per IP.',
+        retryAfterSeconds: retryAfter
+      });
+    }
+  }
+  next();
+}
+
+// In-memory 24-hour cache for historical climate analytics (lat+lon+startYear+endYear)
+const researchArchiveCache = new Map();
+const RESEARCH_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+/**
+ * Public Research & Climate Analytics Endpoint
+ * GET /api/research/historical?lat=&lon=&start=&end=&variable=
+ * Real-time live Open-Meteo ERA5 archive fetch, climateStats.js trend & indices.
+ */
+app.get('/api/research/historical', researchRateLimiter, async (req, res) => {
+  try {
+    const lat = parseFloat(req.query.lat ?? req.query.latitude);
+    const lon = parseFloat(req.query.lon ?? req.query.lng ?? req.query.longitude);
+    const start = req.query.start;
+    const end = req.query.end;
+    const variable = (req.query.variable || 'all').toLowerCase().trim();
+
+    if (Number.isNaN(lat) || Number.isNaN(lon)) {
+      return res.status(400).json({ error: 'Valid numeric "lat" and "lon" query parameters are required.' });
+    }
+
+    const currentYear = new Date().getFullYear();
+    const startYear = Math.max(1990, parseInt(start, 10) || 1990);
+    let endYear = parseInt(end, 10) || currentYear;
+    if (endYear < startYear) endYear = startYear;
+    if (endYear > currentYear) endYear = currentYear;
+
+    // Check in-memory cache before hitting Open-Meteo Archive
+    const cacheKey = `${lat.toFixed(4)}_${lon.toFixed(4)}_${startYear}_${endYear}_${variable}`;
+    const cached = researchArchiveCache.get(cacheKey);
+    if (cached && (Date.now() - cached.timestamp < RESEARCH_CACHE_TTL_MS)) {
+      return res.json(cached.data);
+    }
+
+    const startStr = `${startYear}-01-01`;
+    const maxDate = new Date();
+    maxDate.setDate(maxDate.getDate() - 5);
+    const maxDateStr = maxDate.toISOString().split('T')[0];
+    let endStr = `${endYear}-12-31`;
+    if (endStr > maxDateStr) endStr = maxDateStr;
+
+    const openMeteoUrl = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${startStr}&end_date=${endStr}&daily=temperature_2m_max,temperature_2m_min,temperature_2m_mean,precipitation_sum&timezone=auto`;
+
+    let response;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      response = await fetch(openMeteoUrl);
+      if (response.status === 429 && attempt < 2) {
+        await new Promise(r => setTimeout(r, 1500 * (attempt + 1)));
+        continue;
+      }
+      break;
+    }
+
+    if (!response || !response.ok) {
+      return res.status(response?.status || 502).json({
+        error: `Open-Meteo Archive API returned status ${response?.status || 'Network/Timeout'}`
+      });
+    }
+
+    const json = await response.json();
+    if (!json.daily || !json.daily.time || json.daily.time.length === 0) {
+      return res.status(404).json({ error: 'No archive records returned for the specified coordinates and time range.' });
+    }
+
+    const daily = json.daily;
+    const nDays = daily.time.length;
+    const yearBuckets = new Map();
+    const allDailyMaxTemps = [];
+
+    for (let i = 0; i < nDays; i++) {
+      const dateStr = daily.time[i];
+      const yr = parseInt(dateStr.slice(0, 4), 10);
+      const tMean = daily.temperature_2m_mean?.[i];
+      const tMax = daily.temperature_2m_max?.[i];
+      const tMin = daily.temperature_2m_min?.[i];
+      const precip = daily.precipitation_sum?.[i] ?? 0;
+
+      if (!yearBuckets.has(yr)) {
+        yearBuckets.set(yr, {
+          year: yr,
+          precipList: [],
+          meanTempList: [],
+          maxTempList: [],
+          minTempList: [],
+          dailyRecords: []
+        });
+      }
+
+      const bucket = yearBuckets.get(yr);
+      bucket.precipList.push(precip);
+      if (tMean != null) bucket.meanTempList.push(tMean);
+      if (tMax != null) {
+        bucket.maxTempList.push(tMax);
+        allDailyMaxTemps.push(tMax);
+        bucket.dailyRecords.push({ date: dateStr, temp: tMax });
+      }
+      if (tMin != null) bucket.minTempList.push(tMin);
+    }
+
+    const baselineMaxMean = allDailyMaxTemps.length > 0
+      ? allDailyMaxTemps.reduce((a, b) => a + b, 0) / allDailyMaxTemps.length
+      : 30;
+
+    const yearlyData = [];
+    const years = [];
+    const yearlyMeanTemps = [];
+    const yearlyTotalPrecip = [];
+
+    for (const [yr, b] of yearBuckets.entries()) {
+      const totalRain = b.precipList.reduce((a, b) => a + b, 0);
+      const avgMeanTemp = b.meanTempList.length > 0
+        ? b.meanTempList.reduce((a, b) => a + b, 0) / b.meanTempList.length
+        : null;
+      const peakMaxTemp = b.maxTempList.length > 0 ? Math.max(...b.maxTempList) : null;
+      const lowestMinTemp = b.minTempList.length > 0 ? Math.min(...b.minTempList) : null;
+
+      const cdd = consecutiveDryDays(b.precipList);
+      const cwd = consecutiveWetDays(b.precipList);
+      const hw = heatwaveDays(b.dailyRecords, baselineMaxMean);
+      const extRain = extremeRainDays(b.precipList);
+      const gdd = growingDegreeDays(b.meanTempList, 10);
+
+      years.push(yr);
+      if (avgMeanTemp != null) yearlyMeanTemps.push(Number(avgMeanTemp.toFixed(2)));
+      yearlyTotalPrecip.push(Number(totalRain.toFixed(1)));
+
+      yearlyData.push({
+        year: yr,
+        meanTemp: avgMeanTemp != null ? Number(avgMeanTemp.toFixed(2)) : null,
+        maxTemp: peakMaxTemp != null ? Number(peakMaxTemp.toFixed(1)) : null,
+        minTemp: lowestMinTemp != null ? Number(lowestMinTemp.toFixed(1)) : null,
+        totalPrecip: Number(totalRain.toFixed(1)),
+        cdd,
+        cwd,
+        heatwaveDays: hw.count,
+        extremeRainDays: extRain,
+        gdd
+      });
+    }
+
+    yearlyData.sort((a, b) => a.year - b.year);
+
+    const tempTrend = linearTrend(years, yearlyMeanTemps);
+    const precipTrend = linearTrend(years, yearlyTotalPrecip);
+
+    let zScore = 0;
+    if (yearlyMeanTemps.length >= 2) {
+      const n = yearlyMeanTemps.length;
+      const mean = yearlyMeanTemps.reduce((a, b) => a + b, 0) / n;
+      const variance = yearlyMeanTemps.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / (n - 1);
+      const stdDev = Math.sqrt(variance);
+      const latestVal = yearlyMeanTemps[yearlyMeanTemps.length - 1];
+      zScore = zScoreAnomaly(latestVal, mean, stdDev);
+    }
+
+    const totalHwDays = yearlyData.reduce((sum, y) => sum + y.heatwaveDays, 0);
+    const totalExtRainDays = yearlyData.reduce((sum, y) => sum + y.extremeRainDays, 0);
+    const maxCdd = Math.max(...yearlyData.map(y => y.cdd), 0);
+    const maxCwd = Math.max(...yearlyData.map(y => y.cwd), 0);
+    const avgGdd = yearlyData.length > 0
+      ? Number((yearlyData.reduce((sum, y) => sum + y.gdd, 0) / yearlyData.length).toFixed(1))
+      : 0;
+
+    // Filter data fields if variable is specified
+    let formattedData = yearlyData;
+    if (variable === 'temperature' || variable === 'temp') {
+      formattedData = yearlyData.map(d => ({ year: d.year, meanTemp: d.meanTemp, maxTemp: d.maxTemp, minTemp: d.minTemp }));
+    } else if (variable === 'precipitation' || variable === 'rain') {
+      formattedData = yearlyData.map(d => ({ year: d.year, totalPrecip: d.totalPrecip, cdd: d.cdd, cwd: d.cwd, extremeRainDays: d.extremeRainDays }));
+    }
+
+    const responsePayload = {
+      data: formattedData,
+      trend: {
+        temperature: tempTrend,
+        precipitation: precipTrend
+      },
+      indices: {
+        linearTrend: {
+          temperature: tempTrend,
+          precipitation: precipTrend
+        },
+        zScoreAnomaly: {
+          latestYear: years[years.length - 1],
+          score: zScore
+        },
+        consecutiveDryDays: {
+          maxRecordedStreak: maxCdd,
+          yearlyAverage: Number((yearlyData.reduce((s, y) => s + y.cdd, 0) / yearlyData.length).toFixed(1))
+        },
+        consecutiveWetDays: {
+          maxRecordedStreak: maxCwd,
+          yearlyAverage: Number((yearlyData.reduce((s, y) => s + y.cwd, 0) / yearlyData.length).toFixed(1))
+        },
+        heatwaveDays: {
+          totalHeatwaveDays: totalHwDays,
+          averagePerYear: Number((totalHwDays / yearlyData.length).toFixed(1))
+        },
+        extremeRainDays: {
+          totalExtremeRainDays: totalExtRainDays,
+          averagePerYear: Number((totalExtRainDays / yearlyData.length).toFixed(1))
+        },
+        growingDegreeDays: {
+          averageGddPerYear: avgGdd
+        }
+      },
+      source: 'ERA5 Reanalysis via Open-Meteo',
+      generated: new Date().toISOString()
+    };
+
+    researchArchiveCache.set(cacheKey, { timestamp: Date.now(), data: responsePayload });
+    return res.json(responsePayload);
+  } catch (err) {
+    console.error('Error in /api/research/historical:', err);
+    return res.status(500).json({ error: err.message || 'Internal server error while processing historical climate analytics.' });
+  }
 });
 
 // Serve built React frontend in production (Docker)

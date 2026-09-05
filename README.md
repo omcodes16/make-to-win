@@ -22,6 +22,8 @@
 3. [Feasibility & Viability](#-3-feasibility--viability)
 4. [Impact & Benefits](#-4-impact--benefits)
 5. [Research & References](#-5-research--references)
+6. [System Architecture & Tech Stack](#️-6-comprehensive-end-to-end-system-architecture--tech-stack)
+7. [Research & Climate Analytics Module (SIH PS-26068)](#-13-research--climate-analytics-module-sih-ps-26068)
 
 ---
 
@@ -526,4 +528,156 @@ flowchart TD
     ColAccuracy -.->|Zero-Downtime Failover| JSONAccuracy
     ColSnapshots -.->|Zero-Downtime Failover| JSONSnapshots
 ```
+
+---
+
+## 🔬 13. Research & Climate Analytics Module (SIH PS-26068)
+
+The **Research & Climate Analytics Module** is engineered specifically for atmospheric researchers, agronomists, urban disaster resilience teams, and environmental policymakers under **Smart India Hackathon Problem Statement PS-26068**.
+
+It provides direct access to multi-decadal historical climate records from **1990 to the present day**, backed by **ECMWF ERA5 atmospheric reanalysis data at ~25 km resolution**, served live through the **Open-Meteo Archive API** with zero API key dependencies and zero cost.
+
+### 📊 The Six Climate & Meteorological Indices
+
+| Index | Metric Name | Standard Reference | Plain English Purpose & Scientific Formula |
+|---|---|---|---|
+| **1** | **Linear Trend (OLS Regression)** | Ordinary Least Squares | Computes the multi-decadal trajectory and slope of temperature and precipitation change.<br>`Slope (m) = Σ((x - x̄) * (y - ȳ)) / Σ((x - x̄)²)`<br>Returns both `slopePerYear` and `slopePerDecade`. |
+| **2** | **Standardized Anomaly (Z-Score)** | WMO Climate Normals | Standardizes yearly observations against the long-term climatological baseline.<br>`z = (value - mean) / stdDev`<br>Scores beyond ±1.5 indicate statistically anomalous climate deviations. |
+| **3** | **Consecutive Dry Days (CDD)** | WMO / ETCCDI Standard | Longest continuous run of days with daily precipitation **< 1.0 mm**. Vital for agricultural drought tracking, reservoir depletion, and wildfire hazard. |
+| **4** | **Consecutive Wet Days (CWD)** | WMO / ETCCDI Standard | Longest continuous run of days with daily precipitation **>= 1.0 mm**. Used to assess soil saturation limits, sustained runoff, and landslide risks. |
+| **5** | **Heatwave Days & Events** | IMD / WMO Heat Standards | Count of days belonging to events where daily maximum temperature exceeds the seasonal baseline mean by **> 5.0°C for 3 or more consecutive days**. |
+| **6** | **Extreme Rainfall Days (R100mm)** | ETCCDI Extreme Index | Annual frequency of days with 24-hour rainfall exceeding **100 mm**. Evaluates flash flood vulnerability and cloudburst incidence. |
+| **7** | **Growing Degree Days (GDD)** | Agro-Climatology Phenology | Thermal units accumulated for agricultural crop development.<br>`GDD = Σ max(0, Daily Mean Temp - 10°C)`. |
+
+---
+
+### 🌐 Public API Endpoint Documentation
+
+#### `GET /api/research/historical`
+
+Fetches live ERA5 reanalysis data from Open-Meteo on every request (no caching layer, real-time timestamping), executes pure mathematical computations via `climateStats.js`, and returns structured historical climate metrics and trends.
+
+* **Base URL:** `http://localhost:3001`
+* **Rate Limiting:** Built-in sliding-window limiter enforcing **60 requests per minute per IP** (returns `HTTP 429` with `Retry-After` header when exceeded).
+
+#### Query Parameters
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `lat` / `latitude` | `float` | **Yes** | — | Latitude coordinate (e.g. `28.6139`) |
+| `lon` / `lng` / `longitude` | `float` | **Yes** | — | Longitude coordinate (e.g. `77.2090`) |
+| `start` | `integer` | No | `1990` | Starting year (minimum 1990) |
+| `end` | `integer` | No | Current Year | Ending year (automatically capped at 5 days ago to respect ERA5 release boundary) |
+| `variable` | `string` | No | `all` | Filter metric view: `all`, `temperature`, or `precipitation` |
+
+#### Example cURL Request
+
+```bash
+curl "http://localhost:3001/api/research/historical?lat=28.6139&lon=77.2090&start=2020&end=2023"
+```
+
+#### Actual Tested JSON Response
+
+```json
+{
+  "data": [
+    {
+      "year": 2020,
+      "meanTemp": 24.01,
+      "maxTemp": 44.2,
+      "minTemp": 2.9,
+      "totalPrecip": 585.3,
+      "cdd": 52,
+      "cwd": 13,
+      "heatwaveDays": 67,
+      "extremeRainDays": 0,
+      "gdd": 5129.4
+    },
+    {
+      "year": 2021,
+      "meanTemp": 24.47,
+      "maxTemp": 43.3,
+      "minTemp": 3.5,
+      "totalPrecip": 816.2,
+      "cdd": 70,
+      "cwd": 16,
+      "heatwaveDays": 78,
+      "extremeRainDays": 1,
+      "gdd": 5280.2
+    },
+    {
+      "year": 2022,
+      "meanTemp": 24.78,
+      "maxTemp": 45.4,
+      "minTemp": 4.7,
+      "totalPrecip": 731.4,
+      "cdd": 80,
+      "cwd": 19,
+      "heatwaveDays": 101,
+      "extremeRainDays": 0,
+      "gdd": 5394.2
+    },
+    {
+      "year": 2023,
+      "meanTemp": 24.1,
+      "maxTemp": 43.6,
+      "minTemp": 3.2,
+      "totalPrecip": 860.5,
+      "cdd": 45,
+      "cwd": 20,
+      "heatwaveDays": 66,
+      "extremeRainDays": 0,
+      "gdd": 5154.2
+    }
+  ],
+  "trend": {
+    "temperature": {
+      "slopePerYear": 0.058,
+      "slopePerDecade": 0.58
+    },
+    "precipitation": {
+      "slopePerYear": 74.08,
+      "slopePerDecade": 740.8
+    }
+  },
+  "indices": {
+    "linearTrend": {
+      "temperature": {
+        "slopePerYear": 0.058,
+        "slopePerDecade": 0.58
+      },
+      "precipitation": {
+        "slopePerYear": 74.08,
+        "slopePerDecade": 740.8
+      }
+    },
+    "zScoreAnomaly": {
+      "latestYear": 2023,
+      "score": -0.68
+    },
+    "consecutiveDryDays": {
+      "maxRecordedStreak": 80,
+      "yearlyAverage": 61.8
+    },
+    "consecutiveWetDays": {
+      "maxRecordedStreak": 20,
+      "yearlyAverage": 17
+    },
+    "heatwaveDays": {
+      "totalHeatwaveDays": 312,
+      "averagePerYear": 78
+    },
+    "extremeRainDays": {
+      "totalExtremeRainDays": 1,
+      "averagePerYear": 0.3
+    },
+    "growingDegreeDays": {
+      "averageGddPerYear": 5239.5
+    }
+  },
+  "source": "ERA5 Reanalysis via Open-Meteo",
+  "generated": "2026-09-05T06:48:59.797Z"
+}
+```
+
 

@@ -60,6 +60,8 @@ const INDIA_CITIES = {
   'tawang': { lat: 27.5860, lng: 91.8596, name: 'Tawang', state: 'Arunachal Pradesh', district: 'Tawang' },
   'lunglei': { lat: 22.8800, lng: 92.7300, name: 'Lunglei', state: 'Mizoram', district: 'Lunglei' },
   'namchi': { lat: 27.1667, lng: 88.3500, name: 'Namchi', state: 'Sikkim', district: 'South Sikkim' },
+  'loktak lake': { lat: 24.5584, lng: 93.8132, name: 'Loktak Lake', state: 'Manipur', district: 'Bishnupur' },
+  'loktak': { lat: 24.5584, lng: 93.8132, name: 'Loktak Lake', state: 'Manipur', district: 'Bishnupur' },
 };
 
 // Client-side local cache for instant village/district lookup
@@ -107,8 +109,13 @@ function getLocationApiBase() {
   return `http://localhost:${(typeof process !== 'undefined' && process.env && process.env.PORT) || 3001}`;
 }
 
+// In-memory cache for resolved geocoded locations (location name + language -> coordinates)
+const GEOCODE_CACHE = new Map();
+const GEOCODE_CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days (static coordinates)
+
 /**
  * Geocode a location name to coordinates (Exclusively inside India).
+ * Tier 0: In-memory static GEOCODE_CACHE (Instant 0ms)
  * Tier 1: Local INDIA_CITIES map
  * Tier 2: Backend Mappls Geocoder (/api/location/geocode)
  * Tier 3: Client-side Open-Meteo & Nominatim fallback
@@ -116,17 +123,33 @@ function getLocationApiBase() {
 export async function geocodeLocation(name, lang = 'en') {
   if (!name || typeof name !== 'string') return null;
   const normalized = name.toLowerCase().trim();
+  const cacheKey = `${normalized}_${lang}`;
+
+  // 0. Check in-memory cache first (Instant 0ms lookup)
+  if (GEOCODE_CACHE.has(cacheKey)) {
+    const cached = GEOCODE_CACHE.get(cacheKey);
+    if (Date.now() - cached.timestamp < GEOCODE_CACHE_TTL_MS) {
+      return cached.data;
+    }
+  }
+
+  const _saveCache = (result) => {
+    if (result && result.lat && result.lng) {
+      GEOCODE_CACHE.set(cacheKey, { data: result, timestamp: Date.now() });
+    }
+    return result;
+  };
 
   // 1. Check local INDIA_CITIES first (Instant)
   if (INDIA_CITIES[normalized]) {
     const city = INDIA_CITIES[normalized];
-    return { lat: city.lat, lng: city.lng, name: city.name, state: city.state, district: city.district, country: 'India' };
+    return _saveCache({ lat: city.lat, lng: city.lng, name: city.name, state: city.state, district: city.district, country: 'India' });
   }
 
   // Partial match against INDIA_CITIES
   for (const [key, city] of Object.entries(INDIA_CITIES)) {
     if (normalized.includes(key) || key.includes(normalized)) {
-      return { lat: city.lat, lng: city.lng, name: city.name, state: city.state, district: city.district, country: 'India' };
+      return _saveCache({ lat: city.lat, lng: city.lng, name: city.name, state: city.state, district: city.district, country: 'India' });
     }
   }
 
@@ -139,14 +162,14 @@ export async function geocodeLocation(name, lang = 'en') {
     if (proxyRes.ok) {
       const geoResult = await proxyRes.json();
       if (geoResult && geoResult.lat && geoResult.lng) {
-        return {
+        return _saveCache({
           lat: parseFloat(geoResult.lat),
           lng: parseFloat(geoResult.lng),
           name: geoResult.name || name,
           state: geoResult.state || '',
           district: geoResult.district || '',
           country: 'India'
-        };
+        });
       }
     }
   } catch (err) {
@@ -163,14 +186,14 @@ export async function geocodeLocation(name, lang = 'en') {
     if (data.results && data.results.length > 0) {
       const indiaResult = data.results.find(r => r.country_code === 'IN' || r.country === 'India') || data.results[0];
       if (indiaResult) {
-        return {
+        return _saveCache({
           lat: indiaResult.latitude,
           lng: indiaResult.longitude,
           name: indiaResult.name,
           state: indiaResult.admin1 || '',
           district: indiaResult.admin2 || '',
           country: 'India'
-        };
+        });
       }
     }
   } catch (err) {
@@ -188,14 +211,14 @@ export async function geocodeLocation(name, lang = 'en') {
       const r = nominatimData[0];
       const rawName = r.name || '';
       const finalName = (typeof rawName === 'string' && rawName.trim().length > 0) ? rawName : r.display_name.split(',')[0];
-      return {
+      return _saveCache({
         lat: parseFloat(r.lat),
         lng: parseFloat(r.lon),
         name: finalName,
         state: r.address?.state || '',
         district: r.address?.state_district || r.address?.county || r.address?.district || '',
         country: 'India'
-      };
+      });
     }
   } catch (err) {
     console.warn('Nominatim geocoding error:', err);
@@ -482,25 +505,48 @@ export async function getWeather(lat, lng) {
   return weatherData;
 }
 
+// In-memory cache for reverse geocoding results (rounded lat/lng ~1km -> location details)
+const REVERSE_GEOCODE_CACHE = new Map();
+const REVERSE_GEOCODE_CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+
 /**
  * Reverse geocode coordinates to a city/town name.
+ * Caches by rounded coordinates (2 decimal places ~1.1km) with 3.5s timeout.
  */
 export async function reverseGeocode(lat, lng) {
+  if (lat == null || lng == null) return { name: "Current Location", state: "", district: "", lat, lng };
+
+  const roundedKey = `${Number(lat).toFixed(2)}_${Number(lng).toFixed(2)}`;
+  if (REVERSE_GEOCODE_CACHE.has(roundedKey)) {
+    const cached = REVERSE_GEOCODE_CACHE.get(roundedKey);
+    if (Date.now() - cached.timestamp < REVERSE_GEOCODE_CACHE_TTL_MS) {
+      return { ...cached.data, lat, lng };
+    }
+  }
+
   try {
-    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10`, { headers: { 'User-Agent': 'WeatherGPT' } });
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10`,
+      { 
+        headers: { 'User-Agent': 'WeatherGPT-SIH2026' },
+        signal: AbortSignal.timeout(3500) // 3.5s timeout: Prevents 10-15s hangs on free Nominatim
+      }
+    );
     if (res.ok) {
       const data = await res.json();
-      const name = data.address?.city || data.address?.town || data.address?.village || data.address?.county || data.address?.state || "Unknown Location";
-      return {
+      const name = data.address?.city || data.address?.town || data.address?.village || data.address?.county || data.address?.state || "Current Location";
+      const result = {
         name: name,
         state: data.address?.state || '',
         district: data.address?.state_district || data.address?.county || '',
         lat: lat,
         lng: lng
       };
+      REVERSE_GEOCODE_CACHE.set(roundedKey, { data: result, timestamp: Date.now() });
+      return result;
     }
   } catch (err) {
-    console.error('Reverse geocoding error:', err);
+    console.warn('Reverse geocoding timed out or failed, using coordinate fallback:', err.message);
   }
   return { name: "Current Location", state: "", district: "", lat, lng };
 }

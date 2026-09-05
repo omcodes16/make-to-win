@@ -1,4 +1,13 @@
 import { geocodeLocation, getWeather, getCurrentHourIndex } from '../src/services/weatherApi.js';
+import { 
+  linearTrend, 
+  zScoreAnomaly, 
+  consecutiveDryDays, 
+  consecutiveWetDays, 
+  heatwaveDays, 
+  extremeRainDays, 
+  growingDegreeDays 
+} from './climateStats.js';
 
 // ------------------------------------------------------------------
 // 1. TOOL DEFINITIONS (OpenAI / Groq Function Calling Schema)
@@ -108,6 +117,31 @@ export const WEATHER_TOOLS = [
           location: {
             type: 'string',
             description: 'The coastal city or location.'
+          }
+        },
+        required: ['location']
+      }
+    }
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_climate_indices',
+      description: 'Use this tool for climate research, long-term historical analysis, and evaluating climate indices (temperature trends, CDD, CWD, heatwaves, extreme rain, growing degree days) over multi-year periods (1990 to present) for a specific location.',
+      parameters: {
+        type: 'object',
+        properties: {
+          location: {
+            type: 'string',
+            description: 'The city, district, or region name (e.g. "Delhi", "Guwahati", "Mumbai").'
+          },
+          startYear: {
+            type: 'integer',
+            description: 'Starting year for historical ERA5 reanalysis data (minimum 1990, default 1990).'
+          },
+          endYear: {
+            type: 'integer',
+            description: 'Ending year for analysis (defaults to current year).'
           }
         },
         required: ['location']
@@ -428,3 +462,215 @@ export async function get_marine_weather({ location }) {
     return { error: 'Could not fetch marine data. This location might not be coastal.' };
   }
 }
+
+// In-memory 24-hour cache for historical climate indices (lat+lon+startYear+endYear)
+const climateIndicesCache = new Map();
+const CLIMATE_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+export async function get_climate_indices({ location, startYear, endYear }) {
+  try {
+    const loc = await geocodeLocation(location, 'en');
+    if (!loc) return { error: `Location not found: ${location}` };
+
+    const currentYear = new Date().getFullYear();
+    const startY = Math.max(1990, Number(startYear) || 1990);
+    let endY = Number(endYear) || currentYear;
+    if (endY < startY) endY = startY;
+    if (endY > currentYear) endY = currentYear;
+
+    // Check cache before calling Open-Meteo Archive
+    const cacheKey = `${Number(loc.lat).toFixed(4)}_${Number(loc.lng).toFixed(4)}_${startY}_${endY}`;
+    const cached = climateIndicesCache.get(cacheKey);
+    if (cached && (Date.now() - cached.timestamp < CLIMATE_CACHE_TTL_MS)) {
+      return cached.data;
+    }
+
+    const startStr = `${startY}-01-01`;
+    // Ensure end date respects official ERA5 reanalysis 5-day latency window
+    const maxDate = new Date();
+    maxDate.setDate(maxDate.getDate() - 5);
+    const maxDateStr = maxDate.toISOString().split('T')[0];
+    let endStr = `${endY}-12-31`;
+    if (endStr > maxDateStr) {
+      endStr = maxDateStr;
+    }
+
+    const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${loc.lat}&longitude=${loc.lng}&start_date=${startStr}&end_date=${endStr}&daily=temperature_2m_max,temperature_2m_min,temperature_2m_mean,precipitation_sum&timezone=auto`;
+    
+    // Resilient fetch with automatic retry on 429
+    let response;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      response = await fetch(url);
+      if (response.status === 429 && attempt < 2) {
+        await new Promise(r => setTimeout(r, 1500 * (attempt + 1)));
+        continue;
+      }
+      break;
+    }
+
+    if (!response || !response.ok) {
+      return { error: `Open-Meteo Archive API returned HTTP ${response?.status || 'Network Error'}` };
+    }
+    const json = await response.json();
+    if (!json.daily || !json.daily.time || json.daily.time.length === 0) {
+      return { error: 'No historical archive data returned for this location and time period.' };
+    }
+
+    const daily = json.daily;
+    const nDays = daily.time.length;
+
+    // Group daily records by calendar year
+    const yearBuckets = new Map();
+    const allDailyMaxTemps = [];
+
+    for (let i = 0; i < nDays; i++) {
+      const dateStr = daily.time[i];
+      const yr = parseInt(dateStr.slice(0, 4), 10);
+      const tMean = daily.temperature_2m_mean?.[i];
+      const tMax = daily.temperature_2m_max?.[i];
+      const tMin = daily.temperature_2m_min?.[i];
+      const precip = daily.precipitation_sum?.[i] ?? 0;
+
+      if (!yearBuckets.has(yr)) {
+        yearBuckets.set(yr, {
+          year: yr,
+          precipList: [],
+          meanTempList: [],
+          maxTempList: [],
+          minTempList: [],
+          dailyRecords: []
+        });
+      }
+
+      const bucket = yearBuckets.get(yr);
+      bucket.precipList.push(precip);
+      if (tMean != null) {
+        bucket.meanTempList.push(tMean);
+      }
+      if (tMax != null) {
+        bucket.maxTempList.push(tMax);
+        allDailyMaxTemps.push(tMax);
+        bucket.dailyRecords.push({ date: dateStr, temp: tMax });
+      }
+      if (tMin != null) {
+        bucket.minTempList.push(tMin);
+      }
+    }
+
+    // Seasonal mean max temperature across all years for heatwave threshold
+    const baselineMaxMean = allDailyMaxTemps.length > 0
+      ? allDailyMaxTemps.reduce((a, b) => a + b, 0) / allDailyMaxTemps.length
+      : 30;
+
+    const yearlyData = [];
+    const years = [];
+    const yearlyMeanTemps = [];
+    const yearlyTotalPrecip = [];
+
+    for (const [yr, b] of yearBuckets.entries()) {
+      const totalRain = b.precipList.reduce((a, b) => a + b, 0);
+      const avgMeanTemp = b.meanTempList.length > 0
+        ? b.meanTempList.reduce((a, b) => a + b, 0) / b.meanTempList.length
+        : null;
+      const peakMaxTemp = b.maxTempList.length > 0 ? Math.max(...b.maxTempList) : null;
+      const lowestMinTemp = b.minTempList.length > 0 ? Math.min(...b.minTempList) : null;
+
+      const cdd = consecutiveDryDays(b.precipList);
+      const cwd = consecutiveWetDays(b.precipList);
+      const hw = heatwaveDays(b.dailyRecords, baselineMaxMean);
+      const extRain = extremeRainDays(b.precipList);
+      const gdd = growingDegreeDays(b.meanTempList, 10);
+
+      years.push(yr);
+      if (avgMeanTemp != null) yearlyMeanTemps.push(Number(avgMeanTemp.toFixed(2)));
+      yearlyTotalPrecip.push(Number(totalRain.toFixed(1)));
+
+      yearlyData.push({
+        year: yr,
+        meanTemp: avgMeanTemp != null ? Number(avgMeanTemp.toFixed(2)) : null,
+        maxTemp: peakMaxTemp != null ? Number(peakMaxTemp.toFixed(1)) : null,
+        minTemp: lowestMinTemp != null ? Number(lowestMinTemp.toFixed(1)) : null,
+        totalPrecip: Number(totalRain.toFixed(1)),
+        cdd,
+        cwd,
+        heatwaveDays: hw.count,
+        extremeRainDays: extRain,
+        gdd
+      });
+    }
+
+    yearlyData.sort((a, b) => a.year - b.year);
+
+    // Compute Linear Trends (OLS)
+    const tempTrend = linearTrend(years, yearlyMeanTemps);
+    const precipTrend = linearTrend(years, yearlyTotalPrecip);
+
+    // Compute Z-Score Anomaly for temperature in the latest recorded year
+    let zScore = 0;
+    if (yearlyMeanTemps.length >= 2) {
+      const n = yearlyMeanTemps.length;
+      const mean = yearlyMeanTemps.reduce((a, b) => a + b, 0) / n;
+      const variance = yearlyMeanTemps.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / (n - 1);
+      const stdDev = Math.sqrt(variance);
+      const latestVal = yearlyMeanTemps[yearlyMeanTemps.length - 1];
+      zScore = zScoreAnomaly(latestVal, mean, stdDev);
+    }
+
+    // Cumulative period summaries
+    const totalHwDays = yearlyData.reduce((sum, y) => sum + y.heatwaveDays, 0);
+    const totalExtRainDays = yearlyData.reduce((sum, y) => sum + y.extremeRainDays, 0);
+    const maxCdd = Math.max(...yearlyData.map(y => y.cdd), 0);
+    const maxCwd = Math.max(...yearlyData.map(y => y.cwd), 0);
+    const avgGdd = yearlyData.length > 0
+      ? Number((yearlyData.reduce((sum, y) => sum + y.gdd, 0) / yearlyData.length).toFixed(1))
+      : 0;
+
+    const result = {
+      location: loc.name,
+      state: loc.state,
+      coordinates: { latitude: loc.lat, longitude: loc.lng },
+      period: `${startY} to ${endY}`,
+      startYear: startY,
+      endYear: endY,
+      generated: new Date().toISOString(),
+      source: "ERA5 Reanalysis via Open-Meteo",
+      indices: {
+        linearTrend: {
+          temperature: tempTrend,
+          precipitation: precipTrend
+        },
+        zScoreAnomaly: {
+          latestYear: years[years.length - 1],
+          score: zScore,
+          interpretation: zScore > 1.5 ? 'Significantly warmer than average' : zScore < -1.5 ? 'Significantly cooler than average' : 'Within normal range'
+        },
+        consecutiveDryDays: {
+          maxRecordedStreak: maxCdd,
+          yearlyAverage: Number((yearlyData.reduce((s, y) => s + y.cdd, 0) / yearlyData.length).toFixed(1))
+        },
+        consecutiveWetDays: {
+          maxRecordedStreak: maxCwd,
+          yearlyAverage: Number((yearlyData.reduce((s, y) => s + y.cwd, 0) / yearlyData.length).toFixed(1))
+        },
+        heatwaveDays: {
+          totalHeatwaveDays: totalHwDays,
+          averagePerYear: Number((totalHwDays / yearlyData.length).toFixed(1))
+        },
+        extremeRainDays: {
+          totalExtremeRainDays: totalExtRainDays,
+          averagePerYear: Number((totalExtRainDays / yearlyData.length).toFixed(1))
+        },
+        growingDegreeDays: {
+          averageGddPerYear: avgGdd
+        }
+      },
+      yearlyData
+    };
+
+    climateIndicesCache.set(cacheKey, { timestamp: Date.now(), data: result });
+    return result;
+  } catch (err) {
+    return { error: err.message };
+  }
+}
+

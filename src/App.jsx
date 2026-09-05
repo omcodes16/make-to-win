@@ -7,6 +7,7 @@ import AlertsScreen from './components/AlertsScreen';
 import ReviewsScreen from './components/ReviewsScreen';
 import ManagerDashboard from './components/ManagerDashboard';
 import SosButton from './components/SosButton';
+import ResearchPanel from './components/ResearchPanel';
 
 import { getTheme } from './utils/themes';
 import { getWeatherInfo } from './utils/weatherConditions';
@@ -100,6 +101,7 @@ function AppContent() {
         {state.activeTab === 'alerts' ? <AlertsScreen /> : 
          state.activeTab === 'stage' ? <WeatherDashboard /> : 
          state.activeTab === 'reviews' ? <ReviewsScreen /> : 
+         state.activeTab === 'research' ? <ResearchPanel /> :
          <ChatScreen />}
       </div>
 

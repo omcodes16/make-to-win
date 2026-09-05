@@ -209,8 +209,12 @@ export function AppProvider({ children }) {
            const path = window.location.pathname.replace(/^\//, '');
            if (path === 'manager' || path === 'alerts' || path === 'stage' || path === 'reviews' || path === 'chat') {
              dispatch({ type: 'SET_ACTIVE_TAB', payload: path });
-           } else if (data.activeTab) {
+           } else if (path === '') {
+             dispatch({ type: 'SET_ACTIVE_TAB', payload: 'chat' });
+           } else if (data.activeTab && data.activeTab !== 'manager') {
              dispatch({ type: 'SET_ACTIVE_TAB', payload: data.activeTab });
+           } else {
+             dispatch({ type: 'SET_ACTIVE_TAB', payload: 'chat' });
            }
 
            if (data.isLargeText !== state.isLargeText) dispatch({ type: 'TOGGLE_LARGE_TEXT' });
@@ -219,6 +223,8 @@ export function AppProvider({ children }) {
            const path = window.location.pathname.replace(/^\//, '');
            if (path === 'manager' || path === 'alerts' || path === 'stage' || path === 'reviews') {
              dispatch({ type: 'SET_ACTIVE_TAB', payload: path });
+           } else {
+             dispatch({ type: 'SET_ACTIVE_TAB', payload: 'chat' });
            }
         }
         dispatch({ type: 'SET_SETTINGS_LOADED' });

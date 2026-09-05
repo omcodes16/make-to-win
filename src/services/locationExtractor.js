@@ -1,4 +1,4 @@
-import { NER_CITIES } from './weatherApi';
+import { NER_CITIES } from './weatherApi.js';
 
 /**
  * Hindi/Devanagari transliterations of NER city names.
@@ -114,7 +114,9 @@ const SKIP_WORDS = new Set([
  * Returns the location string or null.
  */
 export function extractLocation(message) {
-  const trimmed = message.trim();
+  if (!message || typeof message !== 'string') return null;
+  // Strip emojis and excessive punctuation
+  const trimmed = message.replace(/[\u{1F300}-\u{1F9FF}]/gu, '').replace(/[\u{2600}-\u{27BF}]/gu, '').trim();
   if (!trimmed) return null;
 
   // 1. Check Hindi transliterations
@@ -134,10 +136,24 @@ export function extractLocation(message) {
 
   const lower = trimmed.toLowerCase();
 
-  // 4. Check English NER cities (case-insensitive)
-  for (const cityKey of Object.keys(NER_CITIES)) {
+  // 4. Check English NER cities (case-insensitive, longest matches first e.g. "Loktak Lake" before "Loktak")
+  const sortedKeys = Object.keys(NER_CITIES).sort((a, b) => b.length - a.length);
+  for (const cityKey of sortedKeys) {
     if (lower.includes(cityKey)) {
       return NER_CITIES[cityKey].name;
+    }
+  }
+
+  // 4b. Preposition extraction (e.g. "in Loktak Lake", "at Loktak Lake", "for Bhopal")
+  const prepMatch = trimmed.match(/\b(?:in|at|for|around|near)\s+([A-Za-z0-9\s\-']{2,30}?)(?:\s+today|\s+tomorrow|\s+now|[?,!.।॥]|$)/i);
+  if (prepMatch && prepMatch[1]) {
+    const cand = prepMatch[1].trim();
+    const candLower = cand.toLowerCase();
+    if (!SKIP_WORDS.has(candLower) && !GREETINGS.has(candLower)) {
+      if (NER_CITIES[candLower]) {
+        return NER_CITIES[candLower].name;
+      }
+      return cand;
     }
   }
 

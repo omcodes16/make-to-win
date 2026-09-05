@@ -128,11 +128,11 @@ export default function Header() {
           
           dispatch({ type: 'SET_LOADING', payload: true });
           
-          // Reverse geocode
-          const location = await reverseGeocode(lat, lng);
-          
-          // Get weather
-          const weatherData = await getWeather(lat, lng);
+          // Fetch reverse geocode and live weather concurrently
+          const [location, weatherData] = await Promise.all([
+            reverseGeocode(lat, lng),
+            getWeather(lat, lng)
+          ]);
           const weatherInfo = getWeatherInfo(weatherData.weatherCode);
           
           dispatch({ type: 'SET_WEATHER_CONDITION', payload: weatherInfo.condition });
@@ -261,6 +261,16 @@ export default function Header() {
                   <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
                   {t.tabAlerts}
                 </span>
+              </button>
+              <button
+                onClick={() => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'research' })}
+                className={`px-3 py-1.5 text-xs lg:text-sm font-bold rounded-full transition-all duration-300 whitespace-nowrap ${
+                  state.activeTab === 'research'
+                    ? 'bg-indigo-500/20 text-indigo-400 shadow-[0_0_15px_rgba(99,102,241,0.2)] border border-indigo-400/30'
+                    : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
+                }`}
+              >
+                🔬 Research
               </button>
             </div>
 
@@ -691,18 +701,27 @@ export default function Header() {
             <span className="text-[10px] tracking-tight font-semibold">Forecast</span>
           </button>
 
-          {/* Tab 3: Advisory Hub (Center featured pill) */}
+          {/* Tab 3: Research & Climate Analytics */}
           <button
-            onClick={() => setIsHubOpen(true)}
-            className="flex flex-col items-center justify-center py-1 px-0.5 rounded-xl gap-0.5 active:scale-95 transition-all text-indigo-400 font-bold"
-            title="Open Profession Advisory Hub"
+            onClick={() => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'research' })}
+            className={`flex flex-col items-center justify-center py-1 px-0.5 rounded-xl gap-0.5 active:scale-95 transition-all ${
+              state.activeTab === 'research'
+                ? 'bottom-tab-active font-bold text-emerald-400'
+                : 'text-emerald-400/80 hover:text-emerald-300 font-semibold'
+            }`}
+            title="Research & Climate Analytics"
           >
-            <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 text-white flex items-center justify-center shadow-md shadow-indigo-500/30">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+            <div className={`w-7 h-7 rounded-full flex items-center justify-center shadow-md transition-all ${
+              state.activeTab === 'research'
+                ? 'bg-gradient-to-tr from-emerald-500 to-teal-500 text-white shadow-emerald-500/40 scale-105'
+                : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+            }`}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M10 2v7.31M14 2v7.31M8.5 2h7M14 9.3a6.5 6.5 0 1 1-4 0"/>
+                <path d="M5.52 16h12.96"/>
               </svg>
             </div>
-            <span className="text-[9px] tracking-tight font-black uppercase text-indigo-400">Hub</span>
+            <span className="text-[9px] tracking-tight font-black uppercase text-emerald-400">Research</span>
           </button>
 
           {/* Tab 4: Alerts */}

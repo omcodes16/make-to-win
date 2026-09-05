@@ -79,7 +79,15 @@ export default function ChatInput() {
     dispatch({ type: 'SET_LOADING', payload: true });
 
     try {
-      const locationName = extractLocation(text);
+      let locationName = extractLocation(text);
+      if (!locationName) {
+        // Fall back to conversation history first (most recent message with location), then dashboard
+        const lastMsgWithLoc = [...state.messages].reverse().find(m => m.location || m.data?.location || m.data?.locationName || m.weatherData?.locationName);
+        locationName = lastMsgWithLoc?.location || lastMsgWithLoc?.data?.location || lastMsgWithLoc?.data?.locationName || lastMsgWithLoc?.weatherData?.locationName || null;
+        if (!locationName) {
+          locationName = state.currentWeather?.locationName || state.weatherStageData?.locationName;
+        }
+      }
 
       let location = null;
       let weatherData = null;
@@ -107,10 +115,13 @@ export default function ChatInput() {
         conditionLabel: weatherInfo.label,
       } : null, recentHistory, state.userProfile);
 
+      const resolvedLocationName = aiResponse.location || (location ? location.name : null) || locationName;
+
       let weatherCache = undefined;
       if (weatherData) {
         weatherCache = {
           locationName: location.name,
+          location: location.name,
           ...weatherData,
         };
         localStorage.setItem('weathergpt-weather-cache', JSON.stringify(weatherCache));
@@ -127,7 +138,10 @@ export default function ChatInput() {
           relevantStat: aiResponse.relevantStat || '',
           advisory: aiResponse.advisory || (severityCheck ? severityCheck.summary : ''),
           severity: aiResponse.severity || (severityCheck?.isSevere ? 'severe' : 'none'),
-          weatherData: aiResponse.showWeatherWidget === false ? null : (aiResponse.weatherData || weatherCache),
+          weatherData: aiResponse.showWeatherWidget === false 
+            ? (resolvedLocationName ? { location: resolvedLocationName, locationName: resolvedLocationName } : null) 
+            : (aiResponse.weatherData || weatherCache || (resolvedLocationName ? { location: resolvedLocationName, locationName: resolvedLocationName } : null)),
+          location: resolvedLocationName,
           suggestedQuestions: aiResponse.suggestedQuestions,
           autoSpeak: isVoice
         },
