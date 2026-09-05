@@ -255,8 +255,14 @@ export default function OfficialBulletinModal({
   const handleWhatsAppShare = () => {
     if (!bulletinData) return;
     const { current, farmer, fisherman, urban, aviation } = bulletinData;
+    const shareUrl = typeof window !== 'undefined' && window.location.origin && !window.location.origin.includes('localhost')
+      ? window.location.origin
+      : 'https://make-to-win.onrender.com';
+    const locDetails = [location.district, location.state].filter(Boolean).join(', ');
+    const locText = locDetails ? `${location.name} (${locDetails})` : location.name;
+
     const text = `🏛️ *${t.govTitle}*
-📍 *${t.panchayat}:* ${location.name} (${location.district ? location.district + ', ' : ''}${location.state})
+📍 *${t.panchayat}:* ${locText}
 ⏱️ *${t.validity}:* ${t.hours}
 🌡️ *Temp:* ${current.temp}°C (Feels like ${current.feelsLike}°C) | Rain Prob: ${current.rainProb}% | Wind: ${current.windSpeed} km/h (${current.windCompass})
 
@@ -277,7 +283,7 @@ export default function OfficialBulletinModal({
 ✈️ *विमानन (Aviation):*
 • Visibility: ${aviation.visibilityKm} km | Drone Clearance: ${aviation.droneClearance}
 
-🔗 *Official WeatherGPT Live Cell:* https://weathergpt.gov.in`;
+🔗 *Official WeatherGPT Live Cell:* ${shareUrl}/`;
 
     if (navigator.share) {
       navigator.share({
