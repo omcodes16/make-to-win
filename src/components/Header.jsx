@@ -160,34 +160,60 @@ export default function Header() {
           const text = `Give me a quick weather summary for my current live location: ${location.name}`;
           dispatch({ type: 'ADD_USER_MESSAGE', payload: `📍 Current Location: ${location.name}` });
           
-          const aiResponse = await sendChatMessage(text, state.language, {
-            location: location.name,
-            state: location.state,
-            ...weatherData,
-            conditionLabel: weatherInfo.label,
-          }, [], state.userProfile);
+          try {
+            const aiResponse = await sendChatMessage(text, state.language, {
+              location: location.name,
+              state: location.state,
+              ...weatherData,
+              conditionLabel: weatherInfo.label,
+            }, [], state.userProfile);
 
-          dispatch({
-            type: 'ADD_ASSISTANT_MESSAGE',
-            payload: {
-              answer: aiResponse.answer,
-              followUp: aiResponse.followUp,
-              relevantStat: aiResponse.relevantStat || '',
-              advisory: aiResponse.advisory || (severityCheck ? severityCheck.summary : ''),
-              severity: aiResponse.severity || (severityCheck?.isSevere ? 'severe' : 'none'),
-              weatherData: {
-                temperature: weatherData.temperature,
-                feelsLike: weatherData.feelsLike,
-                humidity: weatherData.humidity,
-                windSpeed: weatherData.windSpeed,
-                precipitation: weatherData.precipitation,
-                weatherCode: weatherData.weatherCode,
-                uvIndex: weatherData.uvIndex,
-                visibility: weatherData.visibility,
-                locationName: location.name,
+            dispatch({
+              type: 'ADD_ASSISTANT_MESSAGE',
+              payload: {
+                answer: aiResponse.answer,
+                followUp: aiResponse.followUp,
+                relevantStat: aiResponse.relevantStat || '',
+                advisory: aiResponse.advisory || (severityCheck ? severityCheck.summary : ''),
+                severity: aiResponse.severity || (severityCheck?.isSevere ? 'severe' : 'none'),
+                weatherData: {
+                  temperature: weatherData.temperature,
+                  feelsLike: weatherData.feelsLike,
+                  humidity: weatherData.humidity,
+                  windSpeed: weatherData.windSpeed,
+                  precipitation: weatherData.precipitation,
+                  weatherCode: weatherData.weatherCode,
+                  uvIndex: weatherData.uvIndex,
+                  visibility: weatherData.visibility,
+                  locationName: location.name,
+                },
               },
-            },
-          });
+            });
+          } catch (aiErr) {
+            console.warn("AI summary fallback:", aiErr.message);
+            // Graceful direct weather summary fallback without showing a failure bubble
+            dispatch({
+              type: 'ADD_ASSISTANT_MESSAGE',
+              payload: {
+                answer: `Current weather in ${location.name}: ${weatherInfo.label} with ${weatherData.temperature}°C (feels like ${weatherData.feelsLike}°C). Humidity is at ${weatherData.humidity}%, wind speed is ${weatherData.windSpeed} km/h.`,
+                followUp: '',
+                relevantStat: `RAIN: ${weatherData.rain || 0} MM`,
+                advisory: severityCheck ? severityCheck.summary : '',
+                severity: severityCheck?.isSevere ? 'severe' : 'none',
+                weatherData: {
+                  temperature: weatherData.temperature,
+                  feelsLike: weatherData.feelsLike,
+                  humidity: weatherData.humidity,
+                  windSpeed: weatherData.windSpeed,
+                  precipitation: weatherData.precipitation,
+                  weatherCode: weatherData.weatherCode,
+                  uvIndex: weatherData.uvIndex,
+                  visibility: weatherData.visibility,
+                  locationName: location.name,
+                },
+              },
+            });
+          }
           
         } catch (err) {
           console.error("Live location error:", err);
@@ -201,6 +227,11 @@ export default function Header() {
         console.error(err);
         alert("Unable to retrieve your location. Please check browser permissions.");
         setIsLocating(false);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
       }
     );
   };

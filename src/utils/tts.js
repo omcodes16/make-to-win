@@ -1,6 +1,6 @@
 // Global state for custom TTS player
 let currentSpeakingId = null;
-let currentAudioContext = null;
+let currentAudioElement = null;
 let currentAudioQueue = [];
 let isPlaying = false;
 
@@ -16,57 +16,105 @@ const notifyListeners = (speakingId) => {
 };
 
 export const stopSpeech = () => {
-  if (currentAudioContext) {
-    currentAudioContext.close().catch(console.error);
-    currentAudioContext = null;
+  if (currentAudioElement) {
+    try {
+      currentAudioElement.pause();
+      currentAudioElement.currentTime = 0;
+    } catch (e) {}
+    currentAudioElement = null;
+  }
+  if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+    try {
+      window.speechSynthesis.cancel();
+    } catch (e) {}
   }
   currentAudioQueue = [];
   isPlaying = false;
   notifyListeners(null);
 };
 
-async function playNextChunk() {
-  if (currentAudioQueue.length === 0) {
+function playNextChunk(id) {
+  if (!isPlaying || currentSpeakingId !== id || currentAudioQueue.length === 0) {
     stopSpeech();
     return;
   }
-  
-  if (!currentAudioContext) {
-    currentAudioContext = new (window.AudioContext || window.webkitAudioContext)();
-  }
-  
+
   const base64Audio = currentAudioQueue.shift();
-  
   try {
-    const binaryString = window.atob(base64Audio);
-    const len = binaryString.length;
-    const bytes = new Uint8Array(len);
-    for (let i = 0; i < len; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-    }
-    
-    const audioBuffer = await currentAudioContext.decodeAudioData(bytes.buffer);
-    const source = currentAudioContext.createBufferSource();
-    source.buffer = audioBuffer;
-    source.connect(currentAudioContext.destination);
-    
-    source.onended = () => {
-      playNextChunk(); // Play the next chunk in the queue
+    const audio = new Audio(`data:audio/mp3;base64,${base64Audio}`);
+    currentAudioElement = audio;
+
+    audio.onended = () => {
+      if (isPlaying && currentSpeakingId === id) {
+        playNextChunk(id);
+      }
     };
-    
-    source.start(0);
+
+    audio.onerror = (e) => {
+      console.warn('TTS chunk audio error, playing next...', e);
+      if (isPlaying && currentSpeakingId === id) {
+        playNextChunk(id);
+      }
+    };
+
+    audio.play().catch(err => {
+      console.warn('Audio play prevented or failed:', err);
+      stopSpeech();
+    });
   } catch (err) {
-    console.error('Error playing audio chunk:', err);
-    playNextChunk(); // skip to next on error
+    console.error('Error creating audio element:', err);
+    if (isPlaying && currentSpeakingId === id) {
+      playNextChunk(id);
+    }
+  }
+}
+
+function fallbackWebSpeech(text, targetLangCode, id) {
+  if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+    stopSpeech();
+    return;
+  }
+  try {
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    const langTagMap = {
+      hi: 'hi-IN',
+      en: 'en-IN',
+      bn: 'bn-IN',
+      as: 'bn-IN',
+      mr: 'mr-IN',
+      ta: 'ta-IN',
+      te: 'te-IN',
+      gu: 'gu-IN',
+      kn: 'kn-IN',
+      ml: 'ml-IN',
+      pa: 'pa-IN',
+      ur: 'ur-IN'
+    };
+    utterance.lang = langTagMap[targetLangCode] || 'hi-IN';
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+
+    utterance.onend = () => {
+      if (currentSpeakingId === id) stopSpeech();
+    };
+    utterance.onerror = () => {
+      if (currentSpeakingId === id) stopSpeech();
+    };
+
+    window.speechSynthesis.speak(utterance);
+  } catch (e) {
+    stopSpeech();
   }
 }
 
 export const speakText = async (id, text, currentLang, onFallbackMessage) => {
-  // Always stop current speech first
   stopSpeech();
+  if (!text || typeof text !== 'string' || !text.trim()) return;
+
   notifyListeners(id);
   isPlaying = true;
-  
+
   // Map standard language codes to TTS voice codes
   const TTS_LANG_MAP = {
     en: 'en',
@@ -87,8 +135,8 @@ export const speakText = async (id, text, currentLang, onFallbackMessage) => {
     ne: 'ne',
     kok: 'mr', // Konkani fallback to Marathi phonetics
   };
-  const targetLangCode = TTS_LANG_MAP[currentLang] || 'en';
-  
+  const targetLangCode = TTS_LANG_MAP[currentLang] || (text.match(/[\u0900-\u097F]/) ? 'hi' : 'en');
+
   try {
     const baseUrl = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
     const response = await fetch(`${baseUrl}/api/tts`, {
@@ -99,29 +147,29 @@ export const speakText = async (id, text, currentLang, onFallbackMessage) => {
       body: JSON.stringify({
         text: text,
         lang: targetLangCode
-      })
+      }),
+      signal: AbortSignal.timeout(8000)
     });
-    
+
     if (!response.ok) {
-      throw new Error('TTS Backend failed');
+      throw new Error('TTS Backend failed with status ' + response.status);
     }
-    
+
     const data = await response.json();
-    if (data.chunks && data.chunks.length > 0) {
-      // If we are still supposed to be playing this message
+    const chunks = data.chunks || data.audioChunks;
+    if (chunks && Array.isArray(chunks) && chunks.length > 0) {
       if (isPlaying && currentSpeakingId === id) {
-         currentAudioQueue = data.chunks;
-         playNextChunk();
+        currentAudioQueue = [...chunks];
+        playNextChunk(id);
       }
     } else {
-       stopSpeech();
-       if (onFallbackMessage) onFallbackMessage('🔇 Could not generate voice');
+      fallbackWebSpeech(text, targetLangCode, id);
     }
-    
   } catch (err) {
-    console.error('TTS Fetch Error:', err);
-    stopSpeech();
-    if (onFallbackMessage) onFallbackMessage('🔇 Network error loading voice');
+    console.warn('TTS Backend failed, switching to native SpeechSynthesis fallback:', err.message);
+    if (isPlaying && currentSpeakingId === id) {
+      fallbackWebSpeech(text, targetLangCode, id);
+    }
   }
 };
 

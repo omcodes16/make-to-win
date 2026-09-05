@@ -52,6 +52,22 @@ export default function ManagerDashboard() {
   const gainRef = React.useRef(null);
   const lfoRef = React.useRef(null);
 
+  const stopSiren = () => {
+    try {
+      if (oscRef.current) {
+        oscRef.current.stop();
+        lfoRef.current?.stop();
+        if (audioCtxRef.current?.state !== 'closed') {
+          audioCtxRef.current?.close();
+        }
+      }
+    } catch (e) {}
+    oscRef.current = null;
+    gainRef.current = null;
+    lfoRef.current = null;
+    audioCtxRef.current = null;
+  };
+
   useEffect(() => {
     const hasPending = sosRequests.some(sos => sos.status === 'pending');
     
@@ -91,26 +107,12 @@ export default function ManagerDashboard() {
         console.log("Audio prevented by browser policy", e);
       }
     } else if (!hasPending && oscRef.current) {
-      // Stop the siren once all requests are attended to
-      try {
-        oscRef.current.stop();
-        lfoRef.current.stop();
-        audioCtxRef.current.close();
-      } catch (e) {}
-      oscRef.current = null;
-      gainRef.current = null;
-      lfoRef.current = null;
-      audioCtxRef.current = null;
+      // Stop the siren immediately once all requests are attended to
+      stopSiren();
     }
 
     return () => {
-      if (oscRef.current) {
-        try {
-          oscRef.current.stop();
-          lfoRef.current.stop();
-          if (audioCtxRef.current?.state !== 'closed') audioCtxRef.current.close();
-        } catch(e) {}
-      }
+      stopSiren();
     };
   }, [sosRequests]);
   // ----------------------------------------------------
@@ -176,13 +178,28 @@ export default function ManagerDashboard() {
         fetchAlerts();
       };
 
+      const handleSosStatusUpdate = (e) => {
+        const detail = e.detail;
+        if (!detail) return;
+        setSosRequests(prev => {
+          const updated = prev.map(s => ((s._id && s._id === detail.sosId) || (s.id && s.id === detail.sosId)) ? { ...s, status: detail.status } : s);
+          const stillPending = updated.some(s => s.status === 'pending');
+          if (!stillPending) {
+            stopSiren();
+          }
+          return updated;
+        });
+      };
+
       window.addEventListener('weathergpt-new-sos', handleNewSos);
+      window.addEventListener('weathergpt-sos-status-update', handleSosStatusUpdate);
       window.addEventListener('focus', handleFocus);
       window.addEventListener('online', handleFocus);
 
       return () => {
         clearInterval(interval);
         window.removeEventListener('weathergpt-new-sos', handleNewSos);
+        window.removeEventListener('weathergpt-sos-status-update', handleSosStatusUpdate);
         window.removeEventListener('focus', handleFocus);
         window.removeEventListener('online', handleFocus);
       };
@@ -207,6 +224,16 @@ export default function ManagerDashboard() {
   };
 
   const updateSosStatus = async (id, status) => {
+    // 1. Immediately update local state and silence siren with 0ms delay
+    setSosRequests(prev => {
+      const updated = prev.map(s => ((s._id && s._id === id) || (s.id && s.id === id)) ? { ...s, status } : s);
+      const stillPending = updated.some(s => s.status === 'pending');
+      if (!stillPending) {
+        stopSiren();
+      }
+      return updated;
+    });
+
     try {
       await fetch(`${API_URL}/api/manager/sos/${id}`, {
         method: "PUT",

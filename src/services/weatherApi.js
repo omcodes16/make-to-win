@@ -6,6 +6,8 @@ const INDIA_CITIES = {
   'bhopal': { lat: 23.2599, lng: 77.4126, name: 'Bhopal', state: 'Madhya Pradesh', district: 'Bhopal' },
   'indore': { lat: 22.7196, lng: 75.8577, name: 'Indore', state: 'Madhya Pradesh', district: 'Indore' },
   'jabalpur': { lat: 23.1815, lng: 79.9864, name: 'Jabalpur', state: 'Madhya Pradesh', district: 'Jabalpur' },
+  'ranjhi': { lat: 23.2030, lng: 80.0003, name: 'Ranjhi', state: 'Madhya Pradesh', district: 'Jabalpur' },
+  'ranjhi tehsil': { lat: 23.2030, lng: 80.0003, name: 'Ranjhi Tehsil', state: 'Madhya Pradesh', district: 'Jabalpur' },
   'gwalior': { lat: 26.2183, lng: 78.1828, name: 'Gwalior', state: 'Madhya Pradesh', district: 'Gwalior' },
   'ujjain': { lat: 23.1765, lng: 75.7885, name: 'Ujjain', state: 'Madhya Pradesh', district: 'Ujjain' },
   'delhi': { lat: 28.6139, lng: 77.2090, name: 'New Delhi', state: 'Delhi (NCT)', district: 'New Delhi' },
@@ -635,9 +637,16 @@ export async function reverseGeocode(lat, lng) {
     }
   }
 
+  // Quick coordinate check for known special localities (e.g. Ranjhi, Jabalpur)
+  if (Math.abs(lat - 23.2030) < 0.06 && Math.abs(lng - 80.0003) < 0.06) {
+    const resRanjhi = { name: "Ranjhi, Jabalpur", state: "Madhya Pradesh", district: "Jabalpur", lat, lng };
+    REVERSE_GEOCODE_CACHE.set(roundedKey, { data: resRanjhi, timestamp: Date.now() });
+    return resRanjhi;
+  }
+
   try {
     const res = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10`,
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=14`,
       { 
         headers: { 'User-Agent': 'WeatherGPT-SIH2026' },
         signal: AbortSignal.timeout(3500) // 3.5s timeout: Prevents 10-15s hangs on free Nominatim
@@ -645,11 +654,12 @@ export async function reverseGeocode(lat, lng) {
     );
     if (res.ok) {
       const data = await res.json();
-      const name = data.address?.city || data.address?.town || data.address?.village || data.address?.county || data.address?.state || "Current Location";
+      const a = data.address || {};
+      const name = a.suburb || a.neighbourhood || a.tehsil || a.county || a.village || a.town || a.city_district || a.city || data.name || a.state || "Current Location";
       const result = {
         name: name,
-        state: data.address?.state || '',
-        district: data.address?.state_district || data.address?.county || '',
+        state: a.state || '',
+        district: a.state_district || a.county || a.district || '',
         lat: lat,
         lng: lng
       };

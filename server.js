@@ -551,9 +551,11 @@ app.post('/api/tts', async (req, res) => {
       timeout: 10000,
     });
 
+    const base64List = audioList.map(item => item.base64);
     res.json({
       success: true,
-      audioChunks: audioList.map(item => item.base64),
+      chunks: base64List,
+      audioChunks: base64List,
       lang: targetLang
     });
   } catch (error) {
