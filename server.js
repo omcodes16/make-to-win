@@ -312,17 +312,18 @@ RESPOND ONLY IN THIS EXACT JSON FORMAT, no markdown fences:
 }`;
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-async function fetchWithRetry(url, options, maxRetries = 4) {
+async function fetchWithRetry(url, options, maxRetries = 2) {
   for (let i = 0; i < maxRetries; i++) {
-    const response = await fetch(url, options);
+    const fetchOpts = { ...options, signal: AbortSignal.timeout(15000) };
+    const response = await fetch(url, fetchOpts);
     if (response.status === 429) {
-      console.warn(`[429 Rate Limit] TPM limit hit. Waiting 4 seconds before retry (Attempt ${i + 1}/${maxRetries})...`);
-      await sleep(4000);
+      console.warn(`[429 Rate Limit] TPM limit hit. Waiting 2 seconds before retry (Attempt ${i + 1}/${maxRetries})...`);
+      await sleep(2000);
       continue;
     }
     return response;
   }
-  return fetch(url, options);
+  return fetch(url, { ...options, signal: AbortSignal.timeout(15000) });
 }
 
 // POST /api/chat
@@ -1387,7 +1388,7 @@ app.post('/api/chat', async (req, res) => {
     : 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
   
   // Use a currently supported Groq model that supports tool calling
-  const apiModel = useGroq ? 'openai/gpt-oss-20b' : 'gemini-3.6-flash';
+  const apiModel = useGroq ? 'openai/gpt-oss-20b' : 'gemini-2.5-flash';
 
   let finalContent = null;
   let lastWeatherData = null;
@@ -1422,7 +1423,7 @@ app.post('/api/chat', async (req, res) => {
     ];
 
     let loopCount = 0;
-    const MAX_LOOPS = 3; 
+    const MAX_LOOPS = 2; 
 
     if (req.body.forceLegacy) {
       throw new Error('Forced legacy bypass for testing.');
@@ -1443,7 +1444,7 @@ app.post('/api/chat', async (req, res) => {
             tools: WEATHER_TOOLS,
             tool_choice: 'auto',
             temperature: 0.7,
-            max_tokens: 2048
+            max_tokens: 1024
           }),
         });
       } catch (e) {
@@ -1455,7 +1456,7 @@ app.post('/api/chat', async (req, res) => {
         console.warn(`[FAILOVER] Primary API failed: ${errContext}. Attempting Alternate API fallback...`);
         const altApiBase = useGroq ? 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions' : 'https://api.groq.com/openai/v1/chat/completions';
         const altApiKey = useGroq ? geminiKey : groqKey;
-        const altApiModel = useGroq ? 'gemini-3.6-flash' : 'openai/gpt-oss-20b';
+        const altApiModel = useGroq ? 'gemini-2.5-flash' : 'openai/gpt-oss-20b';
 
         if (altApiKey) {
           response = await fetchWithRetry(altApiBase, {
@@ -1470,7 +1471,7 @@ app.post('/api/chat', async (req, res) => {
               tools: WEATHER_TOOLS,
               tool_choice: 'auto',
               temperature: 0.7,
-              max_tokens: 2048
+              max_tokens: 1024
             }),
           });
         }
@@ -1619,7 +1620,7 @@ ${modelNote}`;
               { role: 'user', content: fallbackPrompt }
             ],
             temperature: 0.7,
-            max_tokens: 2048
+            max_tokens: 1024
           }),
         });
       } catch (e) {
@@ -1631,7 +1632,7 @@ ${modelNote}`;
         console.warn(`[FAILOVER] Primary API failed in fallback mode: ${errContext}. Attempting Alternate API fallback...`);
         const altApiBase = useGroq ? 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions' : 'https://api.groq.com/openai/v1/chat/completions';
         const altApiKey = useGroq ? geminiKey : groqKey;
-        const altApiModel = useGroq ? 'gemini-3.6-flash' : 'openai/gpt-oss-20b';
+        const altApiModel = useGroq ? 'gemini-2.5-flash' : 'openai/gpt-oss-20b';
 
         if (altApiKey) {
           fallbackRes = await fetchWithRetry(altApiBase, {
@@ -1645,7 +1646,7 @@ ${modelNote}`;
                 { role: 'user', content: fallbackPrompt }
               ],
               temperature: 0.7,
-              max_tokens: 2048
+              max_tokens: 1024
             }),
           });
         }

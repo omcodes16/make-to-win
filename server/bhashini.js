@@ -143,11 +143,11 @@ ${JSON.stringify(texts)}`;
         'Authorization': `Bearer ${geminiKey}`
       },
       body: JSON.stringify({
-        model: 'gemini-3.6-flash',
+        model: 'gemini-2.5-flash',
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.2
       }),
-      signal: AbortSignal.timeout(10000)
+      signal: AbortSignal.timeout(6000)
     });
 
     if (res.ok) {

@@ -156,11 +156,29 @@ export const WEATHER_TOOLS = [
 // ------------------------------------------------------------------
 
 /**
+ * Server-side geocode cache — avoids re-geocoding the same city name
+ * on every tool call. TTL: 30 minutes.
+ */
+const GEOCODE_CACHE = new Map();
+const GEOCODE_CACHE_TTL = 30 * 60 * 1000;
+
+async function cachedGeocode(location) {
+  const key = location.toLowerCase().trim();
+  if (GEOCODE_CACHE.has(key)) {
+    const cached = GEOCODE_CACHE.get(key);
+    if (Date.now() - cached.ts < GEOCODE_CACHE_TTL) return cached.data;
+  }
+  const loc = await geocodeLocation(location, 'en');
+  if (loc) GEOCODE_CACHE.set(key, { data: loc, ts: Date.now() });
+  return loc;
+}
+
+/**
  * Helper: Geocode and fetch weather data. 
- * Reused by multiple tools.
+ * Reused by multiple tools. Uses geocode cache for speed.
  */
 async function _getLocAndWeather(location) {
-  const loc = await geocodeLocation(location, 'en');
+  const loc = await cachedGeocode(location);
   if (!loc) throw new Error(`Location not found: ${location}`);
   const data = await getWeather(loc.lat, loc.lng);
   return { loc, data };
@@ -217,7 +235,7 @@ export async function get_forecast({ location, daysAhead }) {
 
 export async function get_historical_trend({ location, days }) {
   try {
-    const loc = await geocodeLocation(location, 'en');
+    const loc = await cachedGeocode(location);
     if (!loc) return { error: `Location not found: ${location}` };
 
     const endDate = new Date();
@@ -357,7 +375,7 @@ export async function get_seasonal_comparison({ location }) {
       };
     } else {
       // Slow path: unknown city — geocode and compute live from archive API
-      const loc = await geocodeLocation(location, 'en');
+      const loc = await cachedGeocode(location);
       if (!loc) return { error: 'No seasonal baseline data available for this specific city.' };
       norm = await computeLiveSeasonalBaseline(loc.lat, loc.lng);
       if (!norm) return { error: 'No seasonal baseline data available for this specific city.' };
@@ -444,7 +462,7 @@ export async function get_active_alerts({ location }) {
 
 export async function get_marine_weather({ location }) {
   try {
-    const loc = await geocodeLocation(location, 'en');
+    const loc = await cachedGeocode(location);
     if (!loc) return { error: `Location not found: ${location}` };
     
     const res = await fetch(`https://marine-api.open-meteo.com/v1/marine?latitude=${loc.lat}&longitude=${loc.lng}&hourly=wave_height,wave_period,wave_direction&timezone=auto`);
@@ -469,7 +487,7 @@ const CLIMATE_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 export async function get_climate_indices({ location, startYear, endYear }) {
   try {
-    const loc = await geocodeLocation(location, 'en');
+    const loc = await cachedGeocode(location);
     if (!loc) return { error: `Location not found: ${location}` };
 
     const currentYear = new Date().getFullYear();
