@@ -25,6 +25,8 @@ export default function MobileMenuSheet({
   onOpenReviews,
   onOpenManager,
   onOpenBulletin,
+  onOpenDrishti,
+  onOpenSagar,
   onResetOnboarding,
 }) {
   const [mobileLangSearch, setMobileLangSearch] = useState('');
@@ -164,6 +166,58 @@ export default function MobileMenuSheet({
                   <span>{s.label}</span>
                 </button>
               ))}
+            </div>
+          </div>
+
+          {/* Mausam-Drishti AI Crop Doctor Card */}
+          <div className="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-500/15 via-slate-900 to-teal-500/15 border border-emerald-500/40 shadow-sm space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center justify-center text-lg shrink-0 shadow-inner">
+                  🌿
+                </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-wider text-emerald-400">Mausam-Drishti AI</p>
+                  <p className="text-xs font-extrabold text-white">फसल रोग व स्प्रे परामर्श (Crop Doctor)</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  onClose();
+                  if (onOpenDrishti) onOpenDrishti();
+                  else window.dispatchEvent(new CustomEvent('weathergpt-open-mausam-drishti'));
+                }}
+                className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-md shadow-emerald-600/30 transition-all active:scale-95 flex items-center gap-1"
+              >
+                <span>Scan</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
+            </div>
+          </div>
+
+          {/* Sagar-Rakshak Marine Safety Card */}
+          <div className="p-3.5 rounded-2xl bg-gradient-to-r from-cyan-500/15 via-slate-900 to-blue-500/15 border border-cyan-500/40 shadow-sm space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 flex items-center justify-center text-lg shrink-0 shadow-inner">
+                  🌊
+                </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-wider text-cyan-400">Sagar-Rakshak AI</p>
+                  <p className="text-xs font-extrabold text-white">कल्लाकडाल व समुद्री सीमा रडार (Marine HUD)</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  onClose();
+                  if (onOpenSagar) onOpenSagar();
+                  else window.dispatchEvent(new CustomEvent('weathergpt-open-sagar-rakshak'));
+                }}
+                className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold text-xs shadow-md shadow-cyan-600/30 transition-all active:scale-95 flex items-center gap-1"
+              >
+                <span>Radar</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
             </div>
           </div>
 

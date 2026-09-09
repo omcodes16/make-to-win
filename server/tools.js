@@ -173,6 +173,22 @@ async function cachedGeocode(location) {
   return loc;
 }
 
+export function primeGeocodeCache(location, data) {
+  if (!location || !data || !data.lat || !data.lng) return;
+  const key = location.toLowerCase().trim();
+  GEOCODE_CACHE.set(key, {
+    data: {
+      name: data.name || location,
+      state: data.state || '',
+      district: data.district || '',
+      lat: data.lat,
+      lng: data.lng,
+      country: 'India'
+    },
+    ts: Date.now()
+  });
+}
+
 /**
  * Helper: Geocode and fetch weather data. 
  * Reused by multiple tools. Uses geocode cache for speed.

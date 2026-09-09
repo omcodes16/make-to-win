@@ -418,10 +418,77 @@ export default function AlertsScreen() {
   return (
     <div className="min-h-[100dvh] text-white overflow-y-auto pb-24 md:pb-20 relative font-body transition-colors duration-1000">
 
-      <div className="relative z-10 max-w-[1400px] mx-auto px-4 sm:px-6 pt-20 sm:pt-28 md:pt-32 flex flex-col lg:flex-row gap-6 pb-32">
+      <div className="relative z-10 max-w-[1400px] mx-auto px-4 sm:px-6 pt-20 sm:pt-24 md:pt-28 flex flex-col gap-6 pb-32">
         
-        {/* Left Column: Alerts & Risk */}
-        <div className="flex-1 flex flex-col gap-6">
+        {/* ── Severity Status Banner — Human-First horizontal safety indicator ── */}
+        {(() => {
+          const highestAlert = liveAlerts.find(a => a.level === 'Severe' || a.level === 'Extreme')
+            || liveAlerts.find(a => a.level === 'Caution' || a.level === 'Warning')
+            || liveAlerts[0];
+          const isSevere = highestAlert?.level === 'Severe' || highestAlert?.level === 'Extreme';
+          const isCaution = highestAlert?.level === 'Caution' || highestAlert?.level === 'Warning';
+          const isGood = highestAlert?.level === 'Good';
+          const cfg = isSevere
+            ? {
+                bg: 'linear-gradient(135deg, rgba(220, 38, 38, 0.22) 0%, rgba(153, 27, 27, 0.15) 100%)',
+                border: '1px solid rgba(239, 68, 68, 0.45)',
+                dot: '#ef4444',
+                icon: '🔴',
+                text: lang === 'hi' ? 'खतरा — गंभीर मौसम चेतावनी सक्रिय' : lang === 'bn' ? 'বিপদ — গুরুতর আবহাওয়া সতর্কতা' : 'DANGER — Severe Weather Alert Active',
+                sub: lang === 'hi' ? 'सुरक्षित स्थान पर रहें। अनावश्यक रूप से बाहर न जाएं।' : lang === 'bn' ? 'নিরাপদ স্থানে থাকুন। বাইরে যাবেন না।' : 'Stay in a safe location. Avoid unnecessary outdoor movement.',
+              }
+            : isCaution
+            ? {
+                bg: 'linear-gradient(135deg, rgba(217, 119, 6, 0.22) 0%, rgba(146, 64, 14, 0.15) 100%)',
+                border: '1px solid rgba(245, 158, 11, 0.45)',
+                dot: '#f59e0b',
+                icon: '🟡',
+                text: lang === 'hi' ? 'सावधान — मौसम की चेतावनी है' : lang === 'bn' ? 'সতর্ক — আবহাওয়া সতর্কতা আছে' : 'CAUTION — Weather Advisory in Effect',
+                sub: lang === 'hi' ? 'सतर्क रहें और स्थानीय निर्देशों का पालन करें।' : lang === 'bn' ? 'সতর্ক থাকুন এবং স্থানীয় নির্দেশাবলী অনুসরণ করুন।' : 'Stay alert and follow local safety guidance.',
+              }
+            : {
+                bg: 'linear-gradient(135deg, rgba(5, 150, 105, 0.22) 0%, rgba(4, 120, 87, 0.15) 100%)',
+                border: '1px solid rgba(16, 185, 129, 0.45)',
+                dot: '#10b981',
+                icon: '🟢',
+                text: lang === 'hi' ? 'सुरक्षित — कोई गंभीर चेतावनी नहीं' : lang === 'bn' ? 'নিরাপদ — কোনো গুরুতর সতর্কতা নেই' : 'SAFE — No Severe Weather Warnings Active',
+                sub: lang === 'hi' ? 'मौसम सामान्य है। सामान्य गतिविधियां जारी रखें।' : lang === 'bn' ? 'আবহাওয়া স্বাভাবিক। স্বাভাবিক কার্যক্রম চালিয়ে যান।' : 'Weather conditions are normal. Proceed with normal activities.',
+              };
+          return (
+            <div
+              className="w-full rounded-2xl overflow-hidden shadow-xl backdrop-blur-xl transition-all duration-300"
+              style={{ background: cfg.bg, border: cfg.border }}
+            >
+              <div className="px-4 py-3 sm:px-6 sm:py-3.5 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="relative flex h-3 w-3 shrink-0">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: cfg.dot }}></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3" style={{ background: cfg.dot }}></span>
+                  </span>
+                  <div className="min-w-0">
+                    <div className="text-white font-black text-sm sm:text-base tracking-tight flex items-center gap-1.5 flex-wrap">
+                      <span>{cfg.icon}</span>
+                      <span>{cfg.text}</span>
+                    </div>
+                    <div className="text-white/80 text-xs sm:text-sm mt-0.5 leading-snug">
+                      {cfg.sub}
+                    </div>
+                  </div>
+                </div>
+                {locationName && (
+                  <div className="text-white/80 text-xs font-semibold shrink-0 hidden sm:flex items-center gap-1 px-3 py-1 rounded-full bg-white/10 border border-white/15 shadow-sm">
+                    📍 <span className="truncate max-w-[150px]">{typeof locationName === 'string' ? locationName : ''}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* ── Two Columns Layout (Alerts on Left, News on Right) ── */}
+        <div className="flex flex-col lg:flex-row gap-6 items-start">
+          {/* Left Column: Alerts & Risk */}
+          <div className="flex-1 flex flex-col gap-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <span className="relative flex h-3 w-3">
@@ -861,6 +928,7 @@ export default function AlertsScreen() {
           </div>
         </div>
 
+        </div>
       </div>
 
 

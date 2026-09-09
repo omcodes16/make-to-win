@@ -8,6 +8,7 @@ const INDIA_CITIES = {
   'jabalpur': { lat: 23.1815, lng: 79.9864, name: 'Jabalpur', state: 'Madhya Pradesh', district: 'Jabalpur' },
   'ranjhi': { lat: 23.2030, lng: 80.0003, name: 'Ranjhi', state: 'Madhya Pradesh', district: 'Jabalpur' },
   'ranjhi tehsil': { lat: 23.2030, lng: 80.0003, name: 'Ranjhi Tehsil', state: 'Madhya Pradesh', district: 'Jabalpur' },
+  'ranjhi tahsil': { lat: 23.2030, lng: 80.0003, name: 'Ranjhi Tahsil', state: 'Madhya Pradesh', district: 'Jabalpur' },
   'gwalior': { lat: 26.2183, lng: 78.1828, name: 'Gwalior', state: 'Madhya Pradesh', district: 'Gwalior' },
   'ujjain': { lat: 23.1765, lng: 75.7885, name: 'Ujjain', state: 'Madhya Pradesh', district: 'Ujjain' },
   'delhi': { lat: 28.6139, lng: 77.2090, name: 'New Delhi', state: 'Delhi (NCT)', district: 'New Delhi' },

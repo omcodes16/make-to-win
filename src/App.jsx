@@ -13,6 +13,7 @@ import { getTheme } from './utils/themes';
 import { getWeatherInfo } from './utils/weatherConditions';
 import Header from './components/Header';
 import OfflineBanner from './components/OfflineBanner';
+import BottomNav from './components/BottomNav';
 import { useAlertSocket } from './hooks/useAlertSocket';
 
 function AppContent() {
@@ -20,6 +21,15 @@ function AppContent() {
   
   // Connect to Real-time WebSocket for Live Disaster Alerts and SOS updates
   useAlertSocket();
+
+  // Handle bottom nav SOS tap
+  useEffect(() => {
+    const handleSosOpen = () => {
+      window.dispatchEvent(new CustomEvent('weathergpt-sos-trigger'));
+    };
+    window.addEventListener('weathergpt-open-sos', handleSosOpen);
+    return () => window.removeEventListener('weathergpt-open-sos', handleSosOpen);
+  }, []);
   
   // Global Theme Logic
   const weather = state.weatherStageData?.weather;
@@ -113,6 +123,22 @@ function AppContent() {
       <div className={`fixed inset-0 z-0 bg-gradient-to-b ${theme.overlay} pointer-events-none transition-colors duration-1000 theme-weather-overlay`}></div>
       <div className={`fixed inset-0 z-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] ${theme.accent} via-transparent to-transparent pointer-events-none transition-colors duration-1000 opacity-70 theme-radial-overlay`}></div>
 
+      {/* Profession Identity Accent — warm tint per user role */}
+      <div
+        className="fixed inset-0 z-0 pointer-events-none transition-colors duration-700"
+        style={{
+          background: state.userProfile === 'farmer'
+            ? 'linear-gradient(160deg, rgba(20,83,45,0.18) 0%, rgba(120,90,10,0.10) 100%)'
+            : state.userProfile === 'fisherman'
+            ? 'linear-gradient(160deg, rgba(8,70,100,0.20) 0%, rgba(5,100,130,0.12) 100%)'
+            : state.userProfile === 'aviation'
+            ? 'linear-gradient(160deg, rgba(30,50,100,0.15) 0%, rgba(100,140,200,0.08) 100%)'
+            : state.userProfile === 'urbanPlanning'
+            ? 'linear-gradient(160deg, rgba(80,20,120,0.15) 0%, rgba(60,40,100,0.10) 100%)'
+            : 'linear-gradient(160deg, rgba(30,40,100,0.12) 0%, rgba(20,60,140,0.08) 100%)',
+        }}
+      />
+
       <Header />
       <OfflineBanner />
       
@@ -145,6 +171,7 @@ function AppContent() {
       </div>
 
       {/* Global SOS Button — visible on all screens */}
+      <BottomNav />
       <SosButton />
     </div>
   );

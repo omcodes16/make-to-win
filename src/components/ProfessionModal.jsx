@@ -9,6 +9,8 @@ import { getFishermanAdvisory } from '../utils/fishermanAdvisory';
 import { getAviationAdvisory } from '../utils/aviationAdvisory';
 import { getUrbanPlanningAdvisory } from '../utils/urbanPlanningAdvisory';
 import OfficialBulletinModal from './OfficialBulletinModal';
+import MausamDrishtiModal from './MausamDrishtiModal';
+import SagarRakshakModal from './SagarRakshakModal';
 
 // --- TRANSLATIONS DICTIONARY ---
 const tHub = {
@@ -218,6 +220,8 @@ export default function ProfessionModal({ lat, lng, locationName, weather, onClo
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showBulletinModal, setShowBulletinModal] = useState(false);
+  const [showDrishtiModal, setShowDrishtiModal] = useState(false);
+  const [showSagarModal, setShowSagarModal] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -314,6 +318,42 @@ export default function ProfessionModal({ lat, lng, locationName, weather, onClo
 
       return (
         <div className="space-y-6">
+          {/* Mausam-Drishti Option Card inside Farmer Hub */}
+          <div className="rounded-2xl p-4 sm:p-5 bg-gradient-to-r from-emerald-950/40 via-slate-900/60 to-teal-950/40 border border-emerald-500/40 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-start gap-3.5">
+              <div className="w-11 h-11 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-2xl shadow-inner shrink-0">
+                🌿
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                  <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    Mausam-Drishti AI
+                  </span>
+                  <span className="text-[10px] text-emerald-400 font-bold flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    Vision + Microclimate
+                  </span>
+                </div>
+                <h4 className="text-sm font-bold text-white">
+                  {lang === 'hi' ? 'मौसम दृष्टि: एआई फसल डॉक्टर एवं 48h सुरक्षित स्प्रे विंडो' : 'Mausam-Drishti: AI Crop Doctor & 48h Safe Spray Window'}
+                </h4>
+                <p className="text-[11px] text-white/70 mt-0.5 leading-relaxed">
+                  {lang === 'hi' 
+                    ? 'पत्ती की तस्वीर से रोग पहचानें, 7-दिवसीय नमी का सहसंबंध देखें और वर्षा व हवा के आधार पर सुरक्षित स्प्रे समय जानें।'
+                    : 'Diagnose leaf diseases, correlate 7-day relative humidity & compute upcoming safe spray hours.'}
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setShowDrishtiModal(true)}
+              className="header-icon-btn px-4 py-2 flex items-center justify-center gap-1.5 rounded-full hover:!text-emerald-300 border border-emerald-500/50 bg-emerald-950/60 text-emerald-300 transition-all shadow-md active:scale-95 cursor-pointer font-black text-xs shrink-0 self-start sm:self-auto"
+            >
+              <span className="text-sm">🌿</span>
+              <span>{lang === 'hi' ? 'मौसम दृष्टि खोलें' : 'Mausam-Drishti'}</span>
+            </button>
+          </div>
+
           <AdvisoryCard />
 
           <div className="grid grid-cols-2 gap-4">
@@ -372,6 +412,42 @@ export default function ProfessionModal({ lat, lng, locationName, weather, onClo
 
       return (
         <div className="space-y-6">
+          {/* Sagar-Rakshak Option Card inside Fisherman Hub */}
+          <div className="rounded-2xl p-4 sm:p-5 bg-gradient-to-r from-cyan-950/40 via-slate-900/60 to-blue-950/40 border border-cyan-500/40 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-start gap-3.5">
+              <div className="w-11 h-11 rounded-2xl bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center text-2xl shadow-inner shrink-0">
+                🌊
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                  <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                    Sagar-Rakshak AI
+                  </span>
+                  <span className="text-[10px] text-cyan-400 font-bold flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+                    Kallakkadal + IMBL Radar
+                  </span>
+                </div>
+                <h4 className="text-sm font-bold text-white">
+                  {lang === 'hi' ? 'सागर-रक्षक: अचानक समुद्री लहरें (कल्लाकडाल) एवं समुद्री सीमा सुरक्षा' : 'Sagar-Rakshak: Kallakkadal Alert & IMBL Border Safety'}
+                </h4>
+                <p className="text-[11px] text-white/70 mt-0.5 leading-relaxed">
+                  {lang === 'hi'
+                    ? 'कल्लाकडाल अचानक लहरों का अलार्म, श्रीलंका/पाक सीमा (IMBL) रडार एवं कैटामरन/मोटरबोट नौका सुरक्षा सीमा।'
+                    : 'Real-time swell surge alerts, IMBL international border radar & 3-tier vessel seaworthiness matrix.'}
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setShowSagarModal(true)}
+              className="header-icon-btn px-4 py-2 flex items-center justify-center gap-1.5 rounded-full hover:!text-cyan-300 border border-cyan-500/50 bg-cyan-950/60 text-cyan-300 transition-all shadow-md active:scale-95 cursor-pointer font-black text-xs shrink-0 self-start sm:self-auto"
+            >
+              <span className="text-sm">🌊</span>
+              <span>{lang === 'hi' ? 'सागर-रक्षक खोलें' : 'Sagar-Rakshak'}</span>
+            </button>
+          </div>
+
           <AdvisoryCard />
           
           {isDataUnavailable && (
@@ -516,21 +592,27 @@ export default function ProfessionModal({ lat, lng, locationName, weather, onClo
         <div className="px-5 sm:px-6 py-2.5 bg-[var(--glass-bg)] border-b border-[var(--theme-border)] flex items-center justify-between gap-2 overflow-x-auto hide-scrollbar">
           <div className="flex gap-2 shrink-0">
             {[
-              { id: 'farmer', icon: <FarmerIcon className="w-4 h-4"/>, label: lang === 'hi' ? 'कृषि' : 'Agriculture' },
-              { id: 'aviation', icon: <AviationIcon className="w-4 h-4"/>, label: lang === 'hi' ? 'उड़ान' : 'Aviation' },
-              { id: 'fisherman', icon: <FishermanIcon className="w-4 h-4"/>, label: lang === 'hi' ? 'समुद्री' : 'Marine' },
-              { id: 'urbanPlanning', icon: <UrbanIcon className="w-4 h-4"/>, label: lang === 'hi' ? 'शहर' : 'Urban' }
+              { id: 'farmer', icon: <FarmerIcon className="w-4 h-4"/>, label: lang === 'hi' ? 'कृषि' : 'Agriculture', badge: '🌿 Drishti' },
+              { id: 'fisherman', icon: <FishermanIcon className="w-4 h-4"/>, label: lang === 'hi' ? 'समुद्री' : 'Marine', badge: '🌊 Rakshak' },
+              { id: 'aviation', icon: <AviationIcon className="w-4 h-4"/>, label: lang === 'hi' ? 'उड़ान' : 'Aviation', badge: null },
+              { id: 'urbanPlanning', icon: <UrbanIcon className="w-4 h-4"/>, label: lang === 'hi' ? 'शहर' : 'Urban', badge: null }
             ].map(tab => (
               <button
                 key={tab.id}
                 onClick={() => switchProfile(tab.id)}
-                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 ${
+                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 ${
                   displayProfile === tab.id
-                    ? 'bg-indigo-600 text-white shadow-sm dark:bg-indigo-500/30 dark:text-indigo-200'
+                    ? 'bg-indigo-600 text-white shadow-sm dark:bg-indigo-500/30 dark:text-indigo-200 ring-2 ring-indigo-500/40'
                     : 'bg-[var(--glass-bg)] text-[var(--text-secondary)] border border-[var(--theme-border)] hover:text-[var(--text-primary)] hover:bg-[var(--glass-bg-hover)]'
                 }`}
               >
-                {tab.icon} {tab.label}
+                {tab.icon}
+                <span>{tab.label}</span>
+                {tab.badge && (
+                  <span className="text-[9px] font-black px-1.5 py-0.2 rounded-full bg-white/15 border border-white/25 text-white/90 shrink-0">
+                    {tab.badge}
+                  </span>
+                )}
               </button>
             ))}
           </div>
@@ -543,6 +625,37 @@ export default function ProfessionModal({ lat, lng, locationName, weather, onClo
             <span>📜</span>
             <span className="hidden sm:inline">{lang === 'hi' ? 'सरकारी बुलेटिन' : 'Official Bulletin'}</span>
           </button>
+        </div>
+
+        {/* Specialized AI Tools Row (Farmers: Mausam-Drishti | Fishermen: Sagar-Rakshak) */}
+        <div className="px-5 sm:px-6 py-2 bg-[var(--header-bg)] border-b border-[var(--theme-border)] flex items-center justify-between gap-2 flex-wrap">
+          <div className="flex items-center gap-1.5 text-[11px] font-bold text-[var(--text-secondary)]">
+            <span className="text-amber-400">⚡</span>
+            <span>{lang === 'hi' ? 'विशेषज्ञ एआई उपकरण:' : 'Specialized AI Engines:'}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            {/* Mausam-Drishti AI Crop Doctor Option */}
+            <button
+              onClick={() => setShowDrishtiModal(true)}
+              className="header-icon-btn px-2.5 sm:px-3 h-8 flex items-center gap-1.5 rounded-full hover:!text-emerald-300 border border-emerald-500/40 bg-emerald-950/30 text-emerald-400 transition-all shadow-sm active:scale-95 cursor-pointer text-xs font-black tracking-tight"
+              title="Mausam-Drishti AI Crop Doctor & Spray Window"
+              aria-label="Mausam-Drishti AI Crop Doctor"
+            >
+              <span className="text-sm">🌿</span>
+              <span>Mausam-Drishti</span>
+            </button>
+
+            {/* Sagar-Rakshak Marine Safety Option */}
+            <button
+              onClick={() => setShowSagarModal(true)}
+              className="header-icon-btn px-2.5 sm:px-3 h-8 flex items-center gap-1.5 rounded-full hover:!text-cyan-300 border border-cyan-500/40 bg-cyan-950/30 text-cyan-400 transition-all shadow-sm active:scale-95 cursor-pointer text-xs font-black tracking-tight"
+              title="Sagar-Rakshak Offshore Marine & IMBL Safety Suite"
+              aria-label="Sagar-Rakshak Marine Safety"
+            >
+              <span className="text-sm">🌊</span>
+              <span>Sagar-Rakshak</span>
+            </button>
+          </div>
         </div>
         
         {/* Content */}
@@ -582,6 +695,38 @@ export default function ProfessionModal({ lat, lng, locationName, weather, onClo
           }}
           initialCategory={displayProfile === 'urbanPlanning' ? 'urban' : displayProfile}
           defaultLang={lang}
+        />
+      )}
+
+      {/* Mausam-Drishti Crop Diagnostic Modal */}
+      {showDrishtiModal && (
+        <MausamDrishtiModal
+          isOpen={showDrishtiModal}
+          onClose={() => setShowDrishtiModal(false)}
+          locationData={{
+            name: locationName || 'Current Location',
+            district: '',
+            state: '',
+            lat: lat || 23.2599,
+            lng: lng || 77.4126
+          }}
+          language={lang}
+        />
+      )}
+
+      {/* Sagar-Rakshak Marine Safety Modal */}
+      {showSagarModal && (
+        <SagarRakshakModal
+          isOpen={showSagarModal}
+          onClose={() => setShowSagarModal(false)}
+          locationData={{
+            name: locationName || 'Coastal Zone',
+            district: '',
+            state: '',
+            lat: lat || 13.0827,
+            lng: lng || 80.2707
+          }}
+          language={lang}
         />
       )}
     </div>

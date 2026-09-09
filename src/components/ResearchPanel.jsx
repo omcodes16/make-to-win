@@ -761,6 +761,11 @@ export default function ResearchPanel() {
             <div className="text-[10px] text-[var(--text-muted)] mt-0.5">
               ({activeLocData.indices.tempTrend.slopePerYear}°C/yr)
             </div>
+            <div className="mt-2 pt-1.5 border-t border-[var(--theme-border)] text-[10px] font-medium text-sky-300">
+              {['hi', 'mr', 'pa', 'gu'].includes(state.language)
+                ? (activeLocData.indices.tempTrend.slopePerDecade > 0 ? '📈 दशक दर दशक तापमान में बढ़ोत्तरी' : '📉 तापमान स्थिर अथवा गिरावट')
+                : (activeLocData.indices.tempTrend.slopePerDecade > 0 ? '📈 Decadal Warming Trend' : '📉 Stable / Cooling Trend')}
+            </div>
           </div>
 
           {/* Card 2: Rainfall Trend */}
@@ -776,6 +781,11 @@ export default function ResearchPanel() {
             <div className="text-[10px] text-[var(--text-muted)] mt-0.5">
               ({activeLocData.indices.precipTrend.slopePerYear}mm/yr)
             </div>
+            <div className="mt-2 pt-1.5 border-t border-[var(--theme-border)] text-[10px] font-medium text-blue-300">
+              {['hi', 'mr', 'pa', 'gu'].includes(state.language)
+                ? (activeLocData.indices.precipTrend.slopePerDecade > 0 ? '🌧️ प्रति दशक वर्षा में बढ़ोतरी' : '☀️ प्रति दशक वर्षा में कमी')
+                : (activeLocData.indices.precipTrend.slopePerDecade > 0 ? '🌧️ Increasing Rainfall Pattern' : '☀️ Decreasing Rainfall Pattern')}
+            </div>
           </div>
 
           {/* Card 3: Max Drought Run (CDD) */}
@@ -789,6 +799,11 @@ export default function ResearchPanel() {
             </div>
             <div className="text-[10px] text-[var(--text-muted)] mt-0.5">
               Rainfall &lt; 1.0mm
+            </div>
+            <div className="mt-2 pt-1.5 border-t border-[var(--theme-border)] text-[10px] font-medium text-amber-300">
+              {['hi', 'mr', 'pa', 'gu'].includes(state.language)
+                ? `☀️ लगातार ${activeLocData.indices.maxCdd} दिन सूखा दौर`
+                : `☀️ Longest Dry Streak: ${activeLocData.indices.maxCdd} Days`}
             </div>
           </div>
 
@@ -804,6 +819,11 @@ export default function ResearchPanel() {
             <div className="text-[10px] text-[var(--text-muted)] mt-0.5">
               (&gt; Seasonal + 5°C, 3+ d)
             </div>
+            <div className="mt-2 pt-1.5 border-t border-[var(--theme-border)] text-[10px] font-medium text-rose-300">
+              {['hi', 'mr', 'pa', 'gu'].includes(state.language)
+                ? `🔥 कुल ${activeLocData.indices.totalHeatwaveDays} दिन भीषण लू की स्थिति`
+                : `🔥 Total ${activeLocData.indices.totalHeatwaveDays} Extreme Heat Days`}
+            </div>
           </div>
 
           {/* Card 5: Extreme Rain Days */}
@@ -818,6 +838,11 @@ export default function ResearchPanel() {
             <div className="text-[10px] text-[var(--text-muted)] mt-0.5">
               R100mm extreme index
             </div>
+            <div className="mt-2 pt-1.5 border-t border-[var(--theme-border)] text-[10px] font-medium text-cyan-300">
+              {['hi', 'mr', 'pa', 'gu'].includes(state.language)
+                ? `⚡ ${activeLocData.indices.totalExtremeRainDays} दिन अतिवृष्टि (बाढ़ जोखिम)`
+                : `⚡ ${activeLocData.indices.totalExtremeRainDays} Torrential Downpour Days`}
+            </div>
           </div>
 
           {/* Card 6: GDD (Growing Degree Days) */}
@@ -831,6 +856,11 @@ export default function ResearchPanel() {
             </div>
             <div className="text-[10px] text-[var(--text-muted)] mt-0.5">
               Base threshold 10°C
+            </div>
+            <div className="mt-2 pt-1.5 border-t border-[var(--theme-border)] text-[10px] font-medium text-emerald-300">
+              {['hi', 'mr', 'pa', 'gu'].includes(state.language)
+                ? '🌾 फसलों के पकने हेतु थर्मल ऊर्जा'
+                : '🌾 Crop Maturity Thermal Units'}
             </div>
           </div>
 

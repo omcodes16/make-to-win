@@ -11,6 +11,8 @@ import UserGuideModal from './UserGuideModal';
 import AccuracyFeedModal from './AccuracyFeedModal';
 import MobileMenuSheet from './MobileMenuSheet';
 import OfficialBulletinModal from './OfficialBulletinModal';
+import MausamDrishtiModal from './MausamDrishtiModal';
+import SagarRakshakModal from './SagarRakshakModal';
 import { getSosQueueCount } from '../utils/sosQueue';
 
 export default function Header() {
@@ -20,6 +22,8 @@ export default function Header() {
   const [showGuide, setShowGuide] = useState(false);
   const [isHubOpen, setIsHubOpen] = useState(false);
   const [isBulletinOpen, setIsBulletinOpen] = useState(false);
+  const [showDrishtiModal, setShowDrishtiModal] = useState(false);
+  const [showSagarModal, setShowSagarModal] = useState(false);
   const [bulletinCategory, setBulletinCategory] = useState('master');
   const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
   const [showAccuracyModal, setShowAccuracyModal] = useState(false);
@@ -47,6 +51,17 @@ export default function Header() {
     return () => {
       window.removeEventListener('weathergpt-sos-queue-changed', updateCount);
       window.removeEventListener('weathergpt-sos-flushed', updateCount);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleOpenDrishti = () => setShowDrishtiModal(true);
+    const handleOpenSagar = () => setShowSagarModal(true);
+    window.addEventListener('weathergpt-open-mausam-drishti', handleOpenDrishti);
+    window.addEventListener('weathergpt-open-sagar-rakshak', handleOpenSagar);
+    return () => {
+      window.removeEventListener('weathergpt-open-mausam-drishti', handleOpenDrishti);
+      window.removeEventListener('weathergpt-open-sagar-rakshak', handleOpenSagar);
     };
   }, []);
 
@@ -240,12 +255,12 @@ export default function Header() {
       <header className="fixed top-0 left-0 right-0 z-50 header-bar border-b border-[var(--header-border)] pt-2.5 pb-2.5 sm:pt-3 sm:pb-3">
         <div className="mx-auto px-3 sm:px-6 flex items-center justify-between max-w-[1400px] gap-2 sm:gap-4">
           
-          {/* Left Corner: Clean App Name (No logo icon) */}
-          <div className="flex items-center shrink-0">
+          {/* Left Corner: App Name & Subtitle */}
+          <div className="flex flex-col shrink-0 text-left">
             <button 
               className="cursor-pointer flex items-center gap-1.5 group select-none text-left focus:outline-none" 
               onClick={() => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'chat' })}
-              title="WeatherGPT - SIH 2026"
+              title="WeatherGPT - IMD Intelligent Assistant"
             >
               <span className="font-heading font-black text-lg sm:text-xl tracking-tight text-[var(--text-primary)]">
                 Weather<span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 via-blue-500 to-sky-400">GPT</span>
@@ -256,9 +271,8 @@ export default function Header() {
             </button>
           </div>
 
-          {/* Center (In-Between): Desktop Tabs & Hub Button */}
-          <div className="hidden md:flex items-center justify-center gap-2 lg:gap-3 flex-1 max-w-2xl mx-auto min-w-0">
-            {/* Desktop Navigation Tabs */}
+          {/* Center (In-Between): Desktop Navigation Tabs */}
+          <div className="hidden md:flex items-center justify-center flex-1 max-w-md mx-auto min-w-0">
             <div className="flex items-center rounded-full p-1 glass-panel border border-[var(--glass-border)] shadow-inner shrink-0">
               <button
                 onClick={() => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'chat' })}
@@ -304,21 +318,6 @@ export default function Header() {
                 🔬 Research
               </button>
             </div>
-
-            {/* Hub Button (Cleanly spaced beside tabs without overlapping) */}
-            <div 
-              onClick={() => setIsHubOpen(true)}
-              className="header-hub-btn flex items-center gap-1.5 px-3 py-1.5 rounded-full cursor-pointer transition-all shadow-md shrink-0"
-              title="Open Profession Advisory Hub"
-            >
-              {/* Multi-Layer Stack Icon */}
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="animate-pulse text-white">
-                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-              </svg>
-              <span className="text-[11px] lg:text-xs font-black tracking-wider uppercase whitespace-nowrap text-white">
-                {currentLang.code === 'hi' ? 'हब खोलें' : currentLang.code === 'bn' ? 'হাব খুলুন' : currentLang.code === 'as' ? 'হাব খোলক' : 'Open Hub'}
-              </span>
-            </div>
           </div>
 
           {/* Mobile Center: Clean Location Pill */}
@@ -326,7 +325,7 @@ export default function Header() {
             <button 
               onClick={handleLiveLocation}
               disabled={isLocating}
-              className="header-live-btn flex items-center gap-1.5 px-2.5 py-1.5 rounded-full font-bold text-xs whitespace-nowrap max-w-[155px] overflow-hidden shadow-sm active:scale-95 transition-all"
+              className="header-live-btn flex items-center gap-1.5 px-3 py-1.5 rounded-full font-bold text-xs whitespace-nowrap max-w-[160px] overflow-hidden shadow-sm active:scale-95 transition-all"
               title="Tap to update live GPS location"
             >
               {isLocating ? (
@@ -343,13 +342,13 @@ export default function Header() {
             </button>
           </div>
 
-          {/* Right Corner: Desktop Live Location Pill + Shield + Three Dots + Language */}
-          <div className="hidden md:flex items-center justify-end gap-1.5 sm:gap-2.5 shrink-0">
+          {/* Right Corner: Desktop Location + Hub + Specialty + Shield + Language + More Menu */}
+          <div className="hidden md:flex items-center justify-end gap-1.5 sm:gap-2 shrink-0">
             {/* Live Location Pill */}
             <button 
               onClick={handleLiveLocation}
               disabled={isLocating}
-              className="header-live-btn flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full font-bold text-xs whitespace-nowrap max-w-[110px] sm:max-w-[170px] overflow-hidden shadow-sm"
+              className="header-live-btn flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full font-bold text-xs whitespace-nowrap max-w-[110px] lg:max-w-[150px] overflow-hidden shadow-sm"
               title="Get Live Location Weather"
             >
               {isLocating ? (
@@ -365,28 +364,143 @@ export default function Header() {
               </span>
             </button>
 
+            {/* Profession Hub Pill */}
+            {(() => {
+              const profMeta = {
+                farmer: { icon: '🌾', hi: 'किसान हब', en: 'Kisan Hub' },
+                fisherman: { icon: '🎣', hi: 'मछुआरा हब', en: 'Marine Hub' },
+                aviation: { icon: '✈️', hi: 'उड्डयन हब', en: 'Aviation Hub' },
+                urbanPlanning: { icon: '🏙️', hi: 'शहर हब', en: 'City Hub' },
+                general: { icon: '🌍', hi: 'मौसम हब', en: 'Weather Hub' },
+              }[state.userProfile] || { icon: '🌾', hi: 'किसान हब', en: 'Kisan Hub' };
+              const profName = ['hi', 'mr', 'pa', 'gu'].includes(state.language) ? profMeta.hi : profMeta.en;
+              return (
+                <button 
+                  onClick={() => setIsHubOpen(true)}
+                  className="header-hub-btn flex items-center gap-1.5 px-2.5 lg:px-3 py-1.5 rounded-full cursor-pointer transition-all shadow-md shrink-0 active:scale-95"
+                  title="Open Profession Advisory Hub"
+                >
+                  <span className="text-sm leading-none">{profMeta.icon}</span>
+                  <span className="hidden lg:inline text-[11px] font-black tracking-wider uppercase whitespace-nowrap text-white">
+                    {profName}
+                  </span>
+                </button>
+              );
+            })()}
+
+            {/* Contextual Specialty Tool Button (XL Screens: Farmer -> Crop Doctor, Fisherman -> Sagar Rakshak, Others -> Bulletin) */}
+            {state.userProfile === 'farmer' ? (
+              <button
+                onClick={() => setShowDrishtiModal(true)}
+                className="hidden xl:flex header-icon-btn px-2.5 h-8 sm:h-9 items-center gap-1.5 rounded-full hover:!text-emerald-300 border border-emerald-500/40 bg-emerald-950/30 text-emerald-400 transition-all shadow-sm active:scale-95 cursor-pointer"
+                title="Mausam-Drishti AI Crop Doctor & Spray Window"
+                aria-label="Mausam-Drishti AI Crop Doctor"
+              >
+                <span className="text-sm">🌿</span>
+                <span className="text-[11px] font-black tracking-tight whitespace-nowrap">Mausam-Drishti</span>
+              </button>
+            ) : state.userProfile === 'fisherman' ? (
+              <button
+                onClick={() => setShowSagarModal(true)}
+                className="hidden xl:flex header-icon-btn px-2.5 h-8 sm:h-9 items-center gap-1.5 rounded-full hover:!text-cyan-300 border border-cyan-500/40 bg-cyan-950/30 text-cyan-400 transition-all shadow-sm active:scale-95 cursor-pointer"
+                title="Sagar-Rakshak Offshore Marine & IMBL Safety Suite"
+                aria-label="Sagar-Rakshak Marine Safety"
+              >
+                <span className="text-sm">🌊</span>
+                <span className="text-[11px] font-black tracking-tight whitespace-nowrap">Sagar-Rakshak</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  setBulletinCategory('master');
+                  setIsBulletinOpen(true);
+                }}
+                className="hidden xl:flex items-center gap-1.5 px-3 h-8 sm:h-9 rounded-full bg-gradient-to-r from-amber-500/20 via-indigo-600/20 to-emerald-500/20 hover:from-amber-500/30 hover:to-emerald-500/30 border border-amber-400/40 text-xs font-bold text-amber-300 shadow-sm transition-all active:scale-95 whitespace-nowrap"
+                title="Official Panchayat to State Weather & Advisory Bulletin"
+              >
+                <span className="text-sm">📜</span>
+                <span>{currentLang.code === 'hi' ? 'सरकारी बुलेटिन' : currentLang.code === 'bn' ? 'বুলেটিন' : currentLang.code === 'as' ? 'বুলেটিন' : 'Bulletin'}</span>
+              </button>
+            )}
+
             {/* AI Trust / Accuracy Shield Button */}
             <button
               onClick={() => setShowAccuracyModal(true)}
-              className="header-icon-btn w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full hover:!text-emerald-500 transition-colors"
+              className="hidden lg:flex header-icon-btn w-8 h-8 sm:w-9 sm:h-9 items-center justify-center rounded-full hover:!text-emerald-500 transition-colors shrink-0"
               title="AI Trust & Verification"
               aria-label="AI Trust & Verification"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                 <polyline points="9 12 11 14 15 10" strokeWidth="2" />
               </svg>
             </button>
 
-            {/* Three Dots Menu (Contains Saved Locations, Theme, Reviews, Portal, Accessibility, Guide) */}
+            {/* Language Selector Pill */}
+            <div className="relative">
+              <button
+                onClick={() => { setShowLangPicker(!showLangPicker); setShowMoreMenu(false); }}
+                className="header-lang-btn px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-sm shrink-0"
+                title="Change Language"
+              >
+                {/* Globe Icon */}
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="2" y1="12" x2="22" y2="12"/>
+                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                </svg>
+                <span className="hidden lg:inline">{currentLang.nativeLabel}</span>
+                <span className="lg:hidden uppercase">{currentLang.code}</span>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              {showLangPicker && (
+                <div 
+                  ref={langPickerRef}
+                  className="absolute right-0 top-full mt-2 rounded-2xl p-2 w-60 z-[100] glass-panel theme-modal border border-[var(--modal-border)] text-[var(--text-primary)] shadow-[var(--modal-shadow)] backdrop-blur-xl"
+                >
+                  <div className="p-1 pb-2 border-b border-white/10">
+                    <input
+                      type="text"
+                      value={headerLangSearch}
+                      onChange={(e) => setHeaderLangSearch(e.target.value)}
+                      placeholder="🔍 Search / भाषा खोजें..."
+                      className="w-full bg-white/10 border border-white/15 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-white/50 focus:outline-none focus:border-blue-400"
+                      autoFocus
+                    />
+                  </div>
+                  <div className="max-h-56 overflow-y-auto py-1 space-y-0.5 custom-scrollbar">
+                    {LANGUAGES.filter(l => 
+                      l.label.toLowerCase().includes(headerLangSearch.toLowerCase()) ||
+                      l.nativeLabel.toLowerCase().includes(headerLangSearch.toLowerCase()) ||
+                      l.code.toLowerCase().includes(headerLangSearch.toLowerCase())
+                    ).map(lang => (
+                      <button
+                        key={lang.code}
+                        onClick={() => {
+                          dispatch({ type: 'SET_LANGUAGE', payload: lang.code });
+                          setShowLangPicker(false);
+                          setHeaderLangSearch('');
+                        }}
+                        className={`w-full text-left px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors hover:bg-white/10 flex items-center justify-between ${state.language === lang.code ? 'text-blue-400 bg-blue-500/15 font-bold' : ''}`}
+                      >
+                        <span>{lang.nativeLabel}</span>
+                        <span className="text-[10px] text-white/50 font-normal">({lang.label})</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Three Dots Menu */}
             <div className="relative" ref={moreMenuRef}>
               <button
                 onClick={() => { setShowMoreMenu(!showMoreMenu); setShowLangPicker(false); }}
-                className={`header-icon-btn w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full transition-colors ${
+                className={`header-icon-btn w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full transition-colors shrink-0 ${
                   showMoreMenu ? '!border-[var(--theme-accent)] !text-[var(--text-primary)] bg-[var(--glass-bg-hover)]' : ''
                 }`}
                 aria-label="More options"
-                title="Menu & Saved Locations"
+                title="Menu & Quick Tools"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                   <circle cx="12" cy="5" r="1.8" />
@@ -397,6 +511,50 @@ export default function Header() {
 
               {showMoreMenu && (
                 <div className="absolute right-0 top-full mt-2 rounded-2xl py-2 w-[270px] sm:w-[290px] z-[100] glass-panel theme-modal border border-[var(--modal-border)] text-[var(--text-primary)] shadow-[var(--modal-shadow)] overflow-hidden">
+                  
+                  {/* Quick Specialty Suites in More Menu */}
+                  <div className="px-2 pb-2 border-b border-[var(--modal-border)] space-y-0.5">
+                    <button
+                      onClick={() => { setShowDrishtiModal(true); setShowMoreMenu(false); }}
+                      className="w-full text-left flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-semibold hover:bg-[var(--glass-bg-hover)] text-emerald-400 transition-colors"
+                    >
+                      <span className="text-base">🌿</span>
+                      <div className="truncate">
+                        <div className="font-bold">Mausam-Drishti</div>
+                        <div className="text-[10px] text-[var(--text-muted)]">AI Crop Doctor & Spray Window</div>
+                      </div>
+                    </button>
+                    <button
+                      onClick={() => { setShowSagarModal(true); setShowMoreMenu(false); }}
+                      className="w-full text-left flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-semibold hover:bg-[var(--glass-bg-hover)] text-cyan-400 transition-colors"
+                    >
+                      <span className="text-base">🌊</span>
+                      <div className="truncate">
+                        <div className="font-bold">Sagar-Rakshak</div>
+                        <div className="text-[10px] text-[var(--text-muted)]">Marine & IMBL Radar Safety</div>
+                      </div>
+                    </button>
+                    <button
+                      onClick={() => { setBulletinCategory('master'); setIsBulletinOpen(true); setShowMoreMenu(false); }}
+                      className="w-full text-left flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-semibold hover:bg-[var(--glass-bg-hover)] text-amber-300 transition-colors"
+                    >
+                      <span className="text-base">📜</span>
+                      <div className="truncate">
+                        <div className="font-bold">Official Bulletin</div>
+                        <div className="text-[10px] text-[var(--text-muted)]">Panchayat to State Advisory</div>
+                      </div>
+                    </button>
+                    <button
+                      onClick={() => { setShowAccuracyModal(true); setShowMoreMenu(false); }}
+                      className="w-full text-left flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-semibold hover:bg-[var(--glass-bg-hover)] text-blue-400 transition-colors"
+                    >
+                      <span className="text-base">🛡️</span>
+                      <div className="truncate">
+                        <div className="font-bold">AI Trust & Accuracy</div>
+                        <div className="text-[10px] text-[var(--text-muted)]">Data Provenance & Feedback</div>
+                      </div>
+                    </button>
+                  </div>
                   
                   {/* Saved Locations Section inside 3 Dots */}
                   <div className="px-3 pt-2 pb-2.5 border-b border-[var(--modal-border)]">
@@ -576,75 +734,6 @@ export default function Header() {
               )}
             </div>
 
-            {/* Official Weather & Advisory Bulletin Button (Desktop) */}
-            <button
-              onClick={() => {
-                setBulletinCategory('master');
-                setIsBulletinOpen(true);
-              }}
-              className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500/20 via-indigo-600/20 to-emerald-500/20 hover:from-amber-500/30 hover:to-emerald-500/30 border border-amber-400/40 text-xs font-bold text-amber-300 shadow-sm transition-all active:scale-95"
-              title="Official Panchayat to State Weather & Advisory Bulletin"
-            >
-              <span className="text-sm">📜</span>
-              <span>{currentLang.code === 'hi' ? 'सरकारी बुलेटिन' : currentLang.code === 'bn' ? 'বুলেটিন' : currentLang.code === 'as' ? 'বুলেটিন' : 'Bulletin'}</span>
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            </button>
-
-            {/* Language Selector Pill */}
-            <div className="relative">
-              <button
-                onClick={() => { setShowLangPicker(!showLangPicker); setShowMoreMenu(false); }}
-                className="header-lang-btn px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-sm"
-                title="Change Language"
-              >
-                {/* Globe Icon */}
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10"/>
-                  <line x1="2" y1="12" x2="22" y2="12"/>
-                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-                </svg>
-                <span className="hidden sm:inline">{currentLang.nativeLabel}</span>
-                <span className="sm:hidden uppercase">{currentLang.code}</span>
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-              </button>
-              {showLangPicker && (
-                <div 
-                  ref={langPickerRef}
-                  className="absolute right-0 top-full mt-2 rounded-2xl p-2 w-60 z-[100] glass-panel theme-modal border border-[var(--modal-border)] text-[var(--text-primary)] shadow-[var(--modal-shadow)] backdrop-blur-xl"
-                >
-                  <div className="p-1 pb-2 border-b border-white/10">
-                    <input
-                      type="text"
-                      value={headerLangSearch}
-                      onChange={(e) => setHeaderLangSearch(e.target.value)}
-                      placeholder="🔍 Search / भाषा खोजें..."
-                      className="w-full bg-white/10 border border-white/15 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-white/50 focus:outline-none focus:border-blue-400"
-                      autoFocus
-                    />
-                  </div>
-                  <div className="max-h-56 overflow-y-auto py-1 space-y-0.5 custom-scrollbar">
-                    {LANGUAGES.filter(l => 
-                      l.label.toLowerCase().includes(headerLangSearch.toLowerCase()) ||
-                      l.nativeLabel.toLowerCase().includes(headerLangSearch.toLowerCase()) ||
-                      l.code.toLowerCase().includes(headerLangSearch.toLowerCase())
-                    ).map(lang => (
-                      <button
-                        key={lang.code}
-                        onClick={() => {
-                          dispatch({ type: 'SET_LANGUAGE', payload: lang.code });
-                          setShowLangPicker(false);
-                          setHeaderLangSearch('');
-                        }}
-                        className={`w-full text-left px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors hover:bg-white/10 flex items-center justify-between ${state.language === lang.code ? 'text-blue-400 bg-blue-500/15 font-bold' : ''}`}
-                      >
-                        <span>{lang.nativeLabel}</span>
-                        <span className="text-[10px] text-white/50 font-normal">({lang.label})</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
           </div>
 
           {/* Mobile Right: Persona Badge + Hamburger Menu Trigger */}
@@ -721,109 +810,11 @@ export default function Header() {
           setBulletinCategory(cat || 'master');
           setIsBulletinOpen(true);
         }}
+        onOpenDrishti={() => setShowDrishtiModal(true)}
+        onOpenSagar={() => setShowSagarModal(true)}
         onResetOnboarding={() => dispatch({ type: 'RESET_ONBOARDING' })}
       />
 
-      {/* Mobile Expanded Full-Width Bottom Navigation Bar (5 Balanced Tabs) */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 mobile-bottom-bar safe-pb shadow-[0_-4px_24px_rgba(0,0,0,0.20)]">
-        <nav className="w-full grid grid-cols-5 px-1 py-1.5 gap-0.5 items-center">
-          {/* Tab 1: Chat */}
-          <button
-            onClick={() => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'chat' })}
-            className={`flex flex-col items-center justify-center py-1.5 px-0.5 rounded-xl transition-all duration-200 gap-0.5 ${
-              state.activeTab === 'chat'
-                ? 'bottom-tab-active font-bold text-blue-400'
-                : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] opacity-75 hover:opacity-100'
-            }`}
-          >
-            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />
-              <path d="M8 12h.01M12 12h.01M16 12h.01" strokeWidth="2.5" strokeLinecap="round" />
-            </svg>
-            <span className="text-[10px] tracking-tight font-semibold">Chat</span>
-          </button>
-
-          {/* Tab 2: Forecast / Weather Stage */}
-          <button
-            onClick={() => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'stage' })}
-            className={`flex flex-col items-center justify-center py-1.5 px-0.5 rounded-xl transition-all duration-200 gap-0.5 ${
-              state.activeTab === 'stage'
-                ? 'bottom-tab-active font-bold text-blue-400'
-                : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] opacity-75 hover:opacity-100'
-            }`}
-          >
-            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
-              <circle cx="12" cy="12" r="4"/>
-            </svg>
-            <span className="text-[10px] tracking-tight font-semibold">Forecast</span>
-          </button>
-
-          {/* Tab 3: Research & Climate Analytics */}
-          <button
-            onClick={() => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'research' })}
-            className={`flex flex-col items-center justify-center py-1.5 px-0.5 rounded-xl gap-0.5 active:scale-95 transition-all ${
-              state.activeTab === 'research'
-                ? 'bottom-tab-active font-bold text-indigo-400'
-                : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] opacity-75 hover:opacity-100'
-            }`}
-            title="Research & Climate Analytics"
-          >
-            <div className={`w-7 h-7 rounded-full flex items-center justify-center shadow-md transition-all ${
-              state.activeTab === 'research'
-                ? 'bg-gradient-to-tr from-indigo-500 to-sky-400 text-white shadow-indigo-500/40 scale-105'
-                : 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30'
-            }`}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M10 2v7.31M14 2v7.31M8.5 2h7M14 9.3a6.5 6.5 0 1 1-4 0"/>
-                <path d="M5.52 16h12.96"/>
-              </svg>
-            </div>
-            <span className="text-[10px] tracking-tight font-semibold">Research</span>
-          </button>
-
-          {/* Tab 4: Alerts */}
-          <button
-            onClick={() => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'alerts' })}
-            className={`flex flex-col items-center justify-center py-1.5 px-0.5 rounded-xl transition-all duration-200 gap-0.5 relative ${
-              state.activeTab === 'alerts'
-                ? 'bottom-tab-active font-bold text-red-400'
-                : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] opacity-75 hover:opacity-100'
-            }`}
-          >
-            <div className="relative">
-              <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
-              <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-red-500 border border-[var(--header-bg)]"></span>
-              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-              </svg>
-            </div>
-            <span className="text-[10px] tracking-tight font-semibold">Alerts</span>
-          </button>
-
-          {/* Tab 5: SOS Emergency */}
-          <button
-            onClick={() => {
-              window.dispatchEvent(new CustomEvent('weathergpt-open-sos'));
-            }}
-            className="flex flex-col items-center justify-center py-1.5 px-0.5 rounded-xl bottom-tab-sos gap-0.5 active:scale-95 transition-all duration-200 relative"
-            title={offlineSosCount > 0 ? `⚠️ ${offlineSosCount} SOS Alert(s) in Offline Vault` : "Emergency SOS"}
-          >
-            {offlineSosCount > 0 && (
-              <span className="absolute -top-1 right-1 bg-amber-400 text-black font-black text-[9px] w-4 h-4 rounded-full flex items-center justify-center border border-neutral-900 shadow animate-bounce">
-                {offlineSosCount}
-              </span>
-            )}
-            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-              <line x1="12" y1="8" x2="12" y2="12"/>
-              <line x1="12" y1="16" x2="12.01" y2="16"/>
-            </svg>
-            <span className="text-[10px] tracking-tight font-bold">SOS</span>
-          </button>
-        </nav>
-      </div>
 
       {isHubOpen && (
         <ProfessionModal
@@ -850,6 +841,38 @@ export default function Header() {
           }}
           initialCategory={bulletinCategory}
           defaultLang={state.language}
+        />
+      )}
+
+      {/* Mausam-Drishti Crop Diagnostic Modal */}
+      {showDrishtiModal && (
+        <MausamDrishtiModal
+          isOpen={showDrishtiModal}
+          onClose={() => setShowDrishtiModal(false)}
+          locationData={{
+            name: state.weatherStageData?.locationName || state.currentWeather?.locationName || 'Bhopal',
+            district: state.weatherStageData?.district || state.currentWeather?.district || '',
+            state: state.weatherStageData?.state || state.currentWeather?.state || '',
+            lat: state.weatherStageData?.lat || state.currentWeather?.lat || 23.2599,
+            lng: state.weatherStageData?.lng || state.currentWeather?.lng || 77.4126
+          }}
+          language={state.language}
+        />
+      )}
+
+      {/* Sagar-Rakshak Marine Safety Modal */}
+      {showSagarModal && (
+        <SagarRakshakModal
+          isOpen={showSagarModal}
+          onClose={() => setShowSagarModal(false)}
+          locationData={{
+            name: state.weatherStageData?.locationName || state.currentWeather?.locationName || 'Chennai Coast',
+            district: state.weatherStageData?.district || state.currentWeather?.district || '',
+            state: state.weatherStageData?.state || state.currentWeather?.state || '',
+            lat: state.weatherStageData?.lat || state.currentWeather?.lat || 13.0827,
+            lng: state.weatherStageData?.lng || state.currentWeather?.lng || 80.2707
+          }}
+          language={state.language}
         />
       )}
     </>

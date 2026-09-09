@@ -265,21 +265,34 @@ export default function SosButton() {
 
   return (
     <>
+      {/* Desktop Persistent Emergency SOS Floating Pill */}
       <button
         onClick={handleSosClick}
-        className="hidden md:flex fixed bottom-6 right-6 z-[60] w-14 h-14 rounded-full bg-gradient-to-tr from-red-700 to-rose-600 hover:from-red-600 hover:to-rose-500 text-white font-bold text-xs shadow-2xl shadow-red-900/60 border-2 border-red-400/80 animate-pulse flex-col items-center justify-center gap-0.5 transition-transform hover:scale-110 active:scale-95 cursor-pointer"
-        style={{ position: 'fixed', bottom: '24px', right: '24px', zIndex: 60 }}
+        className="hidden md:flex fixed z-[60] items-center gap-2 px-3.5 py-2 rounded-full bg-gradient-to-r from-red-700 via-red-600 to-rose-600 hover:from-red-600 hover:to-rose-500 text-white font-black text-xs shadow-2xl shadow-red-900/60 border-2 border-red-400/80 transition-all hover:scale-105 active:scale-95 cursor-pointer select-none ring-4 ring-red-500/20"
+        style={{
+          position: 'fixed',
+          bottom: state.activeTab === 'chat' ? '84px' : '24px',
+          right: '24px',
+          zIndex: 60,
+          transition: 'bottom 0.3s ease',
+        }}
         title={offlineQueueCount > 0 ? `⚠️ ${offlineQueueCount} SOS Alert(s) Queued in Offline Vault` : "Send Emergency SOS Alert"}
         aria-label="Send Emergency SOS Alert"
       >
-        <span className="text-lg leading-none">🆘</span>
-        <span className="text-[10px] font-black tracking-wider leading-none">SOS</span>
+        <span className="relative flex h-2.5 w-2.5">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-white"></span>
+        </span>
+        <span className="text-base leading-none">🆘</span>
+        <span className="text-xs font-black tracking-wider uppercase">
+          {['hi', 'mr', 'pa', 'gu'].includes(state.language) ? 'आपातकाल SOS' : 'Emergency SOS'}
+        </span>
         {offlineQueueCount > 0 && (
           <span 
-            className="absolute -top-1.5 -right-1.5 bg-amber-400 text-black font-black text-[9px] w-5 h-5 rounded-full flex items-center justify-center border-2 border-neutral-900 shadow-lg animate-bounce"
+            className="ml-1 bg-amber-400 text-black font-black text-[10px] px-1.5 py-0.5 rounded-full border border-neutral-900 shadow-md animate-pulse"
             title={`${offlineQueueCount} pending offline SOS`}
           >
-            {offlineQueueCount}
+            {offlineQueueCount} Offline
           </span>
         )}
       </button>

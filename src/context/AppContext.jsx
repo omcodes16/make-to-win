@@ -27,7 +27,7 @@ const initialState = {
   activeSosStatus: null,
   weatherCondition: 'clear',
   severeAlert: null,
-  isOnboarded: false,
+  isOnboarded: true,
   isOnline: navigator.onLine,
   isLargeText: false,
   isHighContrast: false,

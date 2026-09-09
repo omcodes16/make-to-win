@@ -680,4 +680,66 @@ curl "http://localhost:3001/api/research/historical?lat=28.6139&lon=77.2090&star
 }
 ```
 
+---
+
+## 🌿 14. Mausam-Drishti (मौसम दृष्टि) — AI Crop Doctor & Microclimate Diagnostic Engine (SIH PS-26068)
+
+The **Mausam-Drishti** system bridges multi-modal computer vision with physical agrometeorology:
+1. **Multi-Modal Vision Inspection**: Detects fungal, bacterial, viral, and abiotic lodging/hail damage on crop leaves using **Gemini 3.6 Flash**.
+2. **7-Day Physical Microclimate Correlation**: Extracts relative humidity trends (hours with RH $>80\%$), temperature range, and rainfall over the past 7 days from Open-Meteo, proving why the pathogen developed.
+3. **48-Hour Meteorological Safe Spray Window Calculator**: Computes upcoming rainfastness and wind drift windows:
+   - Identifies whether spraying today will wash away chemicals ($>40\%$ rain risk).
+   - Identifies the optimal calm morning window (Wind $<12\text{ km/h}$, Rain $0\%$) with exact chemical dosages and bio-fungicide alternatives.
+4. **Pradhan Mantri Fasal Bima Yojana (PMFBY) Guidance**: Auto-generates damage evidence and 72-hour claim notification steps for hailstorms and cyclonic lodging.
+5. **Rural Audio Playback & Printable Agronomy Slips**: Multilingual audio bulletin readout and printable KVK report.
+
+### API Endpoint: `POST /api/crop-diagnostic`
+- **Payload**: `{ image: "<base64>", lat: 23.2599, lng: 77.4126, locationName: "Bhopal", cropType: "potato", language: "hi" }`
+- **Response**: Full structured diagnosis, microclimatic causation metrics, 48-hour hourly timeline, and spoken bulletin script.
+
+---
+
+## 🌊 15. Sagar-Rakshak (सागर-रक्षक) — Offshore Marine, Swell Surge (Kallakkadal) & IMBL Fishermen Safety Suite (SIH PS-26068)
+
+The **Sagar-Rakshak** engine empowers artisanal, motorized, and mechanized coastal fishermen across India's 7,516 km coastline with real-time oceanographic telemetry, sudden surge intelligence, and international maritime border boundary enforcement.
+
+### Key Capabilities:
+1. **Live Oceanographic Telemetry**:
+   - Fetches wave height, swell wave height, wave period, swell period, wave direction, and wind wave height from the Open-Meteo Marine API.
+   - Computes real-time **WMO Douglas Sea State** (0–9 scale, e.g. Smooth, Slight, Moderate, Rough, Very Rough, High).
+   - Computes standard **Indian Port Warning Signals (1–11)** (e.g. Signal 1 Distant Cautionary, Signal 3 Local Cautionary, Signal 7 Danger Port, Signal 10 Great Danger).
+
+2. **INCOIS Swell Surge / Kallakkadal (कल्लाकडाल) Detection Engine**:
+   - Monitors meteorological conditions for sudden, catastrophic coastal swells triggered by distant Southern Ocean storms arriving without local atmospheric warning.
+   - Triggers automated emergency warnings when **Swell Period $\ge 12\text{s}$ and Swell Height $\ge 1.8\text{m}$**, providing proactive beaching warnings for catamarans and low-lying coastal villages.
+
+3. **IMBL (International Maritime Boundary Line) Proximity & Anti-Apprehension Radar**:
+   - Computes high-precision Haversine nautical distance to the nearest Indian maritime border (Palk Strait / Gulf of Mannar Sri Lanka IMBL and Gujarat Sir Creek Pakistan IMBL).
+   - Generates 3-stage security alerts:
+     - 🟢 **SAFE**: $>15\text{ km}$ from border line.
+     - 🟡 **CAUTION**: $5–15\text{ km}$ from border line.
+     - 🔴 **CRITICAL DANGER / BREACH**: $<5\text{ km}$ with automated siren alerts to prevent accidental crossing and maritime apprehension.
+
+4. **3-Tier Boat-Class Venturing Matrix**:
+   - Segmented safety clearances based on vessel seaworthiness:
+     - 🛶 **Traditional / Catamaran (कैटामरन / मरुवम)**: Safe wave limit $<1.2\text{m}$, max wind $18\text{ km/h}$.
+     - 🚤 **Motorized Vallam (मोटराइज्ड नाव)**: Safe wave limit $<2.0\text{m}$, max wind $28\text{ km/h}$.
+     - 🚢 **Mechanized Deep-Sea Trawler (ट्रॉलर)**: Safe wave limit $<3.5\text{m}$, max wind $45\text{ km/h}$.
+
+5. **Audio Foghorn Synthesizer & Spoken Marine Bulletin**:
+   - Web Audio API dual-oscillator acoustic marine foghorn ($110\text{Hz} + 115\text{Hz}$) for zero-network audio warning.
+   - Multilingual spoken audio bulletin in Hindi, Tamil, Malayalam, Bengali, and English.
+
+6. **1-Click SIH Live Presentation Scenarios**:
+   - 🌊 **INCOIS Swell Alert (Kallakkadal, Vizhinjam Kerala)**: High swell period ($14\text{s}$), Kallakkadal alert triggered.
+   - ⚠️ **IMBL Proximity Warning (Dhanushkodi / Palk Bay)**: Close to Sri Lanka IMBL ($3.2\text{ km}$), proximity breach alert.
+   - 🚨 **Port Warning Signal 7 (Paradip Deep Sea, Odisha)**: Rough seas ($4.1\text{m}$ waves), all artisanal boats barred.
+   - 🟢 **Optimal Trawling Conditions (Veraval Harbor, Gujarat)**: Calm seas ($0.9\text{m}$ waves), green clearance for all tiers.
+
+### API Endpoint: `GET /api/marine-safety`
+- **Query Parameters**: `lat=13.0827&lng=80.2707&boatType=motorized&language=en`
+- **Response**: Live ocean telemetry, Douglas sea state, INCOIS Kallakkadal status, IMBL nearest distance, boat venturing recommendation, port signal number/meaning, and spoken advisory script.
+
+
+
 

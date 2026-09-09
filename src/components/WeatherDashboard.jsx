@@ -22,17 +22,26 @@ import { FEATURE_I18N } from '../utils/featureTranslations';
 import ModelConfidence from './ModelConfidence';
 import OfficialBulletinModal from './OfficialBulletinModal';
 import AawazEMausam from './AawazEMausam';
+import MausamDrishtiModal from './MausamDrishtiModal';
 
 
 export default function WeatherDashboard() {
   const { state, dispatch } = useApp();
   const [showBulletinModal, setShowBulletinModal] = useState(false);
+  const [showDrishtiModal, setShowDrishtiModal] = useState(false);
   const [searchInput, setSearchInput] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const debounceRef = useRef(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshingWeather, setIsRefreshingWeather] = useState(false);
+
+  // Listen for global open Mausam-Drishti events from Header or Quick Hub
+  useEffect(() => {
+    const handleOpenDrishti = () => setShowDrishtiModal(true);
+    window.addEventListener('weathergpt-open-mausam-drishti', handleOpenDrishti);
+    return () => window.removeEventListener('weathergpt-open-mausam-drishti', handleOpenDrishti);
+  }, []);
 
   // Initialize WebSocket and Service Worker for Live Alerts
   useEffect(() => {
@@ -522,6 +531,136 @@ return (
           confidence={weather?.confidence} 
         />
 
+        {/* ── Profession Advisory Banner — Human-First, color-coded at-a-glance ── */}
+        {activeAdvisory && (() => {
+          const typeConfig = {
+            danger:  { bg: 'rgba(239,68,68,0.14)',  border: 'rgba(239,68,68,0.45)',  dot: '#ef4444', text: '#fca5a5',  strip: '#dc2626', stripLabel: lang === 'hi' ? '⚠️ सावधान' : lang === 'bn' ? '⚠️ সতর্ক' : '⚠️ Warning' },
+            caution: { bg: 'rgba(245,158,11,0.14)', border: 'rgba(245,158,11,0.45)', dot: '#f59e0b', text: '#fcd34d',  strip: '#d97706', stripLabel: lang === 'hi' ? '🟡 ध्यान दें' : lang === 'bn' ? '🟡 মনোযোগ' : '🟡 Caution' },
+            good:    { bg: 'rgba(16,185,129,0.14)', border: 'rgba(16,185,129,0.45)', dot: '#10b981', text: '#6ee7b7',  strip: '#059669', stripLabel: lang === 'hi' ? '✅ अनुकूल' : lang === 'bn' ? '✅ অনুকূল' : '✅ Favorable' },
+          };
+          const cfg = typeConfig[activeAdvisory.type] || typeConfig.good;
+          return (
+            <div className="rounded-2xl sm:rounded-3xl mb-4 sm:mb-6 overflow-hidden shadow-xl" style={{ border: `1px solid ${cfg.border}`, background: cfg.bg }}>
+              {/* Colored strip at top */}
+              <div className="px-4 py-2 flex items-center gap-2" style={{ background: cfg.strip }}>
+                <span className="w-2 h-2 rounded-full bg-white/80 animate-pulse shrink-0" />
+                <span className="text-white text-[11px] font-black tracking-wide uppercase">{cfg.stripLabel}</span>
+                <span className="ml-auto text-white/80 text-[10px] font-semibold">{
+                  advisoryProfile === 'farmer' ? (lang === 'hi' ? '🌾 किसान परामर्श' : '🌾 Kisan Advisory')
+                  : advisoryProfile === 'fisherman' ? (lang === 'hi' ? '🎣 मछुआरा परामर्श' : '🎣 Marine Advisory')
+                  : advisoryProfile === 'aviation' ? (lang === 'hi' ? '✈️ विमानन परामर्श' : '✈️ Aviation Advisory')
+                  : advisoryProfile === 'urbanPlanning' ? (lang === 'hi' ? '🏙️ शहर परामर्श' : '🏙️ Urban Advisory')
+                  : ''
+                }</span>
+              </div>
+              {/* Advisory body */}
+              <div className="px-4 py-3 flex items-start gap-3">
+                <span className="w-3 h-3 rounded-full shrink-0 mt-1" style={{ background: cfg.dot }} />
+                <div>
+                  <div className="font-black text-sm sm:text-base mb-1" style={{ color: cfg.text }}>{activeAdvisory.title}</div>
+                  <p className="text-[var(--text-muted)] text-xs sm:text-sm leading-relaxed">{activeAdvisory.advice}</p>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* ── Priority Feature: Mausam-Drishti AI (Pinned at Top for Farmers) ── */}
+        {advisoryProfile === 'farmer' && (
+          <div className="glass-panel border-2 border-emerald-400/80 rounded-3xl p-4 sm:p-5 mb-5 shadow-[0_0_30px_rgba(16,185,129,0.22)] flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative overflow-hidden">
+            <div className="absolute top-0 right-0 bg-emerald-500 text-white font-black text-[9px] px-3 py-0.5 rounded-bl-xl tracking-wider uppercase shadow-sm">
+              {state.language === 'hi' ? '🌾 किसान विशेष प्राथमिकता' : '🌾 Farmer Priority Suite'}
+            </div>
+            <div className="flex items-start gap-3.5">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-400/50 flex items-center justify-center text-2xl shadow-inner shrink-0">
+                🌿
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                  <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">
+                    Mausam-Drishti AI
+                  </span>
+                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    Vision + Microclimate
+                  </span>
+                  <span className="text-[10px] text-teal-700 dark:text-teal-300 bg-teal-500/15 px-2 py-0.5 rounded-full border border-teal-500/30 font-medium">
+                    48h Safe Spray Window
+                  </span>
+                </div>
+                <h3 className="text-sm sm:text-base font-black text-[var(--text-primary)]">
+                  {state.language === 'hi' 
+                    ? 'मौसम दृष्टि: फसल रोग पहचान एवं 48 घंटे सुरक्षित स्प्रे परामर्श' 
+                    : 'Mausam-Drishti: AI Crop Doctor & 48h Safe Spray Window'}
+                </h3>
+                <p className="text-xs text-[var(--text-secondary)] mt-0.5 leading-relaxed">
+                  {state.language === 'hi' 
+                    ? 'पत्ती की फोटो से रोग पहचानें, 7-दिवसीय नमी का सहसंबंध देखें और वर्षा व हवा के आधार पर सुरक्षित स्प्रे समय जानें।'
+                    : 'Diagnose leaf diseases with Gemini Vision, correlate with 7-day microclimate humidity, and compute ideal fungicide spray hours.'}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => setShowDrishtiModal(true)}
+                className="w-full sm:w-auto px-5 py-3 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 hover:brightness-110 text-white font-black text-xs shadow-lg shadow-emerald-600/30 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <span>📸 {state.language === 'hi' ? 'फसल जांचें / 1-क्लिक नमूने' : 'Scan Leaf / 1-Click Samples'}</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── Priority Feature: Sagar-Rakshak AI (Pinned at Top for Fishermen) ── */}
+        {advisoryProfile === 'fisherman' && (
+          <div className="glass-panel border-2 border-cyan-400/80 rounded-3xl p-4 sm:p-5 mb-5 shadow-[0_0_30px_rgba(6,182,212,0.22)] flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative overflow-hidden">
+            <div className="absolute top-0 right-0 bg-cyan-600 text-white font-black text-[9px] px-3 py-0.5 rounded-bl-xl tracking-wider uppercase shadow-sm">
+              {state.language === 'hi' ? '🎣 मछुआरा विशेष प्राथमिकता' : '🎣 Marine Priority Suite'}
+            </div>
+            <div className="flex items-start gap-3.5">
+              <div className="w-12 h-12 rounded-2xl bg-cyan-500/20 border border-cyan-400/50 flex items-center justify-center text-2xl shadow-inner shrink-0">
+                🌊
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                  <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border border-cyan-500/30">
+                    Sagar-Rakshak AI
+                  </span>
+                  <span className="text-[10px] text-cyan-600 dark:text-cyan-400 font-bold flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse"></span>
+                    Kallakkadal & Swell Radar
+                  </span>
+                  <span className="text-[10px] text-blue-700 dark:text-blue-300 bg-blue-500/15 px-2 py-0.5 rounded-full border border-blue-500/30 font-medium">
+                    IMBL Border Alarm
+                  </span>
+                </div>
+                <h3 className="text-sm sm:text-base font-black text-[var(--text-primary)]">
+                  {state.language === 'hi' 
+                    ? 'सागर रक्षक: कल्लाकडाल अचानक लहरें एवं समुद्री सीमा (IMBL) रडार' 
+                    : 'Sagar-Rakshak: Kallakkadal Swell Surge & IMBL Border Radar'}
+                </h3>
+                <p className="text-xs text-[var(--text-secondary)] mt-0.5 leading-relaxed">
+                  {state.language === 'hi' 
+                    ? 'महासागरीय लहरों व कल्लाकडाल की पूर्व चेतावनी, अंतर्राष्ट्रीय सीमा से दूरी, और काटामारन, वल्लम व ट्रॉलर हेतु सुरक्षित दूरी जानें।'
+                    : 'Real-time ocean swell alerts, distance to international maritime boundaries, and boat-class venturing limits (Catamaran, Vallam, Trawler).'}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => window.dispatchEvent(new CustomEvent('weathergpt-open-sagar-rakshak'))}
+                className="w-full sm:w-auto px-5 py-3 rounded-xl bg-gradient-to-r from-cyan-600 via-cyan-500 to-blue-600 hover:brightness-110 text-white font-black text-xs shadow-lg shadow-cyan-600/30 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <span>🧭 {state.language === 'hi' ? 'समुद्री रडार व परीक्षण' : 'Launch Marine Radar'}</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Hourly Forecast */}
         {isToday && (
           <div className="glass-panel border border-indigo-400/30 rounded-3xl p-4 sm:p-6 mb-4 sm:mb-6 shadow-[0_0_25px_rgba(99,102,241,0.15)] relative overflow-hidden">
@@ -537,6 +676,96 @@ return (
               ))}
             </div>
             <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-indigo-400/60 to-transparent"></div>
+          </div>
+        )}
+
+        {/* Mausam-Drishti AI Crop Doctor Banner (for non-farmer profiles) */}
+        {advisoryProfile !== 'farmer' && (
+          <div className="glass-panel border border-emerald-500/40 rounded-3xl p-4 sm:p-5 mb-6 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-start gap-3.5">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-2xl shadow-inner shrink-0">
+                🌿
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                  <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">
+                    Mausam-Drishti AI
+                  </span>
+                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    Vision + Microclimate
+                  </span>
+                  <span className="text-[10px] text-teal-700 dark:text-teal-300 bg-teal-500/15 px-2 py-0.5 rounded-full border border-teal-500/30 font-medium">
+                    48h Safe Spray Window
+                  </span>
+                </div>
+                <h3 className="text-sm sm:text-base font-black text-[var(--text-primary)]">
+                  {state.language === 'hi' 
+                    ? 'मौसम दृष्टि: फसल रोग पहचान एवं 48 घंटे सुरक्षित स्प्रे परामर्श' 
+                    : 'Mausam-Drishti: AI Crop Doctor & 48h Safe Spray Window'}
+                </h3>
+                <p className="text-xs text-[var(--text-secondary)] mt-0.5 leading-relaxed">
+                  {state.language === 'hi' 
+                    ? 'पत्ती की फोटो से रोग पहचानें, 7-दिवसीय नमी का सहसंबंध देखें और वर्षा व हवा के आधार पर सुरक्षित स्प्रे समय जानें।'
+                    : 'Diagnose leaf diseases with Gemini Vision, correlate with 7-day microclimate humidity, and compute ideal fungicide spray hours.'}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => setShowDrishtiModal(true)}
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 hover:brightness-110 text-white font-black text-xs shadow-lg shadow-emerald-600/30 active:scale-95 transition-all flex items-center justify-center gap-2"
+              >
+                <span>📸 {state.language === 'hi' ? 'फसल जांचें / 1-क्लिक नमूने' : 'Scan Leaf / 1-Click Samples'}</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Sagar-Rakshak AI Marine & Offshore Safety Banner (for non-fisherman profiles) */}
+        {advisoryProfile !== 'fisherman' && (
+          <div className="glass-panel border border-cyan-500/40 rounded-3xl p-4 sm:p-5 mb-6 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-start gap-3.5">
+              <div className="w-12 h-12 rounded-2xl bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center text-2xl shadow-inner shrink-0">
+                🌊
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                  <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border border-cyan-500/30">
+                    Sagar-Rakshak AI
+                  </span>
+                  <span className="text-[10px] text-cyan-600 dark:text-cyan-400 font-bold flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse"></span>
+                    Kallakkadal & Swell Radar
+                  </span>
+                  <span className="text-[10px] text-blue-700 dark:text-blue-300 bg-blue-500/15 px-2 py-0.5 rounded-full border border-blue-500/30 font-medium">
+                    IMBL Border Alarm
+                  </span>
+                </div>
+                <h3 className="text-sm sm:text-base font-black text-[var(--text-primary)]">
+                  {state.language === 'hi' 
+                    ? 'सागर रक्षक: कल्लाकडाल अचानक लहरें एवं समुद्री सीमा (IMBL) रडार' 
+                    : 'Sagar-Rakshak: Kallakkadal Swell Surge & IMBL Border Radar'}
+                </h3>
+                <p className="text-xs text-[var(--text-secondary)] mt-0.5 leading-relaxed">
+                  {state.language === 'hi' 
+                    ? 'महासागरीय लहरों व कल्लाकडाल की पूर्व चेतावनी, अंतर्राष्ट्रीय सीमा से दूरी, और काटामारन, वल्लम व ट्रॉलर हेतु सुरक्षित दूरी जानें।'
+                    : 'Real-time ocean swell alerts, distance to international maritime boundaries, and boat-class venturing limits (Catamaran, Vallam, Trawler).'}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => window.dispatchEvent(new CustomEvent('weathergpt-open-sagar-rakshak'))}
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 via-cyan-500 to-blue-600 hover:brightness-110 text-white font-black text-xs shadow-lg shadow-cyan-600/30 active:scale-95 transition-all flex items-center justify-center gap-2"
+              >
+                <span>🧭 {state.language === 'hi' ? 'समुद्री रडार व परीक्षण' : 'Launch Marine Radar'}</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
+            </div>
           </div>
         )}
 
@@ -891,6 +1120,22 @@ return (
           }}
           initialCategory={state.userProfile === 'general' ? 'master' : state.userProfile}
           defaultLang={state.language}
+        />
+      )}
+
+      {/* Mausam-Drishti Crop Diagnostic Modal */}
+      {showDrishtiModal && (
+        <MausamDrishtiModal
+          isOpen={showDrishtiModal}
+          onClose={() => setShowDrishtiModal(false)}
+          locationData={{
+            name: stageData.locationName || 'Bhopal',
+            district: stageData.district || '',
+            state: stageData.state || '',
+            lat: stageData.lat || 23.2599,
+            lng: stageData.lng || 77.4126
+          }}
+          language={state.language}
         />
       )}
     </div>

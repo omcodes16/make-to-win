@@ -7,7 +7,40 @@ import { sendMessage as sendChatMessage } from '../services/chatApi';
 import { getWeatherInfo, checkSeverity } from '../utils/weatherConditions';
 import { speakText, stopSpeech, subscribeToTts, getCurrentSpeakingId } from '../utils/tts';
 
-export default function ChatInput() {
+const MULTILINGUAL_QUICK_CHIPS = {
+  farmer: {
+    hi: ["🌾 क्या आज स्प्रे करना सुरक्षित है?", "💧 क्या कल बारिश होगी, सिंचाई रोकें?", "🌿 पत्ती पर फंगस रोग की जांच", "🌦️ आज रात पाले का जोखिम?"],
+    bn: ["🌾 আজ স্প্রে করা কি নিরাপদ?", "💧 কাল কি বৃষ্টি হবে, সেচ থামাব?", "🌿 পাতায় ছত্রাক পরীক্ষা", "🌦️ আজ রাতে তুষারপাতের বিপদ?"],
+    as: ["🌾 আজি স্প্ৰে' কৰা নিৰাপদ নে?", "💧 কাইলৈ বৰষুণ হ'ব নে, জলসিঞ্চন বন্ধ কৰিম?", "🌿 পাতত ফাংগাল পৰীক্ষা", "🌦️ আজি ৰাতি পাল পৰাৰ বিপদ?"],
+    en: ["🌾 Safe to spray pesticides today?", "💧 Will it rain tomorrow, delay irrigation?", "🌿 Check leaf fungal disease risk", "🌦️ Frost risk tonight for crops?"]
+  },
+  fisherman: {
+    hi: ["🌊 क्या आज समुद्र में जाना सुरक्षित है?", "⚓ लहरों की ऊंचाई और कल्लाकडाल?", "🚨 IMBL अंतरराष्ट्रीय सीमा कितनी दूर है?", "🌀 क्या आसपास कोई चक्रवात चेतावनी है?"],
+    bn: ["🌊 আজ সমুদ্রে যাওয়া কি নিরাপদ?", "⚓ ঢেউয়ের উচ্চতা ও কাল্লাক্কাদাল?", "🚨 IMBL আন্তর্জাতিক সীমান্ত কত দূরে?", "🌀 আশেপাশে কি কোনো ঘূর্ণিঝড় আছে?"],
+    as: ["🌊 আজি সমুদ্ৰলৈ যোৱা নিৰাপদ নে?", "⚓ ঢৌৰ উচ্চতা আৰু কাল্লাক্কাদাল?", "🚨 IMBL সীমা কিমান দূৰ?", "🌀 ওচৰত কিবা ঘূৰ্ণীবতাহ আছে নেকি?"],
+    en: ["🌊 Safe to venture into sea today?", "⚓ Wave height & Kallakkadal swell?", "🚨 Distance to IMBL border radar?", "🌀 Any active cyclone in Bay of Bengal?"]
+  },
+  aviation: {
+    hi: ["✈️ आज VFR दृश्यता और बादलों की छत?", "🌪️ क्या विंड शियर या टर्बुलेंस का खतरा है?", "🛸 ड्रोन उड़ान हेतु हवा की गति सीमा?", "👁️ रनवे पर दृश्यता स्तर क्या है?"],
+    bn: ["✈️ আজ VFR দৃশ্যমানতা এবং মেঘের উচ্চতা?", "🌪️ উইন্ড শিয়ার বা টার্বুলেন্সের ঝুঁকি?", "🛸 ড্রোন ওড়ানোর বাতাসের গতি?", "👁️ রানওয়েতে দৃশ্যমানতা কত?"],
+    as: ["✈️ আজি VFR দৃশ্যমানতা আৰু ডাৱৰৰ সীমা?", "🌪️ বতাহ কতৰনি বা টাৰ্বুলেন্সৰ বিপদ?", "🛸 ড্ৰোন উৰণৰ বতাহৰ গতি?", "👁️ ৰাণৱেত দৃশ্যমানতা কিমান?"],
+    en: ["✈️ VFR visibility & cloud ceiling?", "🌪️ Wind shear or turbulence risk?", "🛸 Drone pilot VLOS wind limits?", "👁️ Current runway visual range?"]
+  },
+  urbanPlanning: {
+    hi: ["🏙️ आज का AQI और वायु गुणवत्ता?", "🌡️ आज हीटवेव और लू का खतरा?", "🌧️ क्या जल निकासी ओवरफ्लो व बाढ़ जोखिम है?", "🌬️ बाहरी मजदूरों हेतु सुरक्षा सलाह?"],
+    bn: ["🏙️ আজকের AQI এবং বায়ুর মান?", "🌡️ আজ কি তাপপ্রবাহের ঝুঁকি আছে?", "🌧️ নিষ্কাশন উপচে পড়া ও বন্যার ঝুঁকি?", "🌬️ বহিরাঙ্গন শ্রমিকদের জন্য পরামর্শ?"],
+    as: ["🏙️ আজিৰ AQI আৰু বায়ুৰ গুণমান?", "🌡️ আজি তাপপ্ৰবাহৰ বিপদ আছে নেকি?", "🌧️ নলা উপচি পৰা আৰু বানপানীৰ আশংকা?", "🌬️ শ্ৰমিকসকলৰ সুৰক্ষা পৰামৰ্শ?"],
+    en: ["🏙️ Today's AQI & air quality?", "🌡️ Urban heat island & heatwave risk?", "🌧️ Drainage waterlogging & flood risk?", "🌬️ Outdoor worker safety index?"]
+  },
+  general: {
+    hi: ["🌧️ क्या आज मेरे शहर में बारिश होगी?", "☔ क्या आज बाहर जाते समय छाता चाहिए?", "🌀 क्या पास में कोई चक्रवात या आपदा है?", "🌡️ आज अधिकतम तापमान कितना रहेगा?"],
+    bn: ["🌧️ আজ আমার শহরে বৃষ্টি হবে কি?", "☔ বাইরে বেরোনোর সময় ছাতা লাগবে?", "🌀 আশেপাশে কি কোনো দুর্যোগ আছে?", "🌡️ আজকের সর্বোচ্চ তাপমাত্রা কত?"],
+    as: ["🌧️ আজি মোৰ চহৰত বৰষুণ হ'ব নেকি?", "☔ বাহিৰলৈ ওলাওঁতে ছাতি লাগিবনে?", "🌀 ওচৰত কিবা দুৰ্যোগ আছে নেকি?", "🌡️ আজি সৰ্বোচ্চ তাপমাত্ৰা কিমান?"],
+    en: ["🌧️ Will it rain in my city today?", "☔ Do I need to carry an umbrella?", "🌀 Any active severe cyclone nearby?", "🌡️ What will be today's maximum temperature?"]
+  }
+};
+
+export default function ChatInput({ isHero = false }) {
   const { state, dispatch } = useApp();
   const [input, setInput] = useState('');
   const [isListening, setIsListening] = useState(false);
@@ -79,13 +112,14 @@ export default function ChatInput() {
     dispatch({ type: 'SET_LOADING', payload: true });
 
     try {
-      let locationName = extractLocation(text);
+      const explicitLocationName = extractLocation(text);
+      let locationName = explicitLocationName;
       if (!locationName) {
         // Fall back to conversation history first (most recent message with location), then dashboard
         const lastMsgWithLoc = [...state.messages].reverse().find(m => m.location || m.data?.location || m.data?.locationName || m.weatherData?.locationName);
         locationName = lastMsgWithLoc?.location || lastMsgWithLoc?.data?.location || lastMsgWithLoc?.data?.locationName || lastMsgWithLoc?.weatherData?.locationName || null;
         if (!locationName) {
-          locationName = state.currentWeather?.locationName || state.weatherStageData?.locationName;
+          locationName = state.weatherStageData?.locationName || state.currentWeather?.locationName;
         }
       }
 
@@ -93,8 +127,43 @@ export default function ChatInput() {
       let weatherData = null;
       let weatherInfo = null;
       let severityCheck = null;
-      
-      if (locationName) {
+
+      // 1. If user did NOT explicitly specify a different city, use active dashboard location and weather directly!
+      const activeStage = state.weatherStageData || {};
+      const activeCurrent = state.currentWeather || {};
+      const activeLocName = activeStage.locationName || activeCurrent.locationName;
+      const activeLat = activeStage.lat || activeCurrent.lat;
+      const activeLng = activeStage.lng || activeCurrent.lng;
+      const activeDist = activeStage.district || activeCurrent.district || '';
+      const activeState = activeStage.state || activeCurrent.state || '';
+      const existingWeather = activeStage.weather || (activeCurrent.temperature != null ? activeCurrent : null);
+
+      if (!explicitLocationName && activeLocName) {
+        location = {
+          name: activeLocName,
+          state: activeState,
+          district: activeDist,
+          lat: activeLat,
+          lng: activeLng,
+        };
+
+        if (existingWeather && existingWeather.temperature != null) {
+          weatherData = existingWeather;
+          weatherInfo = getWeatherInfo(weatherData.weatherCode);
+          severityCheck = checkSeverity(weatherData, activeLocName);
+        } else if (activeLat && activeLng) {
+          try {
+            weatherData = await getWeather(activeLat, activeLng);
+            weatherInfo = getWeatherInfo(weatherData.weatherCode);
+            severityCheck = checkSeverity(weatherData, activeLocName);
+          } catch (e) {
+            console.warn("Direct weather fetch error:", e);
+          }
+        }
+      }
+
+      // 2. If user asked about a different location or no active weather was found, geocode the requested city
+      if (!location && locationName) {
         location = await geocodeLocation(locationName, state.language);
         if (location) {
           weatherData = await getWeather(location.lat, location.lng);
@@ -108,12 +177,23 @@ export default function ChatInput() {
         .slice(-2)
         .map(m => ({ role: m.role, content: m.text }));
 
+      const effectiveLocationName = location ? location.name : (locationName || activeLocName);
+
       const aiResponse = await sendChatMessage(text, state.language, weatherData ? {
-        location: location.name,
-        state: location.state,
+        location: effectiveLocationName,
+        state: location?.state || activeState,
+        district: location?.district || activeDist,
+        lat: location?.lat || activeLat,
+        lng: location?.lng || activeLng,
         ...weatherData,
-        conditionLabel: weatherInfo.label,
-      } : null, recentHistory, state.userProfile);
+        conditionLabel: weatherInfo?.label || '',
+      } : (effectiveLocationName ? {
+        location: effectiveLocationName,
+        state: location?.state || activeState,
+        district: location?.district || activeDist,
+        lat: location?.lat || activeLat,
+        lng: location?.lng || activeLng,
+      } : null), recentHistory, state.userProfile);
 
       const resolvedLocationName = aiResponse.location || (location ? location.name : null) || locationName;
 
@@ -245,7 +325,7 @@ export default function ChatInput() {
     const handler = (e) => handleSend(e.detail);
     window.addEventListener('weathergpt-send', handler);
     return () => window.removeEventListener('weathergpt-send', handler);
-  }, [state.language, state.isLoading]);
+  }, [state.language, state.isLoading, state.weatherStageData, state.currentWeather, state.messages, state.userProfile]);
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -271,11 +351,38 @@ export default function ChatInput() {
     );
   };
 
+  const handleChipClick = (chipText) => {
+    setInput(chipText);
+    handleSend(chipText);
+  };
+
+  const prof = state.userProfile || 'general';
+  const lang = state.language || 'en';
+  const chipsForProf = MULTILINGUAL_QUICK_CHIPS[prof] || MULTILINGUAL_QUICK_CHIPS.general;
+  const activeChips = chipsForProf[lang] || chipsForProf.en || MULTILINGUAL_QUICK_CHIPS.general.en;
+
   return (
-    <div className="bg-transparent border-t-0 px-2 py-1">
-      <div className="max-w-lg mx-auto relative">
+    <div className={`bg-transparent border-t-0 px-2 py-1 ${isHero ? 'w-full' : ''}`}>
+      <div className={`mx-auto relative ${isHero ? 'w-full max-w-xl' : 'max-w-lg'}`}>
+
+        {/* Quick Suggestion Chips Carousel (Shown only when conversation has active messages) */}
+        {!isHero && !input && state.messages && state.messages.length > 0 && (
+          <div className="flex items-center gap-1.5 overflow-x-auto hide-scrollbar pb-2 pt-0.5 px-1 scrollbar-hide">
+            {activeChips.map((chip, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => handleChipClick(chip)}
+                className="whitespace-nowrap px-3 py-1 rounded-full text-[11px] font-semibold bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--theme-border)] hover:border-indigo-400/50 shadow-sm transition-all active:scale-95 cursor-pointer shrink-0"
+              >
+                {chip}
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* UI States */}
-        <div className="absolute -top-6 left-2 text-xs text-theme-muted font-medium">
+        <div className="absolute -top-6 left-2 text-xs text-theme-muted font-medium pointer-events-none">
           {ttsMessage ? <span className="text-amber-400">{ttsMessage}</span> :
            isSpeaking ? activeVoiceState.speaking :
            state.isLoading ? activeVoiceState.thinking :
@@ -284,7 +391,9 @@ export default function ChatInput() {
         </div>
         <form 
           onSubmit={handleSend}
-          className="relative glass-input rounded-full p-1.5 pl-3 flex items-center shadow-[0_8px_32px_rgba(0,0,0,0.4)] hover:shadow-[0_8px_32px_rgba(129,140,248,0.1)] transition-all duration-500 glow-focus"
+          className={`relative glass-input rounded-full flex items-center shadow-[0_8px_32px_rgba(0,0,0,0.4)] hover:shadow-[0_8px_32px_rgba(129,140,248,0.15)] transition-all duration-500 glow-focus ${
+            isHero ? 'p-2 sm:p-2.5 pl-4 sm:pl-5 border border-white/20' : 'p-1.5 pl-3'
+          }`}
         >
           <button
             type="button"
@@ -308,13 +417,17 @@ export default function ChatInput() {
             }}
             placeholder={placeholder}
             disabled={state.isLoading}
-            className="flex-1 bg-transparent px-3 py-2 text-theme-primary placeholder-theme-muted/50 focus:outline-none text-sm md:text-base focus:ring-0"
+            className={`flex-1 bg-transparent px-3 py-2 text-theme-primary placeholder-theme-muted/50 focus:outline-none focus:ring-0 ${
+              isHero ? 'text-base sm:text-lg' : 'text-sm md:text-base'
+            }`}
           />
 
           <button
             type="submit"
             disabled={!input.trim() || state.isLoading}
-            className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-indigo-600 hover:bg-indigo-500 text-white disabled:opacity-40 disabled:bg-slate-200 dark:disabled:bg-white/10 disabled:text-slate-500 dark:disabled:text-white/40 transition-all shadow-md active:scale-95 flex-shrink-0 ml-1"
+            className={`flex items-center justify-center rounded-full bg-indigo-600 hover:bg-indigo-500 text-white disabled:opacity-40 disabled:bg-slate-200 dark:disabled:bg-white/10 disabled:text-slate-500 dark:disabled:text-white/40 transition-all shadow-md active:scale-95 flex-shrink-0 ml-1 ${
+              isHero ? 'w-10 h-10 sm:w-11 sm:h-11' : 'w-9 h-9 sm:w-10 sm:h-10'
+            }`}
           >
             {state.isLoading ? (
               <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

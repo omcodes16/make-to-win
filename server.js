@@ -32,6 +32,8 @@ import {
   broadcastPushNotification 
 } from './server/pushService.js';
 import { extractLocation } from './src/services/locationExtractor.js';
+import { diagnoseCropLeaf } from './server/cropDiagnostic.js';
+import { getMarineSafetyReport } from './server/marineSafety.js';
 
 // Scheduled jobs will be started later
 
@@ -220,7 +222,8 @@ import {
   get_seasonal_comparison, 
   get_active_alerts,
   get_marine_weather,
-  get_climate_indices
+  get_climate_indices,
+  primeGeocodeCache
 } from './server/tools.js';
 
 import { geocodeLocation } from './src/services/weatherApi.js';
@@ -1396,6 +1399,17 @@ app.post('/api/chat', async (req, res) => {
   let lastWeatherData = null;
   let toolLocation = null;
 
+  // Prime server-side geocode cache with user's active coordinates
+  if (weatherData && weatherData.location && weatherData.lat && weatherData.lng) {
+    primeGeocodeCache(weatherData.location, {
+      lat: weatherData.lat,
+      lng: weatherData.lng,
+      name: weatherData.location,
+      state: weatherData.state || '',
+      district: weatherData.district || ''
+    });
+  }
+
   try {
     // ---------------------------------------------------------
     // PRIMARY STRATEGY: FUNCTION CALLING LOOP
@@ -1403,7 +1417,9 @@ app.post('/api/chat', async (req, res) => {
     let localContext = '';
     const locNameLower = (weatherData?.location || '').toLowerCase();
     
-    if (locNameLower.includes('betul')) {
+    if (locNameLower.includes('ranjhi') || locNameLower.includes('jabalpur')) {
+      localContext = '\n[LOCAL GEOGRAPHY (RANJHI / JABALPUR): Ranjhi is an eastern tehsil and suburb of Jabalpur, Madhya Pradesh, in the Mahakoshal region near the Narmada river basin (Bhedaghat). Climate is humid subtropical with active thunderstorm and lightning risks during weather disturbances. Mention Narmada river conditions or Jabalpur district advisories if relevant.]';
+    } else if (locNameLower.includes('betul')) {
       localContext = '\n[LOCAL GEOGRAPHY (BETUL): Tapti and Machna rivers originate near Betul in the Satpura range. Mention river conditions or tribal agriculture (Soyabean, Maize) if relevant to the query.]';
     } else if (locNameLower.includes('ujjain')) {
       localContext = '\n[LOCAL GEOGRAPHY (UJJAIN): Located on the banks of the Kshipra river. Mention Kshipra river water levels and Malwa plateau agricultural impact if relevant.]';
@@ -1413,10 +1429,23 @@ app.post('/api/chat', async (req, res) => {
       localContext = '\n[LOCAL GEOGRAPHY (ASSAM): Brahmaputra river dominates the landscape. Flood risks and tea garden impacts are highly relevant.]';
     }
     
-    const locHint = weatherData?.location ? `\n(Hint: The user's location is generally ${weatherData.location}${weatherData.state ? ', ' + weatherData.state : ''}. Use tools to fetch precise data if needed.)${localContext}` : '';
+    let locationInstruction = '';
+    if (weatherData?.location) {
+      const locFull = `${weatherData.location}${weatherData.district && !weatherData.location.toLowerCase().includes(weatherData.district.toLowerCase()) ? ', District ' + weatherData.district : ''}${weatherData.state ? ', ' + weatherData.state : ''}`;
+      locationInstruction = `\n[ACTIVE USER LOCATION & OBSERVED WEATHER CONTEXT]:
+- User Current Location: "${locFull}" (GPS: ${weatherData.lat || 'N/A'}, ${weatherData.lng || 'N/A'}).
+- Live Measured Weather at ${weatherData.location}:
+  * Temperature: ${weatherData.temperature != null ? weatherData.temperature + '°C' : 'N/A'} (Feels like: ${weatherData.feelsLike != null ? weatherData.feelsLike + '°C' : 'N/A'})
+  * Condition: ${weatherData.conditionLabel || weatherData.weatherCode || 'Active'}
+  * Humidity: ${weatherData.humidity != null ? weatherData.humidity + '%' : 'N/A'}
+  * Wind Speed: ${weatherData.windSpeed != null ? weatherData.windSpeed + ' km/h' : 'N/A'}
+  * Rain / Precipitation: ${weatherData.precipitation ?? weatherData.rain ?? 0} mm
+- MANDATORY INSTRUCTION: The user is currently situated in "${weatherData.location}". Unless they explicitly mention a different city in their message, you MUST tailor your answer and safety advice SPECIFICALLY TO "${weatherData.location}". You MUST explicitly state "${weatherData.location}" in your answer so the user knows you are answering for their exact location.${localContext}`;
+    }
+
     const initialUserPrompt = isRegionalLang
-      ? `User question (translated to English for accurate tool-calling from ${targetLanguage}): "${englishQuery}"\n(Original native script query: "${message}")${locHint}\nIMPORTANT: Answer in clear English using the required JSON schema; the system will translate your response back to ${targetLanguage}.`
-      : `User question (language: ${targetLanguage}): "${message}"${locHint}`;
+      ? `User question (translated to English for accurate tool-calling from ${targetLanguage}): "${englishQuery}"\n(Original native script query: "${message}")${locationInstruction}\nIMPORTANT: Answer in clear English using the required JSON schema; the system will translate your response back to ${targetLanguage}.`
+      : `User question (language: ${targetLanguage}): "${message}"${locationInstruction}`;
 
     let messages = [
       { role: 'system', content: SYSTEM_PROMPT + `\n\nActive User Profile: ${profile.toUpperCase()}` },
@@ -1504,6 +1533,9 @@ app.post('/api/chat', async (req, res) => {
           try {
             const args = JSON.parse(tc.function.arguments);
             console.log(`[TOOL CALLED] ${funcName} with args:`, args);
+            if (!args.location || ['current', 'here', 'my location', 'this location', 'user location'].includes((args.location || '').toLowerCase().trim())) {
+              args.location = weatherData?.location || 'New Delhi';
+            }
             if (args.location) {
               toolLocation = args.location;
             }
@@ -1782,7 +1814,15 @@ ${modelNote}`;
         finalJson.suggestedQuestions = finalJson.suggestedQuestions.map(q => {
           if (typeof q !== 'string') return q;
           const trimmed = q.trim();
-          if (!trimmed.toLowerCase().includes(activeLoc.toLowerCase())) {
+          const cleanLoc = activeLoc.split(',')[0].trim();
+          const hasLocationAlready =
+            trimmed.toLowerCase().includes(activeLoc.toLowerCase()) ||
+            trimmed.toLowerCase().includes(cleanLoc.toLowerCase()) ||
+            (/[\u0900-\u097F\u0980-\u09FF\u0A00-\u0A7F]/.test(trimmed) && (
+              trimmed.includes('तहसील') || trimmed.includes('शहर') || trimmed.includes('जिले') || trimmed.includes('गाँव') || trimmed.includes('में')
+            ));
+
+          if (!hasLocationAlready) {
             if (/this area|the area/i.test(trimmed)) {
               return trimmed.replace(/this area|the area/gi, activeLoc);
             }
@@ -1790,6 +1830,13 @@ ${modelNote}`;
               return trimmed.replace(/\bhere\b/gi, `in ${activeLoc}`);
             }
             const base = trimmed.endsWith('?') ? trimmed.slice(0, -1) : trimmed;
+            if (lang === 'hi') {
+              return `${base} (${cleanLoc} में)?`;
+            } else if (lang === 'bn') {
+              return `${base} (${cleanLoc}-এ)?`;
+            } else if (lang === 'as') {
+              return `${base} (${cleanLoc}ত)?`;
+            }
             return `${base} in ${activeLoc}?`;
           }
           return trimmed;
@@ -2592,6 +2639,50 @@ app.get('/api/research/historical', researchRateLimiter, async (req, res) => {
   } catch (err) {
     console.error('Error in /api/research/historical:', err);
     return res.status(500).json({ error: err.message || 'Internal server error while processing historical climate analytics.' });
+  }
+});
+
+// ------------------------------------------------------------------
+// MAUSAM-DRISHTI: CROP DOCTOR & MICROCLIMATE VISION DIAGNOSTIC API (SIH PS-26068)
+// ------------------------------------------------------------------
+app.post('/api/crop-diagnostic', async (req, res) => {
+  try {
+    const { image, lat, lng, locationName, cropType, language } = req.body;
+    if (!image) {
+      return res.status(400).json({ error: 'Image data is required for crop diagnostic.' });
+    }
+
+    const result = await diagnoseCropLeaf({
+      imageBase64: image,
+      lat: lat || 23.2599,
+      lng: lng || 77.4126,
+      locationName: locationName || 'India',
+      cropType: cropType || 'auto',
+      language: language || 'en'
+    });
+
+    return res.json(result);
+  } catch (err) {
+    console.error('Error in /api/crop-diagnostic:', err);
+    return res.status(500).json({ error: err.message || 'Failed to process crop diagnostic.' });
+  }
+});
+
+// ------------------------------------------------------------------
+// SAGAR-RAKSHAK: OFFSHORE MARINE & IMBL SAFETY API (SIH PS-26068)
+// ------------------------------------------------------------------
+app.get('/api/marine-safety', async (req, res) => {
+  try {
+    const lat = req.query.lat ? parseFloat(req.query.lat) : 13.0827;
+    const lng = req.query.lng ? parseFloat(req.query.lng) : 80.2707;
+    const locationName = req.query.locationName || req.query.name || 'Coastal India';
+    const language = req.query.language || 'en';
+
+    const report = await getMarineSafetyReport({ lat, lng, locationName, language });
+    return res.json(report);
+  } catch (err) {
+    console.error('Error in /api/marine-safety:', err);
+    return res.status(500).json({ error: err.message || 'Failed to process marine safety report.' });
   }
 });
 

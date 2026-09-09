@@ -590,6 +590,103 @@
   animation: rainStreak 1.5s linear infinite;
 }
 
+/* ============================================================
+   LIVING ATMOSPHERE & ONBOARDING HERO ANIMATIONS
+   ============================================================ */
+
+@keyframes dawnToDuskSky {
+  0% {
+    background: radial-gradient(circle at 50% 50%, rgba(30, 27, 75, 0.90) 0%, rgba(15, 23, 42, 0.95) 100%);
+    box-shadow: 0 0 50px rgba(99, 102, 241, 0.25), inset 0 0 30px rgba(129, 140, 248, 0.15);
+  }
+  25% {
+    background: radial-gradient(circle at 60% 40%, rgba(124, 45, 18, 0.88) 0%, rgba(67, 24, 6, 0.92) 50%, rgba(15, 23, 42, 0.95) 100%);
+    box-shadow: 0 0 60px rgba(249, 115, 22, 0.35), inset 0 0 35px rgba(251, 146, 60, 0.2);
+  }
+  50% {
+    background: radial-gradient(circle at 50% 30%, rgba(3, 105, 161, 0.88) 0%, rgba(12, 74, 110, 0.92) 60%, rgba(15, 23, 42, 0.95) 100%);
+    box-shadow: 0 0 60px rgba(56, 189, 248, 0.35), inset 0 0 35px rgba(14, 165, 233, 0.2);
+  }
+  75% {
+    background: radial-gradient(circle at 40% 60%, rgba(194, 65, 12, 0.88) 0%, rgba(120, 53, 15, 0.92) 55%, rgba(15, 23, 42, 0.95) 100%);
+    box-shadow: 0 0 60px rgba(245, 158, 11, 0.35), inset 0 0 35px rgba(217, 119, 6, 0.2);
+  }
+  100% {
+    background: radial-gradient(circle at 50% 50%, rgba(30, 27, 75, 0.90) 0%, rgba(15, 23, 42, 0.95) 100%);
+    box-shadow: 0 0 50px rgba(99, 102, 241, 0.25), inset 0 0 30px rgba(129, 140, 248, 0.15);
+  }
+}
+
+@keyframes radarRotateSweep {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes alertBeaconPing {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(1.45);
+    opacity: 0.3;
+  }
+  100% {
+    transform: scale(0.95);
+    opacity: 0.9;
+  }
+}
+
+@keyframes ctaSunrisePulse {
+  0%, 100% {
+    box-shadow: 0 0 25px rgba(249, 115, 22, 0.45), 0 10px 25px -5px rgba(234, 88, 12, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    transform: translateY(0);
+  }
+  50% {
+    box-shadow: 0 0 42px rgba(249, 115, 22, 0.72), 0 14px 32px -4px rgba(234, 88, 12, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    transform: translateY(-1.5px);
+  }
+}
+
+@keyframes heroFadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.living-sky-halo {
+  animation: dawnToDuskSky 22s ease-in-out infinite;
+}
+
+.radar-sweep-beam {
+  animation: radarRotateSweep 5s linear infinite;
+  transform-origin: center center;
+}
+
+.alert-beacon-dot {
+  animation: alertBeaconPing 2.2s ease-in-out infinite;
+}
+
+.cta-sunrise-glow {
+  animation: ctaSunrisePulse 3.5s ease-in-out infinite;
+}
+
+.hero-anim-1 { animation: heroFadeSlideUp 350ms cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.hero-anim-2 { animation: heroFadeSlideUp 350ms cubic-bezier(0.16, 1, 0.3, 1) 70ms forwards; opacity: 0; animation-fill-mode: forwards; }
+.hero-anim-3 { animation: heroFadeSlideUp 350ms cubic-bezier(0.16, 1, 0.3, 1) 140ms forwards; opacity: 0; animation-fill-mode: forwards; }
+.hero-anim-4 { animation: heroFadeSlideUp 350ms cubic-bezier(0.16, 1, 0.3, 1) 210ms forwards; opacity: 0; animation-fill-mode: forwards; }
+.hero-anim-5 { animation: heroFadeSlideUp 350ms cubic-bezier(0.16, 1, 0.3, 1) 280ms forwards; opacity: 0; animation-fill-mode: forwards; }
+.hero-anim-6 { animation: heroFadeSlideUp 350ms cubic-bezier(0.16, 1, 0.3, 1) 360ms forwards; opacity: 0; animation-fill-mode: forwards; }
+
 /* Large text mode */
 .large-text {
   font-size: 18px;
