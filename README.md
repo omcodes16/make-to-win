@@ -870,3 +870,27 @@ docker-compose up --build
 
 *Built for Smart India Hackathon 2026 â€” Problem Statement PS 26068*
 *Team: omcodes16 | Every claim verified against live codebase.*
+
+---
+
+## 🖼️ 14. Prototype Architecture — Visual Overview
+
+The diagram below shows the **complete working of the WeatherGPT prototype** — from user personas at the top, through the React frontend, Node.js backend API, Gemini AI engine, external data sources, all the way down to the storage layer.
+
+![WeatherGPT Prototype Architecture](./prototype_architecture.jpg)
+
+| Layer | What it does |
+|---|---|
+| 👥 **User Personas** | 6 user types — Farmer, Fisherman, Aviator, Urban Planner, General Citizen, Disaster Manager — each with tailored advisories |
+| 🖥️ **Frontend (React 18 + Vite)** | Dashboard, Chat, Alerts, Manager Portal, Research Panel, SOS — all sharing state via `AppContext.jsx` |
+| ⚙️ **Backend API (Node.js + Express)** | REST endpoints + WebSocket server on Port 3001 — handles chat, alerts, SOS, research, crop diagnosis, marine safety |
+| 🤖 **AI Engine** | Gemini 3.6 Flash → Autonomous Function Calling Loop → 6 weather tools executed concurrently via `Promise.all()` |
+| 🌐 **External Data Sources** | Open-Meteo API (free), GFS + ICON + ECMWF NWP tri-model, NDMA CAP XML (Indian Govt), Nominatim OSM geocoder |
+| 💾 **Storage** | MongoDB Atlas (primary) ↔ Local JSON fallback files (zero-downtime guarantee) |
+
+> **How to read it:** Each arrow flows top-to-bottom. A user query travels from their browser → React screen → Express API → Gemini AI → weather tools → external data → response back up the chain. Alerts flow in parallel via WebSocket push.
+
+---
+
+*Built for Smart India Hackathon 2026 — Problem Statement PS 26068*
+*Team: omcodes16 | Every claim verified against live codebase.*
