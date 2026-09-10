@@ -387,7 +387,7 @@ export async function getWeather(lat, lng, forceRefresh = false) {
     }
   }
 
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,rain,weather_code,wind_speed_10m,wind_direction_10m,uv_index,visibility,is_day&hourly=temperature_2m,precipitation_probability,wind_speed_10m,wind_direction_10m,weather_code,is_day&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,uv_index_max,sunrise,sunset,weather_code&timezone=auto&forecast_days=7`;
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,rain,weather_code,wind_speed_10m,wind_direction_10m,uv_index,visibility,is_day,surface_pressure&hourly=temperature_2m,precipitation_probability,wind_speed_10m,wind_direction_10m,weather_code,is_day&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,uv_index_max,sunrise,sunset,weather_code&timezone=auto&forecast_days=7`;
   const aqiUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lng}&current=us_aqi&timezone=auto`;
 
   // NWP Multi-Model Combined URL — fetching GFS, ICON, ECMWF in parallel with full metrics
@@ -552,6 +552,7 @@ export async function getWeather(lat, lng, forceRefresh = false) {
     weatherCode: current.weather_code,
     uvIndex: current.uv_index,
     visibility: current.visibility,
+    surfacePressure: Math.round(current.surface_pressure ?? 1013),
     aqi: Math.round(aqiValue),
     isDay: current.is_day === 1,
 

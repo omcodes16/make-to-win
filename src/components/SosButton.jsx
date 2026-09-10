@@ -265,53 +265,23 @@ export default function SosButton() {
 
   return (
     <>
-      {/* Desktop Persistent Emergency SOS Floating Pill */}
-      <button
-        onClick={handleSosClick}
-        className="hidden md:flex fixed z-[60] items-center gap-2 px-3.5 py-2 rounded-full bg-gradient-to-r from-red-700 via-red-600 to-rose-600 hover:from-red-600 hover:to-rose-500 text-white font-black text-xs shadow-2xl shadow-red-900/60 border-2 border-red-400/80 transition-all hover:scale-105 active:scale-95 cursor-pointer select-none ring-4 ring-red-500/20"
-        style={{
-          position: 'fixed',
-          bottom: state.activeTab === 'chat' ? '84px' : '24px',
-          right: '24px',
-          zIndex: 60,
-          transition: 'bottom 0.3s ease',
-        }}
-        title={offlineQueueCount > 0 ? `⚠️ ${offlineQueueCount} SOS Alert(s) Queued in Offline Vault` : "Send Emergency SOS Alert"}
-        aria-label="Send Emergency SOS Alert"
-      >
-        <span className="relative flex h-2.5 w-2.5">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-white"></span>
-        </span>
-        <span className="text-base leading-none">🆘</span>
-        <span className="text-xs font-black tracking-wider uppercase">
-          {['hi', 'mr', 'pa', 'gu'].includes(state.language) ? 'आपातकाल SOS' : 'Emergency SOS'}
-        </span>
-        {offlineQueueCount > 0 && (
-          <span 
-            className="ml-1 bg-amber-400 text-black font-black text-[10px] px-1.5 py-0.5 rounded-full border border-neutral-900 shadow-md animate-pulse"
-            title={`${offlineQueueCount} pending offline SOS`}
-          >
-            {offlineQueueCount} Offline
-          </span>
-        )}
-      </button>
+      {/* Modals & Dialogs (Triggered from Header Emergency SOS) */}
 
       {phase !== "idle" && (
-        <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in" onClick={reset}>
+        <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 animate-fade-in" onClick={reset}>
           <div 
-            className="theme-modal border border-red-500/40 rounded-3xl p-6 w-full max-w-sm shadow-2xl text-[var(--text-primary)] max-h-[95vh] overflow-y-auto relative"
+            className="theme-modal border border-red-500/40 rounded-2xl sm:rounded-3xl p-4 sm:p-6 w-full max-w-sm shadow-2xl text-[var(--text-primary)] max-h-[92vh] overflow-y-auto relative"
             onClick={e => e.stopPropagation()}
           >
 
             {phase === "form" && (
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="text-center space-y-1.5">
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-red-600 to-rose-500 flex items-center justify-center text-white text-base font-black shadow-lg shadow-red-500/30 mx-auto mb-1">
+              <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+                <div className="text-center space-y-1 sm:space-y-1.5">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-red-600 to-rose-500 flex items-center justify-center text-white text-sm sm:text-base font-black shadow-lg shadow-red-500/30 mx-auto mb-1">
                     SOS
                   </div>
-                  <h2 className="text-2xl font-black text-[var(--text-primary)] tracking-tight">Emergency SOS</h2>
-                  <p className="text-[var(--text-secondary)] text-xs font-medium">Fill details and share location to dispatch rescue.</p>
+                  <h2 className="text-lg sm:text-2xl font-black text-[var(--text-primary)] tracking-tight">Emergency SOS</h2>
+                  <p className="text-[var(--text-secondary)] text-[11px] sm:text-xs font-medium">Fill details and share location to dispatch rescue.</p>
                 </div>
                 
                 <div className="pt-2">
@@ -371,19 +341,19 @@ export default function SosButton() {
                   />
                 </div>
                 
-                <div className="flex gap-3 pt-2">
+                <div className="flex gap-2 sm:gap-3 pt-1 sm:pt-2">
                   <button 
                     type="button" 
                     onClick={reset} 
-                    className="flex-1 py-3 bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-hover)] border border-[var(--theme-border)] rounded-xl font-bold transition-all text-sm text-[var(--text-primary)] shadow-sm active:scale-95"
+                    className="flex-1 py-2 sm:py-3 bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-hover)] border border-[var(--theme-border)] rounded-xl font-bold transition-all text-xs sm:text-sm text-[var(--text-primary)] shadow-sm active:scale-95 cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button 
                     type="submit" 
-                    className="flex-1 py-3 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 rounded-xl font-black text-sm transition-all shadow-lg shadow-red-600/30 text-white active:scale-95"
+                    className="flex-1 py-2 sm:py-3 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 rounded-xl font-black text-xs sm:text-sm transition-all shadow-lg shadow-red-600/30 text-white active:scale-95 cursor-pointer"
                   >
-                    📍 Share Location & Send
+                    📍 Share & Send
                   </button>
                 </div>
               </form>

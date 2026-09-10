@@ -77,17 +77,17 @@ export default function MobileMenuSheet({
       >
         {/* Top sheet pull handle */}
         <div className="sticky top-0 z-20 pt-3 pb-2 bg-[var(--modal-bg)] backdrop-blur-xl flex flex-col items-center">
-          <div className="w-12 h-1.5 rounded-full bg-white/25 mb-2 cursor-grab active:cursor-grabbing" />
+          <div className="w-12 h-1.5 rounded-full bg-slate-400/40 dark:bg-white/25 mb-2 cursor-grab active:cursor-grabbing" />
           <div className="w-full px-5 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="text-base font-black tracking-tight text-[var(--text-primary)]">Settings & Tools</span>
-              <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
+              <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-500 dark:text-indigo-400 border border-indigo-500/30">
                 WeatherGPT
               </span>
             </div>
             <button
               onClick={onClose}
-              className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-all"
+              className="w-8 h-8 rounded-full bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-hover)] border border-[var(--modal-border)] active:scale-95 flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-all"
               aria-label="Close menu"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -103,7 +103,7 @@ export default function MobileMenuSheet({
           {/* Active Profile / Hub Card */}
           <div className={`p-3.5 rounded-2xl bg-gradient-to-r ${activeProfile.color} border flex items-center justify-between gap-3 shadow-sm`}>
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-xl shrink-0 shadow-inner">
+              <div className="w-10 h-10 rounded-xl bg-[var(--glass-bg)] border border-[var(--theme-border)] flex items-center justify-center text-xl shrink-0 shadow-inner">
                 {activeProfile.icon}
               </div>
               <div className="min-w-0">
@@ -124,15 +124,15 @@ export default function MobileMenuSheet({
           </div>
 
           {/* Official Weather & Advisory Bulletin Card (Gram Panchayat & Multi-Category) */}
-          <div className="p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-indigo-600/15 to-emerald-500/15 border border-indigo-500/40 shadow-sm space-y-2.5">
+          <div className="p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-[var(--glass-bg)] to-emerald-500/15 border border-indigo-500/40 shadow-sm space-y-2.5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center justify-center text-lg shrink-0 shadow-inner">
+                <div className="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-500 dark:text-amber-300 border border-amber-500/30 flex items-center justify-center text-lg shrink-0 shadow-inner">
                   🏛️
                 </div>
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-wider text-amber-400">Panchayat to State</p>
-                  <p className="text-xs font-extrabold text-white">पंचायत, तहसील, जिला व राज्य बुलेटिन</p>
+                  <p className="text-[10px] font-black uppercase tracking-wider text-amber-500 dark:text-amber-400">Panchayat to State</p>
+                  <p className="text-xs font-black text-[var(--text-primary)]">पंचायत, तहसील, जिला व राज्य बुलेटिन</p>
                 </div>
               </div>
               <button
@@ -147,7 +147,7 @@ export default function MobileMenuSheet({
               </button>
             </div>
             {/* Sector quick pills */}
-            <div className="grid grid-cols-4 gap-1.5 pt-1 border-t border-white/10">
+            <div className="grid grid-cols-4 gap-1.5 pt-1 border-t border-[var(--modal-border)]">
               {[
                 { id: 'farmer', icon: '🌾', label: 'Kisan' },
                 { id: 'fisherman', icon: '🎣', label: 'Marine' },
@@ -160,7 +160,7 @@ export default function MobileMenuSheet({
                     onClose();
                     if (onOpenBulletin) onOpenBulletin(s.id);
                   }}
-                  className="py-1 px-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-[10px] font-bold text-slate-200 flex items-center justify-center gap-1 transition-colors"
+                  className="py-1 px-1 rounded-lg bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-hover)] border border-[var(--modal-border)] text-[10px] font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)] flex items-center justify-center gap-1 transition-colors"
                 >
                   <span>{s.icon}</span>
                   <span>{s.label}</span>
@@ -170,15 +170,15 @@ export default function MobileMenuSheet({
           </div>
 
           {/* Mausam-Drishti AI Crop Doctor Card */}
-          <div className="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-500/15 via-slate-900 to-teal-500/15 border border-emerald-500/40 shadow-sm space-y-2">
+          <div className="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-500/15 via-[var(--glass-bg)] to-teal-500/15 border border-emerald-500/40 shadow-sm space-y-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center justify-center text-lg shrink-0 shadow-inner">
+                <div className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-500 dark:text-emerald-300 border border-emerald-500/30 flex items-center justify-center text-lg shrink-0 shadow-inner">
                   🌿
                 </div>
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-wider text-emerald-400">Mausam-Drishti AI</p>
-                  <p className="text-xs font-extrabold text-white">फसल रोग व स्प्रे परामर्श (Crop Doctor)</p>
+                  <p className="text-[10px] font-black uppercase tracking-wider text-emerald-500 dark:text-emerald-400">Mausam-Drishti AI</p>
+                  <p className="text-xs font-black text-[var(--text-primary)]">फसल रोग व स्प्रे परामर्श (Crop Doctor)</p>
                 </div>
               </div>
               <button
@@ -196,15 +196,15 @@ export default function MobileMenuSheet({
           </div>
 
           {/* Sagar-Rakshak Marine Safety Card */}
-          <div className="p-3.5 rounded-2xl bg-gradient-to-r from-cyan-500/15 via-slate-900 to-blue-500/15 border border-cyan-500/40 shadow-sm space-y-2">
+          <div className="p-3.5 rounded-2xl bg-gradient-to-r from-cyan-500/15 via-[var(--glass-bg)] to-blue-500/15 border border-cyan-500/40 shadow-sm space-y-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 flex items-center justify-center text-lg shrink-0 shadow-inner">
+                <div className="w-9 h-9 rounded-xl bg-cyan-500/20 text-cyan-500 dark:text-cyan-300 border border-cyan-500/30 flex items-center justify-center text-lg shrink-0 shadow-inner">
                   🌊
                 </div>
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-wider text-cyan-400">Sagar-Rakshak AI</p>
-                  <p className="text-xs font-extrabold text-white">कल्लाकडाल व समुद्री सीमा रडार (Marine HUD)</p>
+                  <p className="text-[10px] font-black uppercase tracking-wider text-cyan-500 dark:text-cyan-400">Sagar-Rakshak AI</p>
+                  <p className="text-xs font-black text-[var(--text-primary)]">कल्लाकडाल व समुद्री सीमा रडार (Marine HUD)</p>
                 </div>
               </div>
               <button
@@ -225,14 +225,14 @@ export default function MobileMenuSheet({
           <div>
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-1.5">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" className="text-blue-400">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" className="text-blue-500 dark:text-blue-400">
                   <circle cx="12" cy="12" r="10" />
                   <line x1="2" y1="12" x2="22" y2="12" />
                   <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
                 </svg>
                 <label className="text-[11px] font-black uppercase tracking-wider text-[var(--text-secondary)]">Language / भाषा</label>
               </div>
-              <span className="text-[10px] text-white/50">{languages?.length || 0} languages</span>
+              <span className="text-[10px] text-[var(--text-secondary)] font-semibold">{languages?.length || 0} languages</span>
             </div>
 
             {/* Mobile quick filter */}
@@ -242,12 +242,12 @@ export default function MobileMenuSheet({
                 value={mobileLangSearch}
                 onChange={(e) => setMobileLangSearch(e.target.value)}
                 placeholder="🔍 Filter language / भाषा खोजें..."
-                className="w-full bg-white/10 border border-white/15 rounded-xl px-3 py-1.5 text-xs text-white placeholder-white/50 focus:outline-none focus:border-blue-400 shadow-inner"
+                className="w-full bg-[var(--input-bg)] border border-[var(--input-border)] rounded-xl px-3 py-1.5 text-xs text-[var(--input-text)] placeholder-[var(--text-secondary)] focus:outline-none focus:border-blue-500 shadow-inner"
               />
               {mobileLangSearch && (
                 <button
                   onClick={() => setMobileLangSearch('')}
-                  className="absolute right-2.5 top-1.5 text-xs text-white/60 hover:text-white"
+                  className="absolute right-2.5 top-1.5 text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                 >
                   ✕
                 </button>
@@ -276,7 +276,7 @@ export default function MobileMenuSheet({
                 );
               })}
               {filteredLanguages.length === 0 && (
-                <div className="col-span-2 text-center py-4 text-xs text-white/50">
+                <div className="col-span-2 text-center py-4 text-xs text-[var(--text-secondary)]">
                   No matching language
                 </div>
               )}
@@ -300,14 +300,17 @@ export default function MobileMenuSheet({
                   <button
                     key={key}
                     onClick={() => onSelectTheme(key)}
-                    className={`py-2 px-2 rounded-xl text-xs font-bold transition-all flex flex-col items-center gap-1 border ${
+                    className={`py-2.5 px-2 rounded-2xl text-xs font-black transition-all flex flex-col items-center gap-1.5 border relative active:scale-95 ${
                       isActive
-                        ? 'border-[var(--theme-accent)] shadow-[0_0_14px_var(--focus-glow)] bg-[var(--glass-bg-hover)] text-[var(--theme-accent)] ring-1 ring-[var(--theme-accent)]'
+                        ? 'border-[var(--theme-accent)] shadow-[0_0_16px_var(--focus-glow)] bg-[var(--glass-bg-hover)] text-[var(--theme-accent)] ring-2 ring-[var(--theme-accent)]'
                         : 'border-[var(--modal-border)] text-[var(--text-muted)] bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-hover)]'
                     }`}
                   >
-                    <span className="text-base">{icon}</span>
-                    <span>{label}</span>
+                    <span className="text-xl">{icon}</span>
+                    <span className="tracking-wide">{label}</span>
+                    {isActive && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-[var(--theme-accent)]" />
+                    )}
                   </button>
                 );
               })}
@@ -315,15 +318,15 @@ export default function MobileMenuSheet({
           </div>
 
           {/* Saved Locations */}
-          <div className="p-3.5 rounded-2xl bg-[var(--glass-bg)] border border-[var(--modal-border)]">
+          <div className="p-3.5 rounded-2xl bg-[var(--glass-bg)] border border-[var(--modal-border)] shadow-sm">
             <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-[var(--text-primary)]">
+              <div className="flex items-center gap-1.5 text-xs font-black text-[var(--text-primary)]">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className="text-amber-500">
                   <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
                 </svg>
                 <span>Saved Locations</span>
               </div>
-              <span className="text-[10px] font-bold text-[var(--text-secondary)] bg-white/10 px-1.5 py-0.5 rounded-md">
+              <span className="text-[10px] font-bold text-[var(--text-secondary)] bg-[var(--glass-bg-hover)] border border-[var(--modal-border)] px-2 py-0.5 rounded-md">
                 {savedLocations.length}/5
               </span>
             </div>
@@ -333,13 +336,13 @@ export default function MobileMenuSheet({
                 No saved locations yet. Tap the bookmark icon in Forecast View to save a city.
               </p>
             ) : (
-              <div className="flex flex-col gap-1.5 max-h-40 overflow-y-auto pt-1">
+              <div className="flex flex-col gap-1.5 max-h-40 overflow-y-auto pt-1 custom-scrollbar">
                 {savedLocations.map((loc) => {
                   const w = savedWeather[loc.name];
                   return (
                     <div
                       key={loc.name}
-                      className="flex items-center justify-between p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 transition-colors group"
+                      className="flex items-center justify-between p-2 rounded-xl bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-hover)] border border-[var(--modal-border)] transition-colors group shadow-sm"
                     >
                       <button
                         onClick={() => {
@@ -350,7 +353,7 @@ export default function MobileMenuSheet({
                       >
                         <span className="text-base shrink-0">{loadingSaved ? '⏳' : (w?.icon || '🌤️')}</span>
                         <span className="text-xs font-bold text-[var(--text-primary)] truncate">{loc.name}</span>
-                        <span className="text-xs font-black text-blue-400 ml-auto mr-2">
+                        <span className="text-xs font-black text-blue-500 dark:text-blue-400 ml-auto mr-2">
                           {loadingSaved ? '...' : (w ? `${w.temp}°` : '--')}
                         </span>
                       </button>
@@ -359,7 +362,7 @@ export default function MobileMenuSheet({
                           e.stopPropagation();
                           onRemoveSaved(loc.name);
                         }}
-                        className="text-red-400 hover:text-red-500 p-1.5 rounded-lg hover:bg-red-500/10 transition-colors"
+                        className="text-red-500 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-500/10 transition-colors"
                         title="Remove location"
                         aria-label={`Remove ${loc.name}`}
                       >
@@ -381,34 +384,34 @@ export default function MobileMenuSheet({
               onClose();
               onOpenAccuracy();
             }}
-            className="w-full p-3 rounded-2xl bg-emerald-500/10 hover:bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-between text-left transition-all active:scale-[0.99]"
+            className="w-full p-3 rounded-2xl bg-emerald-500/10 hover:bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-between text-left transition-all active:scale-[0.99] shadow-sm"
           >
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+              <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-500 dark:text-emerald-400 flex items-center justify-center shrink-0">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
                   <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                   <polyline points="9 12 11 14 15 10" strokeWidth="2" />
                 </svg>
               </div>
               <div>
-                <p className="text-xs font-black text-emerald-400">AI Trust & IMD Verification</p>
+                <p className="text-xs font-black text-emerald-600 dark:text-emerald-400">AI Trust & IMD Verification</p>
                 <p className="text-[10px] text-[var(--text-secondary)]">View real-time model accuracy scores</p>
               </div>
             </div>
-            <span className="text-emerald-400 text-xs font-bold">›</span>
+            <span className="text-emerald-600 dark:text-emerald-400 text-xs font-bold">›</span>
           </button>
 
           {/* Accessibility Settings */}
-          <div className="p-3.5 rounded-2xl bg-[var(--glass-bg)] border border-[var(--modal-border)] space-y-2.5">
+          <div className="p-3.5 rounded-2xl bg-[var(--glass-bg)] border border-[var(--modal-border)] space-y-2.5 shadow-sm">
             <label className="text-[11px] font-black uppercase tracking-wider text-[var(--text-secondary)] block">
               Accessibility
             </label>
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-[var(--text-primary)]">Large text</span>
+              <span className="text-xs font-bold text-[var(--text-primary)]">Large text</span>
               <button
                 onClick={onToggleLargeText}
                 className={`w-10 h-6 rounded-full transition-all relative ${
-                  isLargeText ? 'bg-indigo-600 shadow-[0_0_12px_rgba(99,102,241,0.6)]' : 'bg-white/20'
+                  isLargeText ? 'bg-indigo-600 shadow-[0_0_12px_rgba(99,102,241,0.6)]' : 'bg-slate-300 dark:bg-white/20'
                 }`}
               >
                 <span
@@ -419,11 +422,11 @@ export default function MobileMenuSheet({
               </button>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-[var(--text-primary)]">High contrast</span>
+              <span className="text-xs font-bold text-[var(--text-primary)]">High contrast</span>
               <button
                 onClick={onToggleHighContrast}
                 className={`w-10 h-6 rounded-full transition-all relative ${
-                  isHighContrast ? 'bg-indigo-600 shadow-[0_0_12px_rgba(99,102,241,0.6)]' : 'bg-white/20'
+                  isHighContrast ? 'bg-indigo-600 shadow-[0_0_12px_rgba(99,102,241,0.6)]' : 'bg-slate-300 dark:bg-white/20'
                 }`}
               >
                 <span
@@ -436,15 +439,15 @@ export default function MobileMenuSheet({
           </div>
 
           {/* Restart to Welcome Screen Card */}
-          <div className="p-3.5 rounded-2xl bg-gradient-to-r from-indigo-600/20 via-sky-600/15 to-purple-600/20 border border-indigo-400/40 shadow-sm space-y-2">
+          <div className="p-3.5 rounded-2xl bg-gradient-to-r from-indigo-600/20 via-[var(--glass-bg)] to-purple-600/20 border border-indigo-400/40 shadow-sm space-y-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-indigo-500/25 border border-indigo-400/30 text-indigo-300 flex items-center justify-center text-lg shadow-inner">
+                <div className="w-9 h-9 rounded-xl bg-indigo-500/25 border border-indigo-400/30 text-indigo-500 dark:text-indigo-300 flex items-center justify-center text-lg shadow-inner">
                   🚀
                 </div>
                 <div>
-                  <p className="text-xs font-black text-white">Go to Welcome Screen</p>
-                  <p className="text-[10px] text-indigo-300 font-medium">वेलकम पेज पर जाएं व शुरू से शुरू करें</p>
+                  <p className="text-xs font-black text-[var(--text-primary)]">Go to Welcome Screen</p>
+                  <p className="text-[10px] text-indigo-500 dark:text-indigo-300 font-semibold">वेलकम पेज पर जाएं व शुरू से शुरू करें</p>
                 </div>
               </div>
               <button
@@ -458,7 +461,7 @@ export default function MobileMenuSheet({
                 <span className="text-[10px]">➔</span>
               </button>
             </div>
-            <p className="text-[11px] text-white/60 leading-relaxed">
+            <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">
               Reset app and re-select your Category (Farmer, Marine, Aviation, City) and primary Language.
             </p>
           </div>
@@ -470,10 +473,10 @@ export default function MobileMenuSheet({
                 onClose();
                 if (onOpenResearch) onOpenResearch();
               }}
-              className="p-2 rounded-xl bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-hover)] border border-[var(--modal-border)] flex flex-col items-center gap-1 text-center transition-all active:scale-95 cursor-pointer"
+              className="p-2.5 rounded-2xl bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-hover)] border border-[var(--modal-border)] flex flex-col items-center gap-1.5 text-center transition-all active:scale-95 cursor-pointer shadow-sm"
             >
-              <span className="text-indigo-400 text-base">🔬</span>
-              <span className="text-[10px] font-bold text-[var(--text-primary)]">Research</span>
+              <span className="text-indigo-500 dark:text-indigo-400 text-lg">🔬</span>
+              <span className="text-[10px] font-black text-[var(--text-primary)]">Research</span>
             </button>
 
             <button
@@ -481,10 +484,10 @@ export default function MobileMenuSheet({
                 onClose();
                 onOpenGuide();
               }}
-              className="p-2 rounded-xl bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-hover)] border border-[var(--modal-border)] flex flex-col items-center gap-1 text-center transition-all active:scale-95 cursor-pointer"
+              className="p-2.5 rounded-2xl bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-hover)] border border-[var(--modal-border)] flex flex-col items-center gap-1.5 text-center transition-all active:scale-95 cursor-pointer shadow-sm"
             >
-              <span className="text-teal-400 text-base">📖</span>
-              <span className="text-[10px] font-bold text-[var(--text-primary)]">Guide</span>
+              <span className="text-teal-500 dark:text-teal-400 text-lg">📖</span>
+              <span className="text-[10px] font-black text-[var(--text-primary)]">Guide</span>
             </button>
 
             <button
@@ -492,10 +495,10 @@ export default function MobileMenuSheet({
                 onClose();
                 onOpenReviews();
               }}
-              className="p-2 rounded-xl bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-hover)] border border-[var(--modal-border)] flex flex-col items-center gap-1 text-center transition-all active:scale-95 cursor-pointer"
+              className="p-2.5 rounded-2xl bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-hover)] border border-[var(--modal-border)] flex flex-col items-center gap-1.5 text-center transition-all active:scale-95 cursor-pointer shadow-sm"
             >
-              <span className="text-amber-400 text-base">⭐</span>
-              <span className="text-[10px] font-bold text-[var(--text-primary)]">Reviews</span>
+              <span className="text-amber-500 dark:text-amber-400 text-lg">⭐</span>
+              <span className="text-[10px] font-black text-[var(--text-primary)]">Reviews</span>
             </button>
 
             <button
@@ -503,10 +506,10 @@ export default function MobileMenuSheet({
                 onClose();
                 onOpenManager();
               }}
-              className="p-2 rounded-xl bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-hover)] border border-[var(--modal-border)] flex flex-col items-center gap-1 text-center transition-all active:scale-95 cursor-pointer"
+              className="p-2.5 rounded-2xl bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-hover)] border border-[var(--modal-border)] flex flex-col items-center gap-1.5 text-center transition-all active:scale-95 cursor-pointer shadow-sm"
             >
-              <span className="text-red-400 text-base">🛡️</span>
-              <span className="text-[10px] font-bold text-[var(--text-primary)]">Portal</span>
+              <span className="text-red-500 dark:text-red-400 text-lg">🛡️</span>
+              <span className="text-[10px] font-black text-[var(--text-primary)]">Portal</span>
             </button>
           </div>
 

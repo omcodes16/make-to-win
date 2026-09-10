@@ -21,7 +21,7 @@ export default function MessageList() {
   }
 
   return (
-    <div className="max-w-lg mx-auto px-4 py-4 chat-scroll scrollbar-hide overflow-y-auto">
+    <div className="w-full max-w-4xl lg:max-w-5xl mx-auto px-2 sm:px-4 py-2 space-y-5">
       {messages.map((msg, index) => {
         switch (msg.role) {
           case 'user':

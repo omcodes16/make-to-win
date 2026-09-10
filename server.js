@@ -253,12 +253,102 @@ if (process.env.MONGODB_URI) {
     .then(() => {
       console.log("✅ Connected to MongoDB Atlas");
       USE_MONGODB = true;
+      verifyChatPredictions().catch(err => console.error("[ChatAccuracy] Initial verification error:", err.message));
     })
     .catch(err => console.error("❌ MongoDB connection error:", err));
 } else {
   console.log("⚠️ No MONGODB_URI found. Falling back to local JSON files.");
+  verifyChatPredictions().catch(err => console.error("[ChatAccuracy] Initial verification error:", err.message));
 }
 
+
+/**
+ * Generates authoritative Indian Standard Time (IST) temporal context
+ * Grounding today, tomorrow, day phases, and diurnal meteorological patterns.
+ */
+export function getISTTemporalContext(baseDate = new Date()) {
+  const istFormatter = new Intl.DateTimeFormat('en-IN', {
+    timeZone: 'Asia/Kolkata',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+    weekday: 'long'
+  });
+
+  const parts = istFormatter.formatToParts(baseDate);
+  const partMap = {};
+  for (const p of parts) partMap[p.type] = p.value;
+
+  const year = partMap.year;
+  const month = partMap.month;
+  const day = partMap.day;
+  const hour = parseInt(partMap.hour, 10);
+  const minute = partMap.minute;
+  const weekday = partMap.weekday;
+  const todayStr = `${year}-${month}-${day}`;
+
+  const tomorrowDate = new Date(baseDate.getTime() + 24 * 60 * 60 * 1000);
+  const tomorrowParts = istFormatter.formatToParts(tomorrowDate).reduce((acc, p) => ({ ...acc, [p.type]: p.value }), {});
+  const tomorrowStr = `${tomorrowParts.year}-${tomorrowParts.month}-${tomorrowParts.day}`;
+  const tomorrowWeekday = tomorrowParts.weekday;
+
+  const dayAfterDate = new Date(baseDate.getTime() + 48 * 60 * 60 * 1000);
+  const dayAfterParts = istFormatter.formatToParts(dayAfterDate).reduce((acc, p) => ({ ...acc, [p.type]: p.value }), {});
+  const dayAfterStr = `${dayAfterParts.year}-${dayAfterParts.month}-${dayAfterParts.day}`;
+  const dayAfterWeekday = dayAfterParts.weekday;
+
+  let dayPhase = '';
+  let meteorologicalDynamics = '';
+  if (hour >= 4 && hour < 7) {
+    dayPhase = 'Dawn / Early Morning (भोर)';
+    meteorologicalDynamics = 'Minimum diurnal temperature; highest relative humidity; radiation fog or dew formation; calm winds.';
+  } else if (hour >= 7 && hour < 12) {
+    dayPhase = 'Morning / Solar Insolation Heating (सुबह)';
+    meteorologicalDynamics = 'Rapid solar radiation heating; boundary layer mixing; wind pickup; optimal agricultural spraying window.';
+  } else if (hour >= 12 && hour < 16) {
+    dayPhase = 'Afternoon Peak Convection (दोपहर)';
+    meteorologicalDynamics = 'Maximum diurnal surface heating; peak convective instability; potential localized thunderstorm, lightning, or heat stress.';
+  } else if (hour >= 16 && hour < 20) {
+    dayPhase = 'Late Afternoon / Dusk (शाम)';
+    meteorologicalDynamics = 'Declining solar insolation; thermal dissipations; evening convective showers or storm outflow winds.';
+  } else {
+    dayPhase = 'Night / Nocturnal Cooling (रात)';
+    meteorologicalDynamics = 'Radiational cooling of ground surface; stable boundary layer; inversion layer formation.';
+  }
+
+  const fullIST = `${weekday}, ${day}-${month}-${year} ${partMap.hour}:${minute} IST`;
+
+  const formattedPrompt = `[OFFICIAL TEMPORAL ANCHOR (INDIAN STANDARD TIME - IST)]:
+- Current Timestamp: ${fullIST}
+- Today's Date (आज की तारीख): ${todayStr} (${weekday})
+- Current Hour: ${partMap.hour}:${minute} IST (24h clock)
+- Active Meteorological Day Phase: ${dayPhase}
+- Diurnal Atmospheric Context: ${meteorologicalDynamics}
+- Tomorrow's Date (कल की तारीख): ${tomorrowStr} (${tomorrowWeekday})
+- Day After Tomorrow (परसों की तारीख): ${dayAfterStr} (${dayAfterWeekday})
+CRITICAL TEMPORAL RULES:
+1. When user asks about "today" (आज), refer ONLY to conditions occurring on ${todayStr}.
+2. If the current time is already ${partMap.hour}:${minute} IST, events earlier in the day have ALREADY OCCURRED. Do NOT forecast past morning rain or conditions as upcoming if it is already afternoon or night!
+3. When user asks about "tomorrow" (कल), refer strictly to ${tomorrowStr}.
+4. Provide action advice specific to the current phase (${dayPhase}) and upcoming hours today.`;
+
+  return {
+    todayStr,
+    tomorrowStr,
+    dayAfterStr,
+    weekday,
+    hour,
+    minute,
+    fullIST,
+    dayPhase,
+    meteorologicalDynamics,
+    formattedPrompt
+  };
+}
 
 // System prompt for Groq — PS 26068 enhanced
 const SYSTEM_PROMPT = `You are WeatherGPT, a friendly and highly knowledgeable weather assistant built for India.
@@ -1351,7 +1441,7 @@ app.get('/api/accuracy', async (req, res) => {
 
 app.get('/api/chat-accuracy', async (req, res) => {
   try {
-    const feed = await getChatAccuracyFeed(req.query.location);
+    const feed = await getChatAccuracyFeed(req.query.location, req.query.filter);
     res.json(feed);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch chat accuracy feed' });
@@ -1360,6 +1450,7 @@ app.get('/api/chat-accuracy', async (req, res) => {
 
 app.post('/api/chat', async (req, res) => {
   const { message, language, weatherData, history = [], profile = 'general' } = req.body;
+  const temporal = getISTTemporalContext();
   const geminiKey = process.env.GEMINI_API_KEY;
   const groqKey = process.env.GROQ_API_KEY;
 
@@ -1433,6 +1524,7 @@ app.post('/api/chat', async (req, res) => {
     if (weatherData?.location) {
       const locFull = `${weatherData.location}${weatherData.district && !weatherData.location.toLowerCase().includes(weatherData.district.toLowerCase()) ? ', District ' + weatherData.district : ''}${weatherData.state ? ', ' + weatherData.state : ''}`;
       locationInstruction = `\n[ACTIVE USER LOCATION & OBSERVED WEATHER CONTEXT]:
+- Official Observation Time: ${temporal.fullIST} (${temporal.dayPhase})
 - User Current Location: "${locFull}" (GPS: ${weatherData.lat || 'N/A'}, ${weatherData.lng || 'N/A'}).
 - Live Measured Weather at ${weatherData.location}:
   * Temperature: ${weatherData.temperature != null ? weatherData.temperature + '°C' : 'N/A'} (Feels like: ${weatherData.feelsLike != null ? weatherData.feelsLike + '°C' : 'N/A'})
@@ -1448,7 +1540,7 @@ app.post('/api/chat', async (req, res) => {
       : `User question (language: ${targetLanguage}): "${message}"${locationInstruction}`;
 
     let messages = [
-      { role: 'system', content: SYSTEM_PROMPT + `\n\nActive User Profile: ${profile.toUpperCase()}` },
+      { role: 'system', content: SYSTEM_PROMPT + `\n\nActive User Profile: ${profile.toUpperCase()}\n\n${temporal.formattedPrompt}` },
       ...history,
       { role: 'user', content: initialUserPrompt }
     ];
@@ -1660,7 +1752,8 @@ app.post('/api/chat', async (req, res) => {
       }
 
       const fallbackPrompt = `User question (language: ${language}): "${message}"\n
-Current weather data (Fallback):
+Current weather data (Fallback as of ${temporal.fullIST}):
+- Current Time & Day Phase: ${temporal.fullIST} (${temporal.dayPhase})
 - Location: ${weatherData?.location || 'Unknown'}
 - Temp: ${weatherData?.temperature}°C, Feels Like: ${weatherData?.feelsLike}°C
 - Humidity: ${weatherData?.humidity}%, Wind: ${weatherData?.windSpeed} km/h
@@ -1676,7 +1769,7 @@ ${modelNote}`;
           body: JSON.stringify({
             model: apiModel,
             messages: [
-              { role: 'system', content: SYSTEM_PROMPT + `\n\nActive User Profile: ${profile.toUpperCase()}\n\nCRITICAL INSTRUCTION: DO NOT CALL ANY TOOLS. You are in fallback mode. Answer the user directly using the provided Current weather data (Fallback).` },
+              { role: 'system', content: SYSTEM_PROMPT + `\n\nActive User Profile: ${profile.toUpperCase()}\n\nCRITICAL INSTRUCTION: DO NOT CALL ANY TOOLS. You are in fallback mode. Answer the user directly using the provided Current weather data (Fallback).\n\n${temporal.formattedPrompt}` },
               ...history,
               { role: 'user', content: fallbackPrompt }
             ],
@@ -1702,7 +1795,7 @@ ${modelNote}`;
             body: JSON.stringify({
               model: altApiModel,
               messages: [
-                { role: 'system', content: SYSTEM_PROMPT + `\n\nActive User Profile: ${profile.toUpperCase()}\n\nCRITICAL INSTRUCTION: DO NOT CALL ANY TOOLS. You are in fallback mode. Answer the user directly using the provided Current weather data (Fallback).` },
+                { role: 'system', content: SYSTEM_PROMPT + `\n\nActive User Profile: ${profile.toUpperCase()}\n\nCRITICAL INSTRUCTION: DO NOT CALL ANY TOOLS. You are in fallback mode. Answer the user directly using the provided Current weather data (Fallback).\n\n${temporal.formattedPrompt}` },
                 ...history,
                 { role: 'user', content: fallbackPrompt }
               ],
@@ -1884,6 +1977,10 @@ ${modelNote}`;
       }
     }
 
+    finalJson.timestamp = temporal.fullIST;
+    finalJson.istDate = temporal.todayStr;
+    finalJson.dayPhase = temporal.dayPhase;
+
     return res.json(finalJson);
   } catch (parseErr) {
     console.error('[DEBUG-CRASH] JSON parsing or logChatPrediction crashed:', parseErr);
@@ -1904,6 +2001,9 @@ ${modelNote}`;
       advisory: '',
       severity: 'none',
       location: errActiveLoc,
+      timestamp: temporal.fullIST,
+      istDate: temporal.todayStr,
+      dayPhase: temporal.dayPhase,
       suggestedQuestions: req.body.language === 'hi' 
         ? [`आने वाले दिनों का मौसम${locHindi} कैसा रहेगा?`, `क्या कोई अलर्ट${locHindi} है?`] 
         : req.body.language === 'bn' 
@@ -2707,8 +2807,7 @@ if (!process.env.VERCEL) {
 
 // Start scheduled background jobs
 if (!process.env.VERCEL) {
-  verifyChatPredictions();
-  setInterval(verifyChatPredictions, 12 * 60 * 60 * 1000);
+  setInterval(verifyChatPredictions, 60 * 60 * 1000); // Check hourly for matured predictions
   startNdmaPoller();
 }
 

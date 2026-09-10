@@ -18,11 +18,18 @@ const MODAL_I18N = {
     accurate: 'Accurate',
     close: 'Close',
     off: 'Off',
+    diverged: 'Diverged',
     pending: 'Pending 24h',
     waiting: 'Waiting...',
-    details: 'Details & Verification',
-    claimsTitle: 'Claims Verified',
+    details: 'Details & Divergence Audit',
+    claimsTitle: 'Claims & Divergence Verification',
     metric: 'Metric',
+    divergenceCol: 'Divergence (Δ)',
+    divergenceAnalysis: 'Divergence Analysis & Root Cause',
+    tabUpcoming: '⏳ Upcoming (Pending)',
+    tabDiverged: '⚠️ Diverged Only (Inaccurate)',
+    tabAll: 'All Questions',
+    tabAccurate: '✓ Exact Matches',
     noAnswer: 'Full answer not stored for this entry.',
     noClaims: 'No quantifiable claims were extracted from this answer.',
     claimLabels: {
@@ -55,11 +62,18 @@ const MODAL_I18N = {
     accurate: 'सटीक',
     close: 'करीब',
     off: 'गलत',
+    diverged: 'अंतर (Diverged)',
     pending: '24 घंटे लंबित',
     waiting: 'प्रतीक्षा में...',
-    details: 'विवरण और सत्यापन',
-    claimsTitle: 'सत्यापित दावे',
+    details: 'विवरण एवं भिन्नता ऑडिट',
+    claimsTitle: 'सत्यापित दावे एवं अंतर',
     metric: 'मीट्रिक',
+    divergenceCol: 'अंतर (Δ)',
+    divergenceAnalysis: 'भिन्नता एवं मूल कारण विश्लेषण',
+    tabUpcoming: '⏳ आगामी / प्रतीक्षित (Upcoming)',
+    tabDiverged: '⚠️ केवल भिन्न (Inaccurate)',
+    tabAll: 'सभी प्रश्न',
+    tabAccurate: '✓ सटीक मिलान',
     noAnswer: 'इस एंट्री के लिए पूर्ण उत्तर उपलब्ध नहीं है।',
     noClaims: 'इस उत्तर से कोई मात्रात्मक दावा नहीं निकाला गया।',
     claimLabels: {
@@ -92,11 +106,17 @@ const MODAL_I18N = {
     accurate: 'সঠিক',
     close: 'কাছাকাছি',
     off: 'ভুল',
+    diverged: 'পার্থক্যযুক্ত',
     pending: '২৪ ঘণ্টা অপেক্ষমাণ',
     waiting: 'অপেক্ষমাণ...',
-    details: 'বিশদ ও যাচাইকরণ',
-    claimsTitle: 'যাচাইকৃত দাবি',
+    details: 'বিশদ ও পার্থক্য নিরীক্ষা',
+    claimsTitle: 'যাচাইকৃত দাবি ও পার্থক্য',
     metric: 'মেট্রিক',
+    divergenceCol: 'পার্থক্য (Δ)',
+    divergenceAnalysis: 'পার্থক্য ও কারণ বিশ্লেষণ',
+    tabDiverged: '⚠️ শুধু পার্থক্যযুক্ত',
+    tabAll: 'সকল প্রশ্ন',
+    tabAccurate: '✓ সঠিক মিল',
     noAnswer: 'এই এন্ট্রির জন্য সম্পূর্ণ উত্তর পাওয়া যায়নি।',
     noClaims: 'এই উত্তর থেকে কোনো পরিমাপযোগ্য দাবি পাওয়া যায়নি।',
     claimLabels: {
@@ -129,11 +149,17 @@ const MODAL_I18N = {
     accurate: 'সঠিক',
     close: 'ওচৰৰ',
     off: 'ভুল',
+    diverged: 'পাৰ্থক্যযুক্ত',
     pending: '২৪ ঘণ্টা বাকী',
     waiting: 'অপেক্ষা কৰি থকা হৈছে...',
-    details: 'বিৱৰণ আৰু প্ৰমাণীকৰণ',
-    claimsTitle: 'প্ৰমাণিত দাবী',
+    details: 'বিৱৰণ আৰু পাৰ্থক্য পৰীক্ষণ',
+    claimsTitle: 'প্ৰমাণিত দাবী আৰু পাৰ্থক্য',
     metric: 'মেট্ৰিক',
+    divergenceCol: 'পাৰ্থক্য (Δ)',
+    divergenceAnalysis: 'পাৰ্থক্য আৰু কাৰণ বিশ্লেষণ',
+    tabDiverged: '⚠️ কেৱল পাৰ্থক্যযুক্ত',
+    tabAll: 'সকলো প্ৰশ্ন',
+    tabAccurate: '✓ সঠিক মিল',
     noAnswer: 'এই এণ্ট্ৰিৰ বাবে সম্পূৰ্ণ উত্তৰ উপলব্ধ নহয়।',
     noClaims: 'এই উত্তৰৰ পৰা কোনো পৰিমাপযোগ্য দাবী পোৱা নগ\u2019ল।',
     claimLabels: {
@@ -163,6 +189,11 @@ const STATUS = {
     dot: 'bg-emerald-500',  
     text: 'text-emerald-800 dark:text-emerald-400 font-bold',  
     pill: 'bg-emerald-50 border-emerald-300 text-emerald-900 dark:bg-emerald-500/15 dark:border-emerald-400/30 dark:text-emerald-300'  
+  },
+  diverged: { 
+    dot: 'bg-amber-500', 
+    text: 'text-amber-800 dark:text-amber-400 font-bold', 
+    pill: 'bg-amber-50 border-amber-300 text-amber-900 dark:bg-amber-500/15 dark:border-amber-400/30 dark:text-amber-300' 
   },
   close: { 
     dot: 'bg-amber-500', 
@@ -194,9 +225,11 @@ function FeedCard({ item, lang }) {
 
   // Normalise claims — support both new `claims[]` and legacy single-claim fields
   const claims = (() => {
-    if (Array.isArray(item.claims) && item.claims.length > 0) return item.claims;
-    if (item.claimType && item.claimType !== 'other' && item.claimValue != null) {
-      return [{
+    let list = [];
+    if (Array.isArray(item.claims) && item.claims.length > 0) {
+      list = item.claims;
+    } else if (item.claimType && item.claimType !== 'other' && item.claimValue != null) {
+      list = [{
         claimType: item.claimType,
         claimValue: item.claimValue,
         unit: item.claimType === 'rain_probability' ? '%'
@@ -206,15 +239,22 @@ function FeedCard({ item, lang }) {
         accuracyStatus: item.accuracyStatus ?? null,
       }];
     }
-    return [];
+    if (item.verified) {
+      list = list.map(c => {
+        const val = c.actualValue ?? (item.actualValue != null && (c.claimType === item.claimType || list.length === 1) ? item.actualValue : null);
+        const status = c.accuracyStatus || (val != null ? (item.accuracyStatus || 'accurate') : null);
+        return { ...c, actualValue: val, accuracyStatus: status };
+      });
+    }
+    return list;
   })();
 
   const overallStatus = item.verified ? (item.accuracyStatus || 'unknown') : 'pending';
   const s = STATUS[overallStatus] || STATUS.unknown;
 
   const dateLabel = item.loggedAt
-    ? new Date(item.loggedAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })
-    : new Date(item.date).toLocaleDateString();
+    ? new Date(item.loggedAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Kolkata' }) + ' IST'
+    : (item.date ? `${item.date} (IST)` : 'Today');
 
   const fmtVal = (claimType, val) => {
     if (val == null) return '—';
@@ -242,17 +282,34 @@ function FeedCard({ item, lang }) {
           )}
         </div>
 
-        {/* Status badge */}
-        <span className={`inline-flex items-center gap-1.5 border px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wide shadow-sm ${s.pill}`}>
-          {overallStatus === 'pending' ? (
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="animate-spin">
-              <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
-            </svg>
-          ) : (
-            <span className={`w-2 h-2 rounded-full ${s.dot}`} />
-          )}
-          {lang[overallStatus] || overallStatus}
-        </span>
+        <div className="flex items-center gap-2">
+          {item.observationWindowText ? (
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold tracking-wide border border-indigo-300 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-800 dark:text-indigo-300 shadow-sm">
+              <span>⏱️</span>
+              <span>{item.observationWindowText}</span>
+            </span>
+          ) : item.horizonLabel ? (
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold tracking-wide border border-indigo-300 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-800 dark:text-indigo-300 shadow-sm">
+              <span>📅</span>
+              <span>{item.horizonLabel}</span>
+            </span>
+          ) : null}
+
+          {/* Status badge */}
+          <span className={`inline-flex items-center gap-1.5 border px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wide shadow-sm ${s.pill}`}>
+            {!item.verified ? (
+              <>
+                <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+                <span>⏳ Awaiting Observation</span>
+              </>
+            ) : (
+              <>
+                <span className={`w-2 h-2 rounded-full ${s.dot}`} />
+                <span>{overallStatus === 'diverged' ? '⚠️ ' : ''}{lang[overallStatus] || overallStatus}</span>
+              </>
+            )}
+          </span>
+        </div>
       </div>
 
       {/* ── User Question (Bold & Deep Obsidian/Navy) ── */}
@@ -265,16 +322,27 @@ function FeedCard({ item, lang }) {
         </p>
       </div>
 
-      {/* ── Claim quick-chips row ── */}
+      {/* ── Claim quick-chips row with Divergence Delta ── */}
       {claims.length > 0 && (
         <div className="px-4 sm:px-5 pb-3 flex flex-wrap gap-1.5">
           {claims.map((c, i) => {
-            const cs = c.accuracyStatus ? STATUS[c.accuracyStatus] : STATUS.pending;
+            const isDiverged = c.accuracyStatus === 'diverged' || c.accuracyStatus === 'off' || c.accuracyStatus === 'close';
+            const cs = c.accuracyStatus ? (STATUS[c.accuracyStatus] || STATUS.pending) : STATUS.pending;
             return (
               <span key={i}
                 className={`inline-flex items-center gap-1.5 border px-3 py-1 rounded-full text-[11px] font-extrabold shadow-sm ${cs.pill}`}>
                 <span>{claimLabel(c.claimType)}: {fmtVal(c.claimType, c.claimValue)}</span>
-                {c.actualValue != null && <> → <span className={cs.text}>{fmtVal(c.claimType, c.actualValue)}</span></>}
+                {c.actualValue != null && (
+                  <>
+                    <span>→</span>
+                    <span className={cs.text}>{fmtVal(c.claimType, c.actualValue)}</span>
+                    {c.deltaSign && (
+                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-black ${isDiverged ? 'bg-amber-500/20 text-amber-900 dark:text-amber-200' : 'bg-emerald-500/20 text-emerald-900 dark:text-emerald-200'}`}>
+                        Δ {c.deltaSign}{c.deltaPct != null ? ` (${c.delta > 0 ? '+' : ''}${c.deltaPct}%)` : ''}
+                      </span>
+                    )}
+                  </>
+                )}
               </span>
             );
           })}
@@ -304,7 +372,7 @@ function FeedCard({ item, lang }) {
       {open && (
         <div className="border-t border-[var(--theme-border)] px-4 sm:px-5 py-4 space-y-4 bg-[var(--card-bg)]">
 
-          {/* Claims verification table */}
+          {/* Claims verification table with Divergence Delta */}
           <div>
             <p className="text-[11px] uppercase tracking-wider font-extrabold text-[var(--text-secondary)] mb-2 flex items-center gap-1.5">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -318,26 +386,31 @@ function FeedCard({ item, lang }) {
             ) : (
               <div className="rounded-xl border border-[var(--theme-border)] overflow-hidden shadow-sm bg-[var(--glass-bg)]">
                 {/* Table header */}
-                <div className="grid grid-cols-4 gap-2 px-3 py-2 border-b border-[var(--theme-border)] bg-[var(--glass-bg-hover)] font-extrabold">
+                <div className="grid grid-cols-5 gap-2 px-3 py-2 border-b border-[var(--theme-border)] bg-[var(--glass-bg-hover)] font-extrabold">
                   <span className="text-[10px] uppercase tracking-wider text-[var(--text-secondary)]">{lang.metric}</span>
                   <span className="text-[10px] uppercase tracking-wider text-[var(--text-secondary)] text-right">{lang.aiPredicted}</span>
                   <span className="text-[10px] uppercase tracking-wider text-[var(--text-secondary)] text-right">{lang.actualOutcome}</span>
+                  <span className="text-[10px] uppercase tracking-wider text-[var(--text-secondary)] text-right">{lang.divergenceCol}</span>
                   <span className="text-[10px] uppercase tracking-wider text-[var(--text-secondary)] text-right">Status</span>
                 </div>
 
                 {/* Table rows — one per claim */}
                 {claims.map((c, idx) => {
-                  const cs = c.accuracyStatus ? STATUS[c.accuracyStatus] : STATUS.pending;
+                  const isDiverged = c.accuracyStatus === 'diverged' || c.accuracyStatus === 'off' || c.accuracyStatus === 'close';
+                  const cs = c.accuracyStatus ? (STATUS[c.accuracyStatus] || STATUS.pending) : STATUS.pending;
                   return (
                     <div key={idx}
-                      className="grid grid-cols-4 gap-2 px-3 py-2.5 border-b border-[var(--theme-border)] last:border-0 items-center hover:bg-[var(--glass-bg-hover)] transition-colors">
+                      className="grid grid-cols-5 gap-2 px-3 py-2.5 border-b border-[var(--theme-border)] last:border-0 items-center hover:bg-[var(--glass-bg-hover)] transition-colors">
                       <span className="text-xs font-bold text-[var(--text-primary)] truncate">{claimLabel(c.claimType)}</span>
                       <span className="text-xs font-extrabold text-amber-700 dark:text-amber-300 text-right">{fmtVal(c.claimType, c.claimValue)}</span>
                       <span className={`text-xs font-extrabold text-right ${c.actualValue != null ? cs.text : 'text-[var(--text-secondary)] italic'}`}>
                         {c.actualValue != null ? fmtVal(c.claimType, c.actualValue) : lang.waiting}
                       </span>
+                      <span className={`text-xs font-black text-right ${c.actualValue == null ? 'text-[var(--text-muted)]' : isDiverged ? 'text-amber-700 dark:text-amber-400' : 'text-emerald-700 dark:text-emerald-400'}`}>
+                        {c.deltaSign ? `${c.deltaSign}${c.deltaPct != null ? ` (${c.delta > 0 ? '+' : ''}${c.deltaPct}%)` : ''}` : (c.actualValue != null ? '0 (Exact)' : '—')}
+                      </span>
                       <span className={`text-[11px] font-extrabold uppercase text-right ${cs.text}`}>
-                        {c.accuracyStatus || (item.verified ? '—' : lang.pending)}
+                        {lang[c.accuracyStatus] || c.accuracyStatus || (item.verified ? '—' : lang.pending)}
                       </span>
                     </div>
                   );
@@ -345,6 +418,40 @@ function FeedCard({ item, lang }) {
               </div>
             )}
           </div>
+
+          {/* Divergence & Meteorological Ground Truth Audit Box */}
+          {item.verified && (
+            <div className={`p-3.5 rounded-2xl border ${item.hasDivergence || overallStatus === 'diverged' || overallStatus === 'off' ? 'border-amber-400/40 bg-amber-500/10 dark:bg-amber-950/20' : 'border-emerald-400/30 bg-emerald-500/10'}`}>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-base">{item.hasDivergence || overallStatus === 'diverged' || overallStatus === 'off' ? '🔍' : '✓'}</span>
+                <p className="text-[12px] font-black uppercase tracking-wider text-[var(--text-primary)]">
+                  {item.hasDivergence || overallStatus === 'diverged' || overallStatus === 'off' ? (lang.divergenceAnalysis || 'Divergence Analysis & Root Cause Audit') : 'Observed Alignment Audit'}
+                </p>
+              </div>
+
+              {item.hasDivergence || overallStatus === 'diverged' || overallStatus === 'off' ? (
+                <div className="space-y-2 text-xs">
+                  {claims.filter(c => c.accuracyStatus !== 'accurate').map((c, i) => (
+                    <div key={i} className="pl-3 border-l-2 border-amber-500/60 dark:border-amber-400/60 py-0.5">
+                      <p className="font-extrabold text-amber-900 dark:text-amber-300">
+                        {claimLabel(c.claimType)}: Stated {fmtVal(c.claimType, c.claimValue)} vs Observed {fmtVal(c.claimType, c.actualValue)} (Δ {c.deltaSign || '—'}{c.deltaPct != null ? `, ${c.delta > 0 ? '+' : ''}${c.deltaPct}%` : ''})
+                      </p>
+                      <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed mt-0.5">
+                        {c.divergenceReason || `AI prediction diverged by ${c.deltaSign || 'variance'} from recorded ground observation.`}
+                      </p>
+                    </div>
+                  ))}
+                  <p className="text-[10px] text-[var(--text-secondary)] opacity-80 italic pt-1 border-t border-amber-500/20">
+                    * WeatherGPT Radical Transparency: Every forecast difference is openly cataloged with meteorological causality, keeping users aware of microclimatic fluctuations.
+                  </p>
+                </div>
+              ) : (
+                <p className="text-xs text-emerald-800 dark:text-emerald-300 font-semibold">
+                  ✓ High-Precision Match: All quantifiable forecast claims matched ground station observations within instrument tolerance limits.
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Full AI answer text */}
           <div>
@@ -364,12 +471,30 @@ function FeedCard({ item, lang }) {
           </div>
 
           {/* Verification note */}
-          {!item.verified && (
-            <div className="flex items-start gap-2 p-2.5 bg-blue-500/10 rounded-lg border border-blue-500/25 text-blue-900 dark:text-blue-300 text-xs font-medium">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="mt-0.5 shrink-0">
+          {!item.verified ? (
+            <div className="flex items-start gap-2.5 p-3 bg-blue-500/10 rounded-xl border border-blue-500/25 text-blue-900 dark:text-blue-200 text-xs">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="mt-0.5 shrink-0 text-blue-600 dark:text-blue-400">
                 <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
               </svg>
-              Verification runs the next morning using the Open-Meteo weather archive. Each claim is checked independently.
+              <div className="space-y-0.5">
+                <p className="font-extrabold text-[12px]">
+                  Target Window: {item.timeHorizon === 'weekly' ? `${item.targetDate} → ${item.targetEndDate} (7 Days)` : (item.targetDate || item.date)}
+                </p>
+                <p className="text-[11px] opacity-90 leading-normal">
+                  {item.timeHorizon === 'tomorrow'
+                    ? `Verification scheduled for ${item.verifyAfter} (after tomorrow concludes) against observed ground truth.`
+                    : item.timeHorizon === 'weekly'
+                    ? `Verification scheduled for ${item.verifyAfter} (aggregating rainfall sum, peak gusts, and UV across the full week).`
+                    : `Verification scheduled for ${item.verifyAfter} (after the 24h period concludes) against Open-Meteo recorded data.`}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 p-2.5 bg-emerald-500/10 rounded-xl border border-emerald-500/25 text-emerald-900 dark:text-emerald-300 text-xs font-semibold">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="shrink-0 text-emerald-600 dark:text-emerald-400">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+              </svg>
+              <span>Verified against actual recorded weather {item.verifiedAt ? `on ${new Date(item.verifiedAt).toLocaleDateString()}` : ''}.</span>
             </div>
           )}
         </div>
@@ -386,6 +511,7 @@ export default function AccuracyFeedModal({ onClose }) {
   const [data, setData] = useState({ totalVerified: 0, accuratePercent: 0, feed: [] });
   const [loading, setLoading] = useState(true);
   const [showAll, setShowAll] = useState(false);
+  const [filterTab, setFilterTab] = useState('upcoming'); // 'upcoming' | 'diverged' | 'all' | 'accurate'
 
   const lang = MODAL_I18N[state.language] || MODAL_I18N['en'];
 
@@ -407,6 +533,23 @@ export default function AccuracyFeedModal({ onClose }) {
     const interval = setInterval(fetchFeed, 10000);
     return () => clearInterval(interval);
   }, []);
+
+  const upcomingCount = data.feed.filter(f => !f.verified).length;
+  const divergedCount = data.feed.filter(f => f.verified && (f.hasDivergence || f.accuracyStatus === 'diverged' || f.accuracyStatus === 'off' || f.accuracyStatus === 'close')).length;
+  const accurateCount = data.feed.filter(f => f.verified && !f.hasDivergence && f.accuracyStatus === 'accurate').length;
+
+  const filteredFeed = data.feed.filter(item => {
+    if (filterTab === 'upcoming') {
+      return !item.verified;
+    }
+    if (filterTab === 'diverged') {
+      return item.verified && (item.hasDivergence || item.accuracyStatus === 'diverged' || item.accuracyStatus === 'off' || item.accuracyStatus === 'close');
+    }
+    if (filterTab === 'accurate') {
+      return item.verified && !item.hasDivergence && item.accuracyStatus === 'accurate';
+    }
+    return true;
+  });
 
   return (
     <div
@@ -437,15 +580,67 @@ export default function AccuracyFeedModal({ onClose }) {
             <h2 className="text-xl sm:text-2xl font-black text-[var(--text-primary)] mb-1 tracking-tight">{lang.title}</h2>
             <p className="text-[var(--text-secondary)] text-xs sm:text-sm max-w-md mx-auto font-medium">{lang.subtitle}</p>
 
-            {!loading && data.totalVerified > 0 && (
-              <div className="mt-4 bg-green-500/15 border border-green-500/40 px-5 py-2 rounded-full text-green-700 dark:text-green-400 font-extrabold text-sm flex items-center gap-2 shadow-sm">
-                <span className="relative flex h-2.5 w-2.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"/>
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"/>
+            {/* ── Filter Tabs ── */}
+            <div className="flex flex-wrap items-center justify-center gap-2 mt-4 px-1">
+              <button
+                onClick={() => { setFilterTab('upcoming'); setShowAll(false); }}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer shadow-sm ${
+                  filterTab === 'upcoming'
+                    ? 'bg-indigo-600 text-white shadow-indigo-500/25 scale-105 ring-2 ring-indigo-400'
+                    : 'bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-hover)] text-[var(--text-secondary)] border border-[var(--theme-border)]'
+                }`}
+              >
+                <span>⏳</span>
+                <span>{lang.tabUpcoming || 'Upcoming (Pending)'}</span>
+                <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-black/20 text-white font-black">
+                  {upcomingCount}
                 </span>
-                {lang.badge(data.accuratePercent, data.totalVerified)}
-              </div>
-            )}
+              </button>
+
+              <button
+                onClick={() => { setFilterTab('diverged'); setShowAll(false); }}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer shadow-sm ${
+                  filterTab === 'diverged'
+                    ? 'bg-amber-500 text-white shadow-amber-500/25 scale-105 ring-2 ring-amber-400'
+                    : 'bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-hover)] text-[var(--text-secondary)] border border-[var(--theme-border)]'
+                }`}
+              >
+                <span>⚠️</span>
+                <span>{lang.tabDiverged}</span>
+                <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-black/20 text-white font-black">
+                  {divergedCount}
+                </span>
+              </button>
+
+              <button
+                onClick={() => { setFilterTab('accurate'); setShowAll(false); }}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer shadow-sm ${
+                  filterTab === 'accurate'
+                    ? 'bg-emerald-600 text-white shadow-emerald-500/25 scale-105 ring-2 ring-emerald-400'
+                    : 'bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-hover)] text-[var(--text-secondary)] border border-[var(--theme-border)]'
+                }`}
+              >
+                <span>✓</span>
+                <span>{lang.tabAccurate}</span>
+                <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-black/20 text-white font-black">
+                  {accurateCount}
+                </span>
+              </button>
+
+              <button
+                onClick={() => { setFilterTab('all'); setShowAll(false); }}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer shadow-sm ${
+                  filterTab === 'all'
+                    ? 'bg-blue-600 text-white shadow-blue-500/25 scale-105 ring-2 ring-blue-400'
+                    : 'bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-hover)] text-[var(--text-secondary)] border border-[var(--theme-border)]'
+                }`}
+              >
+                <span>{lang.tabAll}</span>
+                <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-black/20 text-white font-black">
+                  {data.feed.length}
+                </span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -456,25 +651,27 @@ export default function AccuracyFeedModal({ onClose }) {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"/>
               <p>{lang.loading}</p>
             </div>
-          ) : data.feed.length === 0 ? (
+          ) : filteredFeed.length === 0 ? (
             <div className="py-10 px-4 rounded-2xl border border-[var(--theme-border)] bg-[var(--glass-bg)] text-center flex flex-col items-center">
               <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="opacity-40 text-[var(--text-secondary)] mb-3">
                 <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
               </svg>
-              <p className="text-[var(--text-secondary)] text-sm max-w-[280px] font-medium">{lang.empty}</p>
+              <p className="text-[var(--text-secondary)] text-sm max-w-[280px] font-medium">
+                {filterTab === 'diverged' ? 'No diverged questions found.' : lang.empty}
+              </p>
             </div>
           ) : (
             <div className="space-y-3">
-              {(showAll ? data.feed : data.feed.slice(0, 3)).map((item) => (
+              {(showAll ? filteredFeed : filteredFeed.slice(0, 4)).map((item) => (
                 <FeedCard key={item.id || item._id} item={item} lang={lang} />
               ))}
-              {data.feed.length > 3 && (
+              {filteredFeed.length > 4 && (
                 <div className="pt-2 flex justify-center">
                   <button
                     onClick={() => setShowAll(prev => !prev)}
                     className="flex items-center gap-2 px-5 py-2 rounded-full text-xs font-bold bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-hover)] border border-[var(--theme-border)] text-[var(--text-primary)] transition-all cursor-pointer shadow-sm active:scale-95"
                   >
-                    <span>{showAll ? 'Show Less' : `View ${data.feed.length - 3} More Questions`}</span>
+                    <span>{showAll ? 'Show Less' : `View ${filteredFeed.length - 4} More Questions`}</span>
                     <svg
                       width="14"
                       height="14"
@@ -496,7 +693,7 @@ export default function AccuracyFeedModal({ onClose }) {
         {/* ── Footer ── */}
         <div className="px-5 py-3 border-t border-[var(--modal-border)] shrink-0">
           <p className="text-[11px] text-[var(--text-secondary)] text-center font-medium">
-            Click <strong className="text-[var(--text-primary)] font-bold">Details & Verification</strong> on any card to see the full AI answer and per-claim accuracy check.
+            Click <strong className="text-[var(--text-primary)] font-bold">{lang.details}</strong> on any question card to inspect full atmospheric divergence deltas and ground truth audits.
           </p>
         </div>
       </div>

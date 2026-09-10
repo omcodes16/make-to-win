@@ -1,257 +1,185 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useApp } from '../context/AppContext';
-import { getFarmerAdvisory } from '../utils/farmerAdvisory';
-import { getFishermanAdvisory } from '../utils/fishermanAdvisory';
-import { getAviationAdvisory } from '../utils/aviationAdvisory';
-import { getUrbanPlanningAdvisory } from '../utils/urbanPlanningAdvisory';
-import { computeHeatIndex, getHeatRisk } from '../utils/heatIndex';
-
-const CHIPS = {
-  farmer: {
-    en: ['Will it rain today and should I spray?', 'Spray window in next 48 hours?', 'Frost risk tonight for my crops?', 'Fungal disease risk this week?'],
-    hi: ['क्या आज बारिश होगी और स्प्रे करूं?', 'अगले 48 घंटे स्प्रे का सही समय?', 'आज रात फसल पर पाला पड़ेगा?', 'इस सप्ताह फंगस का खतरा?'],
-    bn: ['আজ বৃষ্টি হবে, স্প্রে করব?', '৪৮ ঘণ্টায় স্প্রে উইন্ডো?', 'আজ রাতে শিলাবৃষ্টি?', 'এ সপ্তাহে ছত্রাকের ঝুঁকি?'],
-    as: ["আজি বৰষুণ হ'ব, স্প্ৰে কৰিব?", '৪৮ ঘণ্টাত স্প্ৰেৰ সময়?', 'আজি ৰাতি পাল পৰিব?', 'এই সপ্তাহত ফাংগাল?'],
-  },
-  fisherman: {
-    en: ['Is the sea safe for fishing today?', 'Wave height and swell forecast?', 'Any cyclone or storm warning nearby?', 'How far am I from IMBL border?'],
-    hi: ['क्या आज समुद्र में मछली पकड़ना सुरक्षित है?', 'लहरों की ऊंचाई का पूर्वानुमान?', 'पास में कोई चक्रवात चेतावनी?', 'मैं IMBL सीमा से कितनी दूर हूं?'],
-    bn: ['আজ সমুদ্রে মাছ ধরা কি নিরাপদ?', 'ঢেউয়ের উচ্চতার পূর্বাভাস?', 'কাছে ঘূর্ণিঝড় সতর্কতা?', 'IMBL সীমা থেকে কতটা দূরে?'],
-    as: ['আজি সমুদ্ৰত মাছ মৰা নিৰাপদ?', 'ঢৌৰ উচ্চতাৰ পূৰ্বাভাস?', 'ওচৰত ঘূৰ্ণীবতাহ সতৰ্কতা?', 'IMBL সীমাৰ পৰা কিমান দূৰ?'],
-  },
-  aviation: {
-    en: ['VFR or IFR conditions today?', 'Cloud ceiling and visibility?', 'Wind shear and turbulence risk?', 'Visibility at Chennai airport?'],
-    hi: ['आज VFR या IFR परिस्थितियां?', 'बादल की छत और दृश्यता?', 'पवन कतरनी और अशांति जोखिम?', 'चेन्नई हवाई अड्डे पर दृश्यता?'],
-    bn: ['আজ VFR বা IFR অবস্থা?', 'মেঘের সিলিং এবং দৃশ্যমানতা?', 'উইন্ড শিয়ার ঝুঁকি?', 'বিমানবন্দরে দৃশ্যমানতা?'],
-    as: ['আজি VFR নে IFR?', 'ডাৱৰৰ উচ্চতা আৰু দৃশ্যমানতা?', 'বতাহ কতৰনিৰ বিপদ?', 'বিমানবন্দৰত দৃশ্যমানতা?'],
-  },
-  urbanPlanning: {
-    en: ['AQI and air quality today?', 'Heat island and heatwave risk?', 'Urban drainage flood risk?', 'Worker safety index for outdoor work?'],
-    hi: ['आज AQI और वायु गुणवत्ता?', 'हीट आइलैंड और लू का जोखिम?', 'शहरी जल निकासी बाढ़ जोखिम?', 'बाहरी काम के लिए कामगार सुरक्षा?'],
-    bn: ['আজ AQI এবং বায়ু মান?', 'তাপ দ্বীপ ও তাপপ্রবাহ?', 'শহুরে বন্যার ঝুঁকি?', 'বহিরাঙ্গন কাজে শ্রমিক সুরক্ষা?'],
-    as: ['আজি AQI আৰু বায়ু মান?', 'তাপ দ্বীপ আৰু তাপপ্ৰবাহ?', 'চহৰৰ বানপানীৰ আশংকা?', 'বাহিৰৰ কামত শ্ৰমিক সুৰক্ষা?'],
-  },
-  general: {
-    en: ['Will it rain today in my city?', 'Is there a cyclone warning nearby?', 'Safe for fishermen to go to sea?', 'Compare this monsoon with last year'],
-    hi: ['क्या आज मेरे शहर में बारिश होगी?', 'क्या पास में चक्रवात चेतावनी है?', 'क्या मछुआरे समुद्र में जा सकते हैं?', 'इस मानसून की पिछले साल से तुलना'],
-    bn: ['আজ আমার শহরে বৃষ্টি হবে?', 'কাছে ঘূর্ণিঝড় সতর্কতা?', 'মৎস্যজীবীরা সমুদ্রে যেতে পারবে?', 'গত বছরের সাথে এই বর্ষার তুলনা'],
-    as: ['আজি মোৰ চহৰত বৰষুণ?', 'ওচৰত ঘূৰ্ণীবতাহ সতৰ্কতা?', 'মাছ মৰা সমুদ্ৰলৈ যাব পাৰিব?', 'যোৱা বছৰৰ সৈতে বৰ্ষাৰ তুলনা'],
-  },
-};
-
-const ADVISORY_STYLE = {
-  danger:  { bg: 'rgba(239,68,68,0.12)',  border: 'rgba(239,68,68,0.35)',  text: '#fca5a5', dot: '#ef4444' },
-  caution: { bg: 'rgba(245,158,11,0.12)', border: 'rgba(245,158,11,0.35)', text: '#fcd34d', dot: '#f59e0b' },
-  good:    { bg: 'rgba(16,185,129,0.12)', border: 'rgba(16,185,129,0.35)', text: '#6ee7b7', dot: '#10b981' },
-};
-
-const PROFESSION_META = {
-  farmer:        { icon: '🌾', labelHi: 'किसान ब्रीफिंग', labelEn: "Kisan's Briefing" },
-  fisherman:     { icon: '🎣', labelHi: 'मछुआरा ब्रीफिंग', labelEn: "Machhua's Briefing" },
-  aviation:      { icon: '✈️', labelHi: 'विमानन ब्रीफिंग', labelEn: 'Aviation Briefing' },
-  urbanPlanning: { icon: '🏙️', labelHi: 'शहर ब्रीफिंग',   labelEn: 'City Briefing' },
-  general:       { icon: '🌍', labelHi: 'आज का मौसम',     labelEn: "Today's Briefing" },
-};
-
-function getSpecialButtons(profile, lang) {
-  const isHi = ['hi','mr','pa','gu','or','ur'].includes(lang);
-  const isBn = lang === 'bn';
-  if (profile === 'farmer') return [
-    { label: isHi ? '📷 फसल डॉक्टर' : isBn ? '📷 ফসল ডাক্তার' : '📷 Fasal Doctor', event: 'weathergpt-open-mausam-drishti', gradient: 'linear-gradient(135deg,#059669,#047857)' },
-    { label: isHi ? '📻 आवाज बुलेटिन' : isBn ? '📻 ভয়েস বুলেটিন' : '📻 Voice Bulletin', event: 'weathergpt-open-bulletin', gradient: 'linear-gradient(135deg,#d97706,#b45309)' },
-  ];
-  if (profile === 'fisherman') return [
-    { label: isHi ? '🌊 सागर रक्षक' : isBn ? '🌊 সাগর রক্ষক' : '🌊 Sagar Rakshak', event: 'weathergpt-open-sagar-rakshak', gradient: 'linear-gradient(135deg,#0891b2,#0e7490)' },
-    { label: isHi ? '📻 समुद्री बुलेटिन' : isBn ? '📻 সামুদ্রিক বুলেটিন' : '📻 Marine Bulletin', event: 'weathergpt-open-bulletin', gradient: 'linear-gradient(135deg,#2563eb,#1d4ed8)' },
-  ];
-  return [
-    { label: isHi ? '🔬 अनुसंधान' : isBn ? '🔬 গবেষণা' : '🔬 Research', tabSwitch: 'research', gradient: 'linear-gradient(135deg,#4f46e5,#4338ca)' },
-    { label: isHi ? '🚨 अलर्ट देखें' : isBn ? '🚨 সতর্কতা দেখুন' : '🚨 View Alerts', tabSwitch: 'alerts', gradient: 'linear-gradient(135deg,#dc2626,#b91c1c)' },
-  ];
-}
-
-function BriefingCard({ weather, locationName, profile, lang, dispatch }) {
-  const meta = PROFESSION_META[profile] || PROFESSION_META.general;
-  const isHi = ['hi','mr','pa','gu','or','ur'].includes(lang);
-
-  const advisory = profile === 'farmer' ? getFarmerAdvisory(weather, 0, lang)
-    : profile === 'fisherman' ? getFishermanAdvisory(weather, 0, lang)
-    : profile === 'aviation' ? getAviationAdvisory(weather, 0, lang)
-    : profile === 'urbanPlanning' ? getUrbanPlanningAdvisory(weather, 0, lang)
-    : null;
-
-  const style = ADVISORY_STYLE[advisory?.type] || ADVISORY_STYLE.good;
-  const specialBtns = getSpecialButtons(profile, lang);
-  const profLabel = isHi ? meta.labelHi : meta.labelEn;
-
-  return (
-    <div className="w-full max-w-sm rounded-2xl mb-3 overflow-hidden" style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }}>
-      {/* Header strip */}
-      <div className="px-4 py-3 flex items-center justify-between" style={{ borderBottom: '1px solid var(--theme-border)' }}>
-        <div className="flex items-center gap-2">
-          <span className="text-2xl">{meta.icon}</span>
-          <div>
-            <div className="font-black text-sm" style={{ color: 'var(--text-primary)' }}>{profLabel}</div>
-            {locationName && (
-              <div className="text-[10px] flex items-center gap-1" style={{ color: 'var(--text-secondary)' }}>
-                📍 <span className="truncate max-w-[130px]">{locationName}</span>
-              </div>
-            )}
-          </div>
-        </div>
-        <div className="text-right">
-          <div className="font-black text-3xl leading-none" style={{ color: 'var(--text-primary)' }}>{Math.round(weather.temperature)}°</div>
-          <div className="text-[10px] mt-0.5" style={{ color: 'var(--text-secondary)' }}>{isHi ? 'महसूस' : 'Feels'} {Math.round(weather.feelsLike ?? weather.temperature)}°</div>
-        </div>
-      </div>
-
-      {/* Advisory Banner */}
-      {advisory && (
-        <div className="mx-3 mt-3 rounded-xl p-3" style={{ background: style.bg, border: `1px solid ${style.border}` }}>
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full shrink-0" style={{ background: style.dot }} />
-            <span className="text-xs font-black" style={{ color: style.text }}>{advisory.title}</span>
-          </div>
-          <p className="text-[11px] mt-1 leading-relaxed" style={{ color: 'var(--text-muted)' }}>{advisory.advice}</p>
-        </div>
-      )}
-
-      {/* Stats Row */}
-      <div className="grid grid-cols-3 gap-2 mx-3 mt-3">
-        {[
-          { icon: '💧', val: `${weather.humidity}%`, lbl: isHi ? 'नमी' : 'Humidity' },
-          { icon: '💨', val: `${Math.round(weather.windSpeed)} km/h`, lbl: isHi ? 'हवा' : 'Wind' },
-          { icon: '☀️', val: `UV ${weather.uvIndex ?? '--'}`, lbl: isHi ? 'सूचकांक' : 'Index' },
-        ].map((s, i) => (
-          <div key={i} className="rounded-xl p-2 text-center" style={{ background: 'var(--glass-bg)', border: '1px solid var(--theme-border)' }}>
-            <div className="text-base">{s.icon}</div>
-            <div className="text-xs font-bold mt-0.5" style={{ color: 'var(--text-primary)' }}>{s.val}</div>
-            <div className="text-[9px]" style={{ color: 'var(--text-secondary)' }}>{s.lbl}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Action Buttons */}
-      <div className="flex gap-2 mx-3 mt-3 mb-3">
-        {specialBtns.map((btn, i) => (
-          <button
-            key={i}
-            onClick={() => {
-              if (btn.event) window.dispatchEvent(new CustomEvent(btn.event));
-              if (btn.tabSwitch) dispatch({ type: 'SET_ACTIVE_TAB', payload: btn.tabSwitch });
-            }}
-            className="flex-1 py-2.5 rounded-xl text-white text-[11px] font-black active:scale-95 transition-all shadow-md"
-            style={{ background: btn.gradient }}
-          >
-            {btn.label}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
+import ChatInput from './ChatInput';
 
 export default function EmptyState() {
-  const { state, dispatch } = useApp();
-  const [chipIdx, setChipIdx] = useState(0);
-  const [animating, setAnimating] = useState(false);
-
+  const { state } = useApp();
   const lang = state.language || 'en';
-  const profile = state.userProfile || 'general';
+  const isHi = ['hi', 'mr', 'pa', 'gu', 'or', 'ur'].includes(lang);
+
   const stageData = state.weatherStageData;
-  const weather = stageData?.weather;
-  const locationName = stageData?.locationName;
-  const isHi = ['hi','mr','pa','gu','or','ur'].includes(lang);
+  const weather = stageData?.weather || state.currentWeather;
+  const locationName = stageData?.locationName || weather?.locationName || '';
 
-  const chips = (CHIPS[profile] || CHIPS.general)[lang] || (CHIPS[profile] || CHIPS.general).en;
-  const meta = PROFESSION_META[profile] || PROFESSION_META.general;
+  // Contextual time greeting based on current IST hour
+  const istHour = parseInt(
+    new Intl.DateTimeFormat('en-IN', {
+      timeZone: 'Asia/Kolkata',
+      hour: 'numeric',
+      hour12: false,
+    }).format(new Date()),
+    10
+  );
 
-  useEffect(() => {
-    const iv = setInterval(() => {
-      setAnimating(true);
-      setTimeout(() => { setChipIdx(p => (p + 1) % chips.length); setAnimating(false); }, 280);
-    }, 3800);
-    return () => clearInterval(iv);
-  }, [chips.length]);
+  const greeting = istHour < 12 
+    ? (isHi ? 'शुभ प्रभात' : 'Good morning')
+    : istHour < 17 
+    ? (isHi ? 'शुभ दोपहर' : 'Good afternoon')
+    : istHour < 21 
+    ? (isHi ? 'शुभ संध्या' : 'Good evening')
+    : (isHi ? 'शुभ रात्रि' : 'Good night');
 
-  const handleChipTap = (text) => {
-    const clean = text.replace(/^[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\s]*/u, '').trim();
-    window.dispatchEvent(new CustomEvent('weathergpt-send', { detail: clean || text }));
+  const handleCardClick = (queryText) => {
+    if (state.isLoading) return;
+    window.dispatchEvent(new CustomEvent('weathergpt-send', { detail: queryText }));
   };
 
-  const hasBriefing = weather && weather.temperature != null;
+  const BENTO_CARDS = [
+    {
+      icon: '🌧️',
+      title: isHi ? 'क्या आज बारिश होगी?' : 'Will it rain today?',
+      desc: isHi ? 'अगले 6 घंटे बारिश का जोखिम, बादल व रडार पूर्वानुमान' : 'Hourly precipitation risk, cloud cover & rain forecast',
+      query: isHi 
+        ? `क्या आज ${locationName ? locationName + ' में' : ''} बारिश होगी? प्रति घंटा पूर्वानुमान बताएं।`
+        : `Will it rain today${locationName ? ' in ' + locationName : ''}? Give me an hourly precipitation forecast.`,
+      tag: isHi ? 'बारिश रडार' : 'Precipitation',
+      tagColor: 'text-sky-700 dark:text-sky-300 bg-sky-500/10 border-sky-500/25',
+    },
+    {
+      icon: '🌾',
+      title: isHi ? 'स्प्रे का सही समय?' : 'Safe to spray crops?',
+      desc: isHi ? '48 घंटे में कीटनाशक छिड़काव, हवा की गति व पाला जोखिम' : '48-hour spray window, dew risk & humidity thresholds',
+      query: isHi 
+        ? `क्या अगले 48 घंटों में ${locationName ? locationName + ' में' : ''} फसलों पर कीटनाशक स्प्रे करना सुरक्षित है?`
+        : `Is it safe to spray pesticides on crops in the next 48 hours${locationName ? ' in ' + locationName : ''}?`,
+      tag: isHi ? 'कृषि सलाह' : 'Agronomy',
+      tagColor: 'text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 border-emerald-500/25',
+    },
+    {
+      icon: '⚡',
+      title: isHi ? 'सक्रिय मौसम चेतावनी?' : 'Any severe alerts?',
+      desc: isHi ? 'IMD वज्रपात, आंधी-तूफान, लू या बाढ़ की पूर्व चेतावनी' : 'Active IMD thunderstorm, lightning, heatwave or cyclone warnings',
+      query: isHi 
+        ? `क्या ${locationName ? locationName + ' के' : ''} आसपास कोई आंधी, चक्रवात या गंभीर मौसम चेतावनी है?`
+        : `Are there any active severe weather alerts, thunderstorms, or cyclone warnings${locationName ? ' near ' + locationName : ''}?`,
+      tag: isHi ? 'आपदा अलर्ट' : 'Early Warning',
+      tagColor: 'text-amber-800 dark:text-amber-300 bg-amber-500/10 border-amber-500/25',
+    },
+    {
+      icon: '📊',
+      title: isHi ? 'NWP मॉडल तुलना' : 'Multi-Model Consensus',
+      desc: isHi ? 'GFS, ECMWF व ICON मौसम मॉडल में सहमति और तापमान अंतर' : 'Inspect GFS, ECMWF & ICON model agreement and confidence',
+      query: isHi 
+        ? `GFS, ECMWF और ICON मौसम मॉडल के पूर्वानुमान की तुलना करें${locationName ? ' (' + locationName + ')' : ''}।`
+        : `Compare GFS, ECMWF, and ICON weather model forecasts${locationName ? ' for ' + locationName : ''}.`,
+      tag: isHi ? 'मॉडल विश्लेषण' : 'NWP Ensemble',
+      tagColor: 'text-indigo-700 dark:text-indigo-300 bg-indigo-500/10 border-indigo-500/25',
+    },
+  ];
 
   return (
-    <div className="flex flex-col items-center justify-start h-full pb-8 px-4 pt-4 animate-fade-in overflow-y-auto">
-
-      {hasBriefing ? (
-        <BriefingCard
-          weather={weather}
-          locationName={locationName}
-          profile={profile}
-          lang={lang}
-          dispatch={dispatch}
-        />
-      ) : (
-        <div className="flex flex-col items-center mb-4">
-          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-tr from-indigo-500 via-purple-500 to-blue-400 rounded-full flex items-center justify-center shadow-[0_0_40px_rgba(99,102,241,0.4)] mb-3 animate-pulse-rays">
-            <span className="text-3xl sm:text-4xl drop-shadow-lg">{meta.icon}</span>
-          </div>
-          <h2 className="text-2xl sm:text-3xl font-heading font-black text-gradient-hero text-center tracking-tight mb-1">WeatherGPT</h2>
-          <p className="text-[var(--text-secondary)] text-center text-xs sm:text-sm">
-            {lang === 'hi' ? 'AI-संचालित मौसम विश्लेषण • लाइव IMD डेटा' : 'AI-Powered Weather Intelligence • Live IMD Data'}
-          </p>
+    <div className="flex flex-col items-center justify-center min-h-full py-2 sm:py-8 px-2 sm:px-4 select-none animate-fade-in">
+      
+      {/* 1. Header Branding & Greeting */}
+      <div className="text-center max-w-2xl mx-auto mb-3 sm:mb-6">
+        {/* Radar Crest Emblem */}
+        <div className="inline-flex items-center justify-center w-9 h-9 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-sky-500/10 border border-sky-500/25 text-sky-400 mb-1.5 sm:mb-3.5 shadow-xs">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="sm:w-7 sm:h-7">
+            <path d="M12 2a10 10 0 1 0 10 10" />
+            <path d="M12 6a6 6 0 1 0 6 6" />
+            <path d="M12 10a2 2 0 1 0 2 2" />
+            <path d="M12 12 21.5 2.5" />
+          </svg>
         </div>
-      )}
 
-      {/* Rotating question chip */}
-      <div className="w-full max-w-sm">
-        <p className="text-[var(--text-secondary)] text-[10px] text-center mb-2 uppercase tracking-wider font-semibold">
-          {isHi ? '— पूछें —' : lang === 'bn' ? '— জিজ্ঞাসা করুন —' : lang === 'as' ? '— সোধক —' : '— Ask Me —'}
+        {/* Greeting Heading */}
+        <h1 className="text-lg sm:text-3xl lg:text-4xl font-extrabold text-[var(--text-primary)] tracking-tight mb-1 sm:mb-2">
+          {greeting}{locationName ? `, ${locationName}` : ''}
+        </h1>
+
+        <p className="text-[11px] sm:text-sm text-[var(--text-secondary)] font-normal sm:font-medium max-w-[280px] sm:max-w-lg mx-auto leading-snug sm:leading-relaxed">
+          {isHi 
+            ? 'मौसम विज्ञान, वर्षा पूर्वानुमान, कृषि परामर्श एवं NWP मॉडल विश्लेषण के लिए कुछ भी पूछें।' 
+            : 'Ask anything about real-time weather, rainfall forecasts, agricultural advisories, or multi-model NWP ensembles.'}
         </p>
 
-        <button
-          onClick={() => handleChipTap(chips[chipIdx])}
-          className={`w-full cursor-pointer glass-panel rounded-2xl p-4 border border-[var(--theme-border)] hover:border-[var(--theme-accent)]/50 transition-all duration-300 active:scale-[0.98] text-left mb-2 ${
-            animating ? 'opacity-0 translate-y-1' : 'opacity-100 translate-y-0'
-          }`}
-          style={{ transition: 'opacity 0.28s, transform 0.28s' }}
-        >
-          <p className="text-[var(--text-primary)] text-sm sm:text-base font-semibold leading-snug">{chips[chipIdx]}</p>
-          <div className="flex items-center gap-1 mt-2 text-xs font-medium" style={{ color: 'var(--theme-accent)' }}>
-            <span>{isHi ? 'टैप करें' : lang === 'bn' ? 'ট্যাপ করুন' : lang === 'as' ? 'টেপ কৰক' : 'Tap to ask'}</span>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        {/* Live Weather Glance Pill (if weather data available) */}
+        {weather && weather.temperature != null && (
+          <div className="inline-flex items-center gap-1.5 sm:gap-2 mt-1.5 sm:mt-3 px-2.5 py-0.5 sm:px-3.5 sm:py-1.5 rounded-full bg-[var(--glass-bg)] border border-[var(--theme-border)] text-[10px] sm:text-xs font-semibold text-[var(--text-primary)] shadow-xs">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span>{Math.round(weather.temperature)}°C</span>
+            {weather.humidity != null && (
+              <>
+                <span className="text-[var(--text-secondary)] opacity-50">•</span>
+                <span className="text-[var(--text-secondary)] font-medium">💧 {weather.humidity}%</span>
+              </>
+            )}
+            {weather.windSpeed != null && (
+              <>
+                <span className="text-[var(--text-secondary)] opacity-50">•</span>
+                <span className="text-[var(--text-secondary)] font-medium">💨 {Math.round(weather.windSpeed)} km/h</span>
+              </>
+            )}
+            {locationName && (
+              <>
+                <span className="text-[var(--text-secondary)] opacity-50">•</span>
+                <span className="text-[var(--text-secondary)] font-medium truncate max-w-[110px] sm:max-w-[150px]">📍 {locationName}</span>
+              </>
+            )}
           </div>
-        </button>
+        )}
+      </div>
 
-        <div className="flex flex-col gap-1.5">
-          {[chips[1], chips[2]].filter(Boolean).map((chip, i) => (
+      {/* 2. Centered Hero AI Prompt Box */}
+      <div className="w-full max-w-md sm:max-w-xl lg:max-w-2xl mb-3 sm:mb-7">
+        <ChatInput isHero={true} />
+      </div>
+
+      {/* 3. Bento Inspiration Grid (4 Cards in compact 2x2 grid on phone) */}
+      <div className="w-full max-w-md sm:max-w-xl lg:max-w-2xl">
+        <div className="flex items-center justify-between mb-1.5 sm:mb-2.5 px-1">
+          <span className="text-[10px] sm:text-[11px] font-bold text-[var(--text-secondary)] uppercase tracking-wider">
+            {isHi ? 'त्वरित परामर्श' : 'Suggested Consultations'}
+          </span>
+          <span className="text-[10px] sm:text-[11px] text-[var(--text-secondary)] font-medium">
+            {isHi ? 'टैप करके पूछें' : 'Tap to ask'}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 sm:gap-3.5">
+          {BENTO_CARDS.map((card, idx) => (
             <button
-              key={i}
-              onClick={() => handleChipTap(chip)}
-              className="cursor-pointer glass-panel rounded-xl px-3.5 py-2.5 border border-[var(--theme-border)] hover:border-[var(--theme-accent)]/30 flex items-center gap-2 transition-all duration-200 active:scale-[0.98] text-left"
+              key={idx}
+              onClick={() => handleCardClick(card.query)}
+              className="group relative rounded-xl sm:rounded-2xl p-2.5 sm:p-4 text-left border border-[var(--theme-border)] bg-[var(--card-bg)] hover:bg-white/[0.04] hover:border-sky-500/40 shadow-xs hover:shadow-md transition-all duration-200 cursor-pointer active:scale-[0.98] flex flex-col justify-between"
             >
-              <p className="text-[var(--text-secondary)] text-xs sm:text-sm leading-snug flex-1">{chip}</p>
-              <svg className="shrink-0 opacity-40" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ color: 'var(--text-secondary)' }}><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              <div>
+                <div className="flex items-center justify-between gap-1 mb-1 sm:mb-2">
+                  <span className="text-base sm:text-2xl">{card.icon}</span>
+                  <span className={`px-1.5 py-0.5 sm:px-2.5 sm:py-0.5 rounded-md sm:rounded-full text-[9px] sm:text-[11px] font-bold tracking-tight border ${card.tagColor}`}>
+                    {card.tag}
+                  </span>
+                </div>
+                <h3 className="text-xs sm:text-[14px] font-bold text-[var(--text-primary)] group-hover:text-sky-500 dark:group-hover:text-sky-300 transition-colors mb-0.5 sm:mb-1 tracking-tight leading-tight sm:leading-snug line-clamp-2">
+                  {card.title}
+                </h3>
+                <p className="text-[9px] sm:text-xs text-[var(--text-secondary)] leading-tight line-clamp-2 font-normal hidden xs:block">
+                  {card.desc}
+                </p>
+              </div>
+
+              <div className="mt-1.5 sm:mt-2.5 pt-1 sm:pt-2 border-t border-[var(--theme-border)]/50 flex items-center justify-between text-[10px] sm:text-[11px] text-sky-500 dark:text-sky-400 font-semibold opacity-90 group-hover:opacity-100 transition-opacity">
+                <span>{isHi ? 'पूछें' : 'Ask'}</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="transform group-hover:translate-x-0.5 transition-transform sm:w-3.5 sm:h-3.5">
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                  <polyline points="12 5 19 12 12 19" />
+                </svg>
+              </div>
             </button>
           ))}
         </div>
-
-        <div className="flex justify-center gap-1.5 mt-3">
-          {chips.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setChipIdx(i)}
-              className="rounded-full transition-all duration-300"
-              style={{
-                width: i === chipIdx ? '20px' : '6px',
-                height: '6px',
-                background: i === chipIdx ? 'var(--theme-accent)' : 'rgba(255,255,255,0.2)',
-              }}
-            />
-          ))}
-        </div>
       </div>
+
     </div>
   );
 }

@@ -555,7 +555,7 @@ export default function OfficialBulletinModal({
               {/* Reference & Time Badge */}
               <div className="text-left sm:text-right text-[11px] text-slate-400 border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-800">
                 <p><span className="text-slate-500 font-bold">{t.refId}:</span> <span className="font-mono text-indigo-300 font-bold">{bulletinData?.bulletinId || 'IN-WGPT-GP/2026/09-LIVE'}</span></p>
-                <p><span className="text-slate-500 font-bold">{t.issued}:</span> <span className="text-slate-200">{new Date().toLocaleString(lang === 'hi' ? 'hi-IN' : 'en-IN')}</span></p>
+                <p><span className="text-slate-500 font-bold">{t.issued}:</span> <span className="text-slate-200">{new Date().toLocaleString(lang === 'hi' ? 'hi-IN' : 'en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'medium' })} IST</span></p>
                 <p><span className="text-slate-500 font-bold">{t.validity}:</span> <span className="text-emerald-400 font-bold">{t.hours}</span></p>
               </div>
             </div>

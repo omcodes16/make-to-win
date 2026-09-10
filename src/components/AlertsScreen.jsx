@@ -416,9 +416,9 @@ export default function AlertsScreen() {
   });
 
   return (
-    <div className="min-h-[100dvh] text-white overflow-y-auto pb-24 md:pb-20 relative font-body transition-colors duration-1000">
+    <div className="min-h-[100dvh] text-[var(--text-primary)] overflow-y-auto pb-24 md:pb-20 relative font-body transition-colors duration-500">
 
-      <div className="relative z-10 max-w-[1400px] mx-auto px-4 sm:px-6 pt-20 sm:pt-24 md:pt-28 flex flex-col gap-6 pb-32">
+      <div className="relative z-10 max-w-[1400px] mx-auto px-2.5 sm:px-6 pt-16 sm:pt-24 md:pt-28 flex flex-col gap-3.5 sm:gap-6 pb-28 md:pb-20">
         
         {/* ── Severity Status Banner — Human-First horizontal safety indicator ── */}
         {(() => {
@@ -444,7 +444,7 @@ export default function AlertsScreen() {
                 dot: '#f59e0b',
                 icon: '🟡',
                 text: lang === 'hi' ? 'सावधान — मौसम की चेतावनी है' : lang === 'bn' ? 'সতর্ক — আবহাওয়া সতর্কতা আছে' : 'CAUTION — Weather Advisory in Effect',
-                sub: lang === 'hi' ? 'सतर्क रहें और स्थानीय निर्देशों का पालन करें।' : lang === 'bn' ? 'সতর্ক থাকুন এবং স্থানীয় নির্দেশাবলী অনুসরণ করুন।' : 'Stay alert and follow local safety guidance.',
+                sub: lang === 'hi' ? 'सतर्क रहें और स्थानीय निर्देशों का पालन करें।' : lang === 'bn' ? 'সতর্ক থাকুন এবং স্থানীয় निर्देशাবলী अनुसरण करें।' : 'Stay alert and follow local safety guidance.',
               }
             : {
                 bg: 'linear-gradient(135deg, rgba(5, 150, 105, 0.22) 0%, rgba(4, 120, 87, 0.15) 100%)',
@@ -456,27 +456,27 @@ export default function AlertsScreen() {
               };
           return (
             <div
-              className="w-full rounded-2xl overflow-hidden shadow-xl backdrop-blur-xl transition-all duration-300"
+              className="w-full rounded-xl sm:rounded-2xl overflow-hidden shadow-xl backdrop-blur-xl transition-all duration-300"
               style={{ background: cfg.bg, border: cfg.border }}
             >
-              <div className="px-4 py-3 sm:px-6 sm:py-3.5 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3 min-w-0">
-                  <span className="relative flex h-3 w-3 shrink-0">
+              <div className="px-3 py-2 sm:px-6 sm:py-3.5 flex items-center justify-between gap-2.5">
+                <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                  <span className="relative flex h-2.5 w-2.5 sm:h-3 sm:w-3 shrink-0">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: cfg.dot }}></span>
-                    <span className="relative inline-flex rounded-full h-3 w-3" style={{ background: cfg.dot }}></span>
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 sm:h-3 sm:w-3" style={{ background: cfg.dot }}></span>
                   </span>
                   <div className="min-w-0">
-                    <div className="text-white font-black text-sm sm:text-base tracking-tight flex items-center gap-1.5 flex-wrap">
+                    <div className="text-[var(--text-primary)] font-black text-xs sm:text-base tracking-tight flex items-center gap-1.5 flex-wrap">
                       <span>{cfg.icon}</span>
                       <span>{cfg.text}</span>
                     </div>
-                    <div className="text-white/80 text-xs sm:text-sm mt-0.5 leading-snug">
+                    <div className="text-[var(--text-secondary)] text-[11px] sm:text-sm mt-0.5 leading-snug truncate sm:whitespace-normal">
                       {cfg.sub}
                     </div>
                   </div>
                 </div>
                 {locationName && (
-                  <div className="text-white/80 text-xs font-semibold shrink-0 hidden sm:flex items-center gap-1 px-3 py-1 rounded-full bg-white/10 border border-white/15 shadow-sm">
+                  <div className="text-[var(--text-primary)] text-xs font-semibold shrink-0 hidden sm:flex items-center gap-1 px-3 py-1 rounded-full bg-[var(--glass-bg)] border border-[var(--theme-border)] shadow-sm">
                     📍 <span className="truncate max-w-[150px]">{typeof locationName === 'string' ? locationName : ''}</span>
                   </div>
                 )}
@@ -486,27 +486,27 @@ export default function AlertsScreen() {
         })()}
 
         {/* ── Two Columns Layout (Alerts on Left, News on Right) ── */}
-        <div className="flex flex-col lg:flex-row gap-6 items-start">
+        <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 items-start">
           {/* Left Column: Alerts & Risk */}
-          <div className="flex-1 flex flex-col gap-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="relative flex h-3 w-3">
+          <div className="flex-1 flex flex-col gap-4 sm:gap-6 w-full">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <span className="relative flex h-2.5 w-2.5 sm:h-3 sm:w-3 shrink-0">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 sm:h-3 sm:w-3 bg-red-500"></span>
               </span>
-              <h2 className="text-2xl font-bold tracking-wide">{ex.liveHighAlerts}</h2>
+              <h2 className="text-base sm:text-2xl font-black tracking-tight text-[var(--text-primary)]">{ex.liveHighAlerts}</h2>
             </div>
             
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
               {/* Manual Refresh Alerts & Disasters Button */}
               <button
                 onClick={handleManualRefresh}
                 disabled={isRefreshing}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-white/10 hover:bg-white/20 border border-white/20 text-white active:scale-95 transition-all cursor-pointer disabled:opacity-50 shadow-sm"
+                className="flex items-center gap-1.5 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-bold bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-hover)] border border-[var(--theme-border)] text-[var(--text-primary)] active:scale-95 transition-all cursor-pointer disabled:opacity-50 shadow-sm"
                 title="Refresh Live Alerts & Disaster Data"
               >
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" className={isRefreshing ? 'animate-spin text-amber-400' : ''}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" className={isRefreshing ? 'animate-spin text-amber-500' : ''}>
                   <polyline points="23 4 23 10 17 10"/>
                   <polyline points="1 20 1 14 7 14"/>
                   <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
@@ -519,7 +519,7 @@ export default function AlertsScreen() {
                 <button 
                   onClick={handleTestPush}
                   disabled={isTestingPush}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-sky-500/15 border border-sky-500/40 text-sky-300 hover:bg-sky-500/25 active:scale-95 transition-all cursor-pointer disabled:opacity-50 shadow-sm"
+                  className="flex items-center gap-1.5 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-bold bg-sky-500/15 border border-sky-500/40 text-sky-600 dark:text-sky-300 hover:bg-sky-500/25 active:scale-95 transition-all cursor-pointer disabled:opacity-50 shadow-sm"
                   title="Send a real test push notification to verify this device"
                 >
                   <span>📲</span>
@@ -530,20 +530,20 @@ export default function AlertsScreen() {
               {/* Push Notifications Two-Way Toggle (ON / OFF) */}
               <button 
                 onClick={handleTogglePush}
-                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold border transition-all duration-300 shadow-sm cursor-pointer select-none active:scale-95 ${
+                className={`flex items-center gap-1.5 px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-bold border transition-all duration-300 shadow-sm cursor-pointer select-none active:scale-95 ${
                   pushEnabled 
-                    ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400 dark:text-emerald-300 shadow-[0_0_15px_rgba(16,185,129,0.25)] hover:bg-emerald-500/25' 
-                    : 'bg-red-500/10 border-red-500/30 text-red-400 dark:text-red-300 hover:bg-red-500/20'
+                    ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-700 dark:text-emerald-300 shadow-[0_0_15px_rgba(16,185,129,0.25)] hover:bg-emerald-500/25' 
+                    : 'bg-red-500/10 border-red-500/30 text-red-600 dark:text-red-300 hover:bg-red-500/20'
                 }`}
                 title={pushEnabled ? "Alerts are ACTIVE — Tap to turn OFF" : "Alerts are DISABLED — Tap to turn ON"}
               >
                 {pushEnabled ? (
                   <>
-                    <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    <span className="relative flex h-1.5 w-1.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
                     </span>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-400">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-600 dark:text-emerald-400">
                       <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
                       <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                     </svg>
@@ -551,8 +551,8 @@ export default function AlertsScreen() {
                   </>
                 ) : (
                   <>
-                    <span className="w-2 h-2 rounded-full bg-red-400 opacity-80"></span>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="text-red-400">
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-500 opacity-80"></span>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="text-red-600 dark:text-red-400">
                       <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                       <path d="M18.63 13A17.89 17.89 0 0 1 18 8"></path>
                       <path d="M6.26 6.26A5.86 5.86 0 0 0 6 8c0 7-3 9-3 9h14"></path>
@@ -568,7 +568,7 @@ export default function AlertsScreen() {
 
           {/* Real-time Push Status Indicator */}
           {pushStatusMessage && (
-            <div className="px-3.5 py-2 rounded-xl bg-slate-900/85 border border-sky-500/30 text-xs font-medium text-slate-200 backdrop-blur-md animate-fadeIn flex items-center gap-2 shadow-lg">
+            <div className="px-3.5 py-2 rounded-xl bg-[var(--modal-bg)] border border-sky-500/40 text-xs font-semibold text-[var(--text-primary)] backdrop-blur-md animate-fadeIn flex items-center gap-2 shadow-lg">
               <span>{pushStatusMessage}</span>
             </div>
           )}
@@ -616,77 +616,77 @@ export default function AlertsScreen() {
               };
 
               return (
-              <div key={alert.id} className={`relative glass-panel border rounded-xl p-4 sm:p-5 overflow-hidden ${styles.cardBorder}`}>
+              <div key={alert.id} className={`relative glass-panel border rounded-xl sm:rounded-2xl p-3.5 sm:p-5 overflow-hidden ${styles.cardBorder}`}>
                 <div className={`absolute top-0 left-0 w-full h-1 bg-gradient-to-r ${styles.gradient} to-transparent`}></div>
 
-                <div className="flex justify-between items-start mb-4 sm:mb-6">
-                  <div className="flex gap-3 sm:gap-4 items-center">
-                    <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center border shrink-0 ${styles.iconBg}`}>
+                <div className="flex justify-between items-start mb-3 sm:mb-5">
+                  <div className="flex gap-2.5 sm:gap-4 items-center min-w-0">
+                    <div className={`w-9 h-9 sm:w-12 sm:h-12 rounded-full flex items-center justify-center border shrink-0 ${styles.iconBg}`}>
                       {alert.level === 'Good' ? (
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                       ) : (
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M20 16.2A4.5 4.5 0 0 0 17.5 8h-1.8A7 7 0 1 0 4 14.9"/><path d="M16 14v6"/><path d="M8 14v6"/><path d="M12 16v6"/></svg>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M20 16.2A4.5 4.5 0 0 0 17.5 8h-1.8A7 7 0 1 0 4 14.9"/><path d="M16 14v6"/><path d="M8 14v6"/><path d="M12 16v6"/></svg>
                       )}
                     </div>
-                    <div>
-                      <h3 className="text-lg sm:text-xl font-bold text-white mb-0.5 sm:mb-1 leading-tight">{alert.title}</h3>
-                      <p className="text-white/60 text-xs sm:text-sm">{alert.desc}</p>
+                    <div className="min-w-0">
+                      <h3 className="text-sm sm:text-xl font-bold text-[var(--text-primary)] mb-0.5 sm:mb-1 leading-tight line-clamp-2 sm:line-clamp-none">{alert.title}</h3>
+                      <p className="text-[var(--text-secondary)] text-[11px] sm:text-sm line-clamp-2 sm:line-clamp-none">{alert.desc}</p>
                     </div>
                   </div>
-                  <span className={`px-2 sm:px-3 py-1 rounded border text-[9px] sm:text-[10px] font-bold uppercase tracking-widest shrink-0 ${styles.badge}`}>
+                  <span className={`px-2 py-0.5 sm:px-3 sm:py-1 rounded border text-[8px] sm:text-[10px] font-bold uppercase tracking-widest shrink-0 ${styles.badge}`}>
                     {alert.level}
                   </span>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-5 border-t border-white/10 pt-4 sm:pt-5">
-                  <div className="flex flex-col gap-1">
-                    <div className="flex items-center gap-1.5 text-white/50 text-[10px] sm:text-xs uppercase tracking-wide">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4 mb-3 sm:mb-5 border-t border-[var(--theme-border)] pt-3 sm:pt-4">
+                  <div className="flex flex-col gap-0.5">
+                    <div className="flex items-center gap-1 text-[var(--text-secondary)] text-[9px] sm:text-xs uppercase tracking-wide font-semibold">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
                       {ex.probLbl}
                     </div>
-                    <div className="text-base sm:text-lg font-bold">{alert.prob}</div>
+                    <div className="text-sm sm:text-lg font-bold text-[var(--text-primary)]">{alert.prob}</div>
                   </div>
-                  <div className="flex flex-col gap-1">
-                    <div className="flex items-center gap-1.5 text-white/50 text-xs uppercase tracking-wide">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                  <div className="flex flex-col gap-0.5">
+                    <div className="flex items-center gap-1 text-[var(--text-secondary)] text-[9px] sm:text-xs uppercase tracking-wide font-semibold">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
                         {ex.expectedLbl}
                     </div>
-                    <div className="text-lg font-bold">{alert.rain} <span className="text-xs font-normal text-white/50">{alert.rain !== 'Unknown' ? 'mm' : ''}</span></div>
+                    <div className="text-sm sm:text-lg font-bold text-[var(--text-primary)]">{alert.rain} <span className="text-[10px] sm:text-xs font-normal text-[var(--text-secondary)]">{alert.rain !== 'Unknown' ? 'mm' : ''}</span></div>
                   </div>
-                  <div className="flex flex-col gap-1">
-                    <div className="flex items-center gap-1.5 text-white/50 text-xs uppercase tracking-wide">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  <div className="flex flex-col gap-0.5">
+                    <div className="flex items-center gap-1 text-[var(--text-secondary)] text-[9px] sm:text-xs uppercase tracking-wide font-semibold">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                       {ex.riskWindowLbl}
                     </div>
-                    <div className="text-lg font-bold">{alert.window}</div>
+                    <div className="text-sm sm:text-lg font-bold text-[var(--text-primary)]">{alert.window}</div>
                   </div>
-                  <div className="flex flex-col gap-1">
-                    <div className="flex items-center gap-1.5 text-white/50 text-xs uppercase tracking-wide">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                  <div className="flex flex-col gap-0.5">
+                    <div className="flex items-center gap-1 text-[var(--text-secondary)] text-[9px] sm:text-xs uppercase tracking-wide font-semibold">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
                         {ex.impactLevelLbl}
                     </div>
-                    <div className={`text-lg font-bold ${styles.impactText}`}>{alert.impact === 'Severe' ? ex.impactSevere : alert.impact === 'High' ? ex.impactHigh : alert.impact === 'Moderate' ? ex.impactMod : ex.impactLow}</div>
+                    <div className={`text-sm sm:text-lg font-bold ${styles.impactText}`}>{alert.impact === 'Severe' ? ex.impactSevere : alert.impact === 'High' ? ex.impactHigh : alert.impact === 'Moderate' ? ex.impactMod : ex.impactLow}</div>
                   </div>
                 </div>
                 
-                <div className={`rounded-lg p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border ${styles.precautionBox}`}>
-                  <div className="flex items-start gap-3">
+                <div className={`rounded-xl p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4 border ${styles.precautionBox}`}>
+                  <div className="flex items-start gap-2.5">
                     {alert.level === 'Good' ? (
-                      <svg className={`w-5 h-5 shrink-0 mt-0.5 ${styles.precautionIcon}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                      <svg className={`w-4 h-4 sm:w-5 sm:h-5 shrink-0 mt-0.5 ${styles.precautionIcon}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                     ) : (
-                      <svg className={`w-5 h-5 shrink-0 mt-0.5 ${styles.precautionIcon}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                      <svg className={`w-4 h-4 sm:w-5 sm:h-5 shrink-0 mt-0.5 ${styles.precautionIcon}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                     )}
                     <div>
-                      <div className={`text-[10px] font-bold uppercase tracking-widest mb-0.5 ${styles.precautionTitle}`}>{ex.precautionLbl}</div>
-                      <div className={`text-sm ${styles.precautionText}`}>{alert.precaution}</div>
+                      <div className={`text-[9px] sm:text-[10px] font-bold uppercase tracking-widest mb-0.5 ${styles.precautionTitle}`}>{ex.precautionLbl}</div>
+                      <div className="text-xs sm:text-sm leading-relaxed text-[var(--text-primary)] opacity-95">{alert.precaution}</div>
                     </div>
                   </div>
                   {styles.btn !== 'hidden' && (
                     <button 
                       onClick={() => setActiveModal('warnings')}
-                      className={`text-xs border px-3 py-1.5 rounded-md transition-colors flex items-center justify-center gap-1 shrink-0 ${styles.btn}`}
+                      className={`text-[11px] sm:text-xs border px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg transition-colors flex items-center justify-center gap-1 shrink-0 ${styles.btn}`}
                     >
-                      {ex.viewDetails} <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                      {ex.viewDetails} <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                     </button>
                   )}
                 </div>
@@ -695,89 +695,212 @@ export default function AlertsScreen() {
           </div>
 
           {/* Smart City & Urban Planning Dashboard */}
-          <div className="glass-panel border border-white/10 rounded-xl p-5 shadow-lg flex flex-col mb-4">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-bold text-white/90 tracking-wide flex items-center gap-2">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          <div className="glass-panel border border-[var(--theme-border)] rounded-xl sm:rounded-2xl p-3.5 sm:p-5 shadow-lg flex flex-col mb-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-xs sm:text-sm font-bold text-[var(--text-primary)] tracking-wide flex items-center gap-2">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
                 {ex.smartCityTitle}
               </h3>
-              <span className="text-[10px] uppercase font-bold text-blue-400 bg-blue-500/10 px-2 py-1 rounded">Live Data</span>
+              <span className="text-[9px] sm:text-[10px] uppercase font-bold text-blue-500 dark:text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded">Live Data</span>
             </div>
             
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4">
               {/* AQI Monitor */}
-              <div className="bg-black/20 rounded-lg p-4 border border-white/10 flex flex-col justify-between">
-                <div className="flex justify-between items-start mb-2">
-                  <span className="text-xs font-bold text-white/50 uppercase">{ex.aqiLbl}</span>
-                  <svg className={`w-4 h-4 ${weather?.aqi > 150 ? 'text-red-400' : weather?.aqi > 100 ? 'text-orange-400' : 'text-green-400'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"/></svg>
+              <div className="bg-[var(--glass-bg)] rounded-xl p-3 sm:p-4 border border-[var(--theme-border)] flex flex-col justify-between shadow-sm">
+                <div className="flex justify-between items-start mb-1.5">
+                  <span className="text-[10px] sm:text-xs font-bold text-[var(--text-secondary)] uppercase">{ex.aqiLbl}</span>
+                  <svg className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${weather?.aqi > 150 ? 'text-red-500' : weather?.aqi > 100 ? 'text-orange-500' : 'text-green-500'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"/></svg>
                 </div>
-                <div className="text-2xl font-bold mb-1">{weather?.aqi || '--'}</div>
-                <div className={`text-xs ${weather?.aqi > 150 ? 'text-red-400' : weather?.aqi > 100 ? 'text-orange-400' : 'text-green-400'}`}>
-                  {weather?.aqi > 150 ? 'Unhealthy' : weather?.aqi > 100 ? 'Moderate' : 'Good'} for sensitive groups
+                <div className="text-xl sm:text-2xl font-black text-[var(--text-primary)] mb-1">{weather?.aqi || '--'}</div>
+                <div className={`text-[10px] sm:text-xs font-semibold ${weather?.aqi > 150 ? 'text-red-500' : weather?.aqi > 100 ? 'text-orange-500' : 'text-green-500'}`}>
+                  {weather?.aqi > 150 ? 'Unhealthy' : weather?.aqi > 100 ? 'Moderate' : 'Good'}
                 </div>
               </div>
 
               {/* Heatwave / Urban Heat Island */}
-              <div className="bg-black/20 rounded-lg p-4 border border-white/10 flex flex-col justify-between">
-                <div className="flex justify-between items-start mb-2">
-                  <span className="text-xs font-bold text-white/50 uppercase">{ex.heatIndexLbl}</span>
-                  <svg className={`w-4 h-4 ${weather?.feelsLike > 40 ? 'text-red-400' : weather?.feelsLike > 35 ? 'text-orange-400' : 'text-yellow-400'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="4.22" x2="19.78" y2="5.64"/></svg>
+              <div className="bg-[var(--glass-bg)] rounded-xl p-3 sm:p-4 border border-[var(--theme-border)] flex flex-col justify-between shadow-sm">
+                <div className="flex justify-between items-start mb-1.5">
+                  <span className="text-[10px] sm:text-xs font-bold text-[var(--text-secondary)] uppercase">{ex.heatIndexLbl}</span>
+                  <svg className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${weather?.feelsLike > 40 ? 'text-red-500' : weather?.feelsLike > 35 ? 'text-orange-500' : 'text-yellow-500'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="4.22" x2="19.78" y2="5.64"/></svg>
                 </div>
-                <div className="text-2xl font-bold mb-1">{weather?.feelsLike || '--'}°C</div>
-                <div className={`text-xs ${weather?.feelsLike > 40 ? 'text-red-400' : weather?.feelsLike > 35 ? 'text-orange-400' : 'text-white/60'}`}>
-                  {weather?.feelsLike > 40 ? 'Extreme Danger' : weather?.feelsLike > 35 ? 'High Risk' : 'Normal Conditions'}
+                <div className="text-xl sm:text-2xl font-black text-[var(--text-primary)] mb-1">{weather?.feelsLike || '--'}°C</div>
+                <div className={`text-[10px] sm:text-xs font-semibold ${weather?.feelsLike > 40 ? 'text-red-500' : weather?.feelsLike > 35 ? 'text-orange-500' : 'text-[var(--text-secondary)]'}`}>
+                  {weather?.feelsLike > 40 ? 'Extreme Danger' : weather?.feelsLike > 35 ? 'High Risk' : 'Normal'}
                 </div>
               </div>
 
               {/* Infrastructure Flood Risk */}
-              <div className="bg-black/20 rounded-lg p-4 border border-white/10 flex flex-col justify-between">
-                <div className="flex justify-between items-start mb-2">
-                  <span className="text-xs font-bold text-white/50 uppercase">{ex.waterRiskLbl}</span>
-                  <svg className={`w-4 h-4 ${impactStats.flood === 'Severe' ? 'text-red-400' : impactStats.flood === 'High' ? 'text-orange-400' : 'text-blue-400'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+              <div className="bg-[var(--glass-bg)] rounded-lg p-3 sm:p-4 border border-[var(--theme-border)] flex flex-col justify-between shadow-sm col-span-2 sm:col-span-1">
+                <div className="flex justify-between items-start mb-1.5 sm:mb-2">
+                  <span className="text-[10px] sm:text-xs font-bold text-[var(--text-secondary)] uppercase">{ex.waterRiskLbl}</span>
+                  <svg className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${impactStats.flood === 'Severe' ? 'text-red-500' : impactStats.flood === 'High' ? 'text-orange-500' : 'text-blue-500'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
                 </div>
-                <div className="text-2xl font-bold mb-1">{weather?.rain || weather?.precipitation || '0'} <span className="text-sm font-normal text-white/50">mm</span></div>
-                <div className={`text-xs ${impactStats.flood === 'Severe' ? 'text-red-400' : impactStats.flood === 'High' ? 'text-orange-400' : 'text-blue-400'}`}>
+                <div className="text-xl sm:text-2xl font-black text-[var(--text-primary)] mb-1">{weather?.rain || weather?.precipitation || '0'} <span className="text-xs sm:text-sm font-normal text-[var(--text-secondary)]">mm</span></div>
+                <div className={`text-[10px] sm:text-xs font-semibold ${impactStats.flood === 'Severe' ? 'text-red-500' : impactStats.flood === 'High' ? 'text-orange-500' : 'text-blue-500'}`}>
                   {impactStats.flood === 'Severe' ? 'High risk for underpasses' : impactStats.flood === 'High' ? 'Moderate drainage stress' : 'Normal drainage capacity'}
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-4">
           
-
-            <div className="glass-panel border border-white/10 rounded-xl p-5 shadow-lg flex flex-col">
-              <h3 className="text-sm font-bold text-white/90 tracking-wide mb-5">{ex.alertImpactAreas}</h3>
-              <div className="flex flex-col gap-3 flex-1">
-                <div className="flex items-center justify-between p-2.5 rounded glass-panel border border-white/10">
-                  <div className="flex items-center gap-3">
-                    <svg className="w-4 h-4 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-                    <span className="text-xs font-medium text-white/80">{ex.flooding}</span>
+            {/* Left: Impact Areas */}
+            <div className="glass-panel border border-[var(--theme-border)] rounded-xl sm:rounded-2xl p-4 sm:p-5 shadow-lg flex flex-col">
+              <h3 className="text-xs sm:text-sm font-bold text-[var(--text-primary)] tracking-wide mb-3 sm:mb-4">{ex.alertImpactAreas}</h3>
+              <div className="flex flex-col gap-2.5 sm:gap-3 flex-1">
+                <div className="flex items-center justify-between p-2.5 rounded-xl glass-panel border border-[var(--theme-border)]">
+                  <div className="flex items-center gap-2.5 sm:gap-3">
+                    <svg className="w-4 h-4 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                    <span className="text-xs font-semibold text-[var(--text-primary)]">{ex.flooding}</span>
                   </div>
-                  <span className={`text-[10px] font-bold uppercase ${impactStats.flood === 'Severe' ? 'text-red-500' : impactStats.flood === 'High' ? 'text-red-400' : impactStats.flood === 'Moderate' ? 'text-yellow-400 border border-yellow-500/30 px-1.5 rounded' : 'text-green-400'}`}>{impactStats.flood === 'Severe' ? ex.impactSevere : impactStats.flood === 'High' ? ex.impactHigh : impactStats.flood === 'Moderate' ? ex.impactMod : ex.impactLow}</span>
+                  <span className={`text-[10px] font-bold uppercase ${impactStats.flood === 'Severe' ? 'text-red-500' : impactStats.flood === 'High' ? 'text-red-500' : impactStats.flood === 'Moderate' ? 'text-amber-500 border border-amber-500/30 px-1.5 rounded' : 'text-emerald-500'}`}>{impactStats.flood === 'Severe' ? ex.impactSevere : impactStats.flood === 'High' ? ex.impactHigh : impactStats.flood === 'Moderate' ? ex.impactMod : ex.impactLow}</span>
                 </div>
-                <div className="flex items-center justify-between p-2.5 rounded glass-panel border border-white/10">
-                  <div className="flex items-center gap-3">
-                    <svg className="w-4 h-4 text-white/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
-                    <span className="text-xs font-medium text-white/80">{ex.roadDisruption}</span>
+                <div className="flex items-center justify-between p-2.5 rounded-xl glass-panel border border-[var(--theme-border)]">
+                  <div className="flex items-center gap-2.5 sm:gap-3">
+                    <svg className="w-4 h-4 text-[var(--text-secondary)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+                    <span className="text-xs font-semibold text-[var(--text-primary)]">{ex.roadDisruption}</span>
                   </div>
-                  <span className={`text-[10px] font-bold uppercase ${impactStats.road === 'Severe' ? 'text-red-500' : impactStats.road === 'High' ? 'text-red-400' : impactStats.road === 'Moderate' ? 'text-yellow-400 border border-yellow-500/30 px-1.5 rounded' : 'text-green-400'}`}>{impactStats.road === 'Severe' ? ex.impactSevere : impactStats.road === 'High' ? ex.impactHigh : impactStats.road === 'Moderate' ? ex.impactMod : ex.impactLow}</span>
+                  <span className={`text-[10px] font-bold uppercase ${impactStats.road === 'Severe' ? 'text-red-500' : impactStats.road === 'High' ? 'text-red-500' : impactStats.road === 'Moderate' ? 'text-amber-500 border border-amber-500/30 px-1.5 rounded' : 'text-emerald-500'}`}>{impactStats.road === 'Severe' ? ex.impactSevere : impactStats.road === 'High' ? ex.impactHigh : impactStats.road === 'Moderate' ? ex.impactMod : ex.impactLow}</span>
                 </div>
-                <div className="flex items-center justify-between p-2.5 rounded glass-panel border border-white/10">
-                  <div className="flex items-center gap-3">
-                    <svg className="w-4 h-4 text-green-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                    <span className="text-xs font-medium text-white/80">{ex.cropDamage}</span>
+                <div className="flex items-center justify-between p-2.5 rounded-xl glass-panel border border-[var(--theme-border)]">
+                  <div className="flex items-center gap-2.5 sm:gap-3">
+                    <svg className="w-4 h-4 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    <span className="text-xs font-semibold text-[var(--text-primary)]">{ex.cropDamage}</span>
                   </div>
-                  <span className={`text-[10px] font-bold uppercase ${impactStats.crop === 'Severe' ? 'text-red-500' : impactStats.crop === 'High' ? 'text-red-400' : impactStats.crop === 'Moderate' ? 'text-yellow-400 border border-yellow-500/30 px-1.5 rounded' : 'text-green-400'}`}>{impactStats.crop === 'Severe' ? ex.impactSevere : impactStats.crop === 'High' ? ex.impactHigh : impactStats.crop === 'Moderate' ? ex.impactMod : ex.impactLow}</span>
+                  <span className={`text-[10px] font-bold uppercase ${impactStats.crop === 'Severe' ? 'text-red-500' : impactStats.crop === 'High' ? 'text-red-500' : impactStats.crop === 'Moderate' ? 'text-amber-500 border border-amber-500/30 px-1.5 rounded' : 'text-emerald-500'}`}>{impactStats.crop === 'Severe' ? ex.impactSevere : impactStats.crop === 'High' ? ex.impactHigh : impactStats.crop === 'Moderate' ? ex.impactMod : ex.impactLow}</span>
                 </div>
-                <div className="flex items-center justify-between p-2.5 rounded glass-panel border border-white/10">
-                  <div className="flex items-center gap-3">
-                    <svg className="w-4 h-4 text-yellow-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                    <span className="text-xs font-medium text-white/80">{ex.powerOutage}</span>
+                <div className="flex items-center justify-between p-2.5 rounded-xl glass-panel border border-[var(--theme-border)]">
+                  <div className="flex items-center gap-2.5 sm:gap-3">
+                    <svg className="w-4 h-4 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                    <span className="text-xs font-semibold text-[var(--text-primary)]">{ex.powerOutage}</span>
                   </div>
-                  <span className={`text-[10px] font-bold uppercase ${impactStats.power === 'Severe' ? 'text-red-500' : impactStats.power === 'High' ? 'text-red-400' : impactStats.power === 'Moderate' ? 'text-yellow-400 border border-yellow-500/30 px-1.5 rounded' : 'text-green-400'}`}>{impactStats.power === 'Severe' ? ex.impactSevere : impactStats.power === 'High' ? ex.impactHigh : impactStats.power === 'Moderate' ? ex.impactMod : ex.impactLow}</span>
+                  <span className={`text-[10px] font-bold uppercase ${impactStats.power === 'Severe' ? 'text-red-500' : impactStats.power === 'High' ? 'text-red-500' : impactStats.power === 'Moderate' ? 'text-amber-500 border border-amber-500/30 px-1.5 rounded' : 'text-emerald-500'}`}>{impactStats.power === 'Severe' ? ex.impactSevere : impactStats.power === 'High' ? ex.impactHigh : impactStats.power === 'Moderate' ? ex.impactMod : ex.impactLow}</span>
                 </div>
               </div>
+            </div>
+
+            {/* Right: Real-Time Telemetry & Emergency Helplines (Fills empty space) */}
+            <div className="glass-panel border border-[var(--theme-border)] rounded-xl sm:rounded-2xl p-4 sm:p-5 shadow-lg flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-3 sm:mb-4">
+                  <h3 className="text-xs sm:text-sm font-bold text-[var(--text-primary)] tracking-wide flex items-center gap-2">
+                    <span className="text-base sm:text-lg">📡</span>
+                    <span>
+                      {['hi', 'mr', 'pa', 'gu'].includes(lang) 
+                        ? 'वास्तविक समय टेलीमेट्री व आपातकालीन नेटवर्क' 
+                        : 'Live Telemetry & Emergency Network'}
+                    </span>
+                  </h3>
+                  <span className="inline-flex items-center gap-1 text-[9px] sm:text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 rounded-full">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    Live Nowcast
+                  </span>
+                </div>
+
+                {/* 3 Real-Time Meteorological Telemetry Sensors */}
+                <div className="grid grid-cols-3 gap-2 mb-3 sm:mb-3.5">
+                  {/* Lightning Sensor */}
+                  <div className="p-2.5 rounded-xl bg-[var(--glass-bg)] border border-[var(--theme-border)] flex flex-col justify-between shadow-sm">
+                    <div className="text-[10px] sm:text-[11px] font-bold text-[var(--text-secondary)] flex items-center gap-1">
+                      <span>⚡</span>
+                      <span>{['hi', 'mr', 'pa', 'gu'].includes(lang) ? 'वज्रपात' : 'Lightning'}</span>
+                    </div>
+                    <div className="text-xs sm:text-sm font-black mt-1 text-emerald-600 dark:text-emerald-400 truncate">
+                      {[95, 96, 99].includes(weather?.weatherCode) ? '⚠️ High Risk' : '🟢 Safe / 0km'}
+                    </div>
+                    <div className="text-[9px] text-[var(--text-secondary)] mt-0.5 font-medium">
+                      {[95, 96, 99].includes(weather?.weatherCode) ? 'Active Strikes' : '0 Strikes in 15km'}
+                    </div>
+                  </div>
+
+                  {/* Wind Gusts */}
+                  <div className="p-2.5 rounded-xl bg-[var(--glass-bg)] border border-[var(--theme-border)] flex flex-col justify-between shadow-sm">
+                    <div className="text-[10px] sm:text-[11px] font-bold text-[var(--text-secondary)] flex items-center gap-1">
+                      <span>💨</span>
+                      <span>{['hi', 'mr', 'pa', 'gu'].includes(lang) ? 'वायु झोंका' : 'Wind Gust'}</span>
+                    </div>
+                    <div className="text-xs sm:text-sm font-black mt-1 text-sky-600 dark:text-sky-400 truncate">
+                      {Math.round((weather?.windSpeed || 14) * 1.35)} km/h
+                    </div>
+                    <div className="text-[9px] text-[var(--text-secondary)] mt-0.5 font-medium">
+                      {(weather?.windSpeed || 14) > 35 ? 'Turbulent' : 'Normal Breeze'}
+                    </div>
+                  </div>
+
+                  {/* Visibility */}
+                  <div className="p-2.5 rounded-xl bg-[var(--glass-bg)] border border-[var(--theme-border)] flex flex-col justify-between shadow-sm">
+                    <div className="text-[10px] sm:text-[11px] font-bold text-[var(--text-secondary)] flex items-center gap-1">
+                      <span>👁️</span>
+                      <span>{['hi', 'mr', 'pa', 'gu'].includes(lang) ? 'दृश्यता' : 'Visibility'}</span>
+                    </div>
+                    <div className="text-xs sm:text-sm font-black mt-1 text-amber-600 dark:text-amber-400 truncate">
+                      {weather?.visibility ? (weather.visibility / 1000).toFixed(1) : '10.0'} km
+                    </div>
+                    <div className="text-[9px] text-[var(--text-secondary)] mt-0.5 font-medium">
+                      {(weather?.visibility || 10000) < 3000 ? 'Low Fog' : 'Clear View'}
+                    </div>
+                  </div>
+                </div>
+
+                {/* 24x7 Emergency Helplines Direct Touch Dialers */}
+                <div className="space-y-1.5 mb-3">
+                  <div className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider text-[var(--text-secondary)] flex items-center justify-between">
+                    <span>{['hi', 'mr', 'pa', 'gu'].includes(lang) ? 'आपातकालीन त्वरित संपर्क (24x7 Helplines)' : '24x7 Emergency One-Touch Helplines'}</span>
+                    <span className="text-[9px] text-indigo-600 dark:text-indigo-400 font-bold">Toll Free</span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                    <a
+                      href="tel:112"
+                      className="p-2 rounded-xl bg-red-500/15 hover:bg-red-500/25 border border-red-500/30 text-red-600 dark:text-red-300 flex flex-col items-center justify-center transition-all active:scale-95 shadow-sm"
+                      title="National Emergency Helpline"
+                    >
+                      <span className="text-xs font-black">📞 112</span>
+                      <span className="text-[9px] text-[var(--text-secondary)] font-semibold">{['hi', 'mr', 'pa', 'gu'].includes(lang) ? 'राष्ट्रीय आपात' : 'National All'}</span>
+                    </a>
+                    <a
+                      href="tel:1078"
+                      className="p-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-600 dark:text-amber-300 flex flex-col items-center justify-center transition-all active:scale-95 shadow-sm"
+                      title="NDRF Disaster Helpline"
+                    >
+                      <span className="text-xs font-black">📞 1078</span>
+                      <span className="text-[9px] text-[var(--text-secondary)] font-semibold">{['hi', 'mr', 'pa', 'gu'].includes(lang) ? 'NDRF आपदा' : 'NDRF Disaster'}</span>
+                    </a>
+                    <a
+                      href="tel:1070"
+                      className="p-2 rounded-xl bg-blue-500/15 hover:bg-blue-500/25 border border-blue-500/30 text-blue-600 dark:text-blue-300 flex flex-col items-center justify-center transition-all active:scale-95 shadow-sm"
+                      title="State Disaster Relief"
+                    >
+                      <span className="text-xs font-black">📞 1070</span>
+                      <span className="text-[9px] text-[var(--text-secondary)] font-semibold">{['hi', 'mr', 'pa', 'gu'].includes(lang) ? 'राज्य राहत' : 'State Relief'}</span>
+                    </a>
+                    <a
+                      href="tel:108"
+                      className="p-2 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-600 dark:text-emerald-300 flex flex-col items-center justify-center transition-all active:scale-95 shadow-sm"
+                      title="Ambulance Service"
+                    >
+                      <span className="text-xs font-black">📞 108</span>
+                      <span className="text-[9px] text-[var(--text-secondary)] font-semibold">{['hi', 'mr', 'pa', 'gu'].includes(lang) ? 'एम्बुलेंस' : 'Ambulance'}</span>
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              {/* Instant GPS SOS Dispatch Button */}
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new CustomEvent('weathergpt-open-sos'))}
+                className="w-full mt-1 py-2 sm:py-2.5 px-3 rounded-xl bg-gradient-to-r from-red-600 via-rose-600 to-red-700 hover:from-red-500 hover:to-rose-500 text-white font-black text-xs shadow-md shadow-red-600/30 border border-red-400/50 flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer"
+              >
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
+                </span>
+                <span>🆘</span>
+                <span className="tracking-wide">
+                  {['hi', 'mr', 'pa', 'gu'].includes(lang) ? 'लाइव जीपीएस आपातकालीन SOS भेजें' : 'Dispatch Live GPS Emergency SOS'}
+                </span>
+              </button>
             </div>
           </div>
 

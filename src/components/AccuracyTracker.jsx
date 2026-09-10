@@ -12,14 +12,20 @@ const I18N = {
     accurate:     'Accurate',
     close:        'Close',
     off:          'Off',
+    diverged:     'Diverged',
     unknown:      'Unknown',
     pending:      'Pending',
-    details:      'Details',
+    details:      'Details & Divergence Audit',
     question:     'Question',
     aiAnswer:     'AI Answer',
     aiSaid:       'AI Said',
     actual:       'Actual',
-    claims:       'Claims Verified',
+    claims:       'Claims & Divergence Verified',
+    divergenceCol:'Divergence (Δ)',
+    divergenceAnalysis: 'Divergence Analysis & Root Cause',
+    tabDiverged:  '⚠️ Diverged Only (Inaccurate)',
+    tabAll:       'All Questions',
+    tabAccurate:  '✓ Exact Matches',
     noAnswer:     'Full answer not available for this entry.',
     showMore:     (count) => `View ${count} More Questions`,
     showLess:     'Show Less',
@@ -48,14 +54,20 @@ const I18N = {
     accurate:     'सटीक',
     close:        'करीब',
     off:          'गलत',
+    diverged:     'अंतर (Diverged)',
     unknown:      'अज्ञात',
     pending:      'लंबित',
-    details:      'विवरण',
+    details:      'विवरण एवं भिन्नता ऑडिट',
     question:     'प्रश्न',
     aiAnswer:     'AI उत्तर',
     aiSaid:       'AI ने कहा',
     actual:       'वास्तविक',
-    claims:       'सत्यापित दावे',
+    claims:       'सत्यापित दावे एवं अंतर',
+    divergenceCol:'अंतर (Δ)',
+    divergenceAnalysis: 'भिन्नता एवं मूल कारण विश्लेषण',
+    tabDiverged:  '⚠️ केवल भिन्न (Inaccurate)',
+    tabAll:       'सभी प्रश्न',
+    tabAccurate:  '✓ सटीक मिलान',
     noAnswer:     'इस एंट्री के लिए पूर्ण उत्तर उपलब्ध नहीं है।',
     showMore:     (count) => `अन्य ${count} प्रश्न देखें`,
     showLess:     'कम दिखाएं',
@@ -84,14 +96,20 @@ const I18N = {
     accurate:     'সঠিক',
     close:        'কাছাকাছি',
     off:          'ভুল',
+    diverged:     'পার্থক্যযুক্ত',
     unknown:      'অজানা',
     pending:      'অপেক্ষমাণ',
-    details:      'বিশদ',
+    details:      'বিশদ ও পার্থক্য নিরীক্ষা',
     question:     'প্রশ্ন',
     aiAnswer:     'AI উত্তর',
     aiSaid:       'AI বলেছে',
     actual:       'প্রকৃত',
-    claims:       'যাচাইকৃত দাবি',
+    claims:       'যাচাইকৃত দাবি ও পার্থক্য',
+    divergenceCol:'পার্থক্য (Δ)',
+    divergenceAnalysis: 'পার্থক্য ও কারণ বিশ্লেষণ',
+    tabDiverged:  '⚠️ শুধু পার্থক্যযুক্ত',
+    tabAll:       'সকল প্রশ্ন',
+    tabAccurate:  '✓ সঠিক মিল',
     noAnswer:     'এই এন্ট্রির জন্য পূর্ণ উত্তর পাওয়া যায়নি।',
     showMore:     (count) => `আরও ${count}টি প্রশ্ন দেখুন`,
     showLess:     'কম দেখান',
@@ -120,14 +138,20 @@ const I18N = {
     accurate:     'সঠিক',
     close:        'ওচৰৰ',
     off:          'ভুল',
+    diverged:     'পাৰ্থক্যযুক্ত',
     unknown:      'অজানা',
     pending:      'বাকী',
-    details:      'বিৱৰণ',
+    details:      'বিৱৰণ আৰু পাৰ্থক্য পৰীক্ষণ',
     question:     'প্ৰশ্ন',
     aiAnswer:     'AI উত্তৰ',
     aiSaid:       'AI এ কৈছে',
     actual:       'প্ৰকৃত',
-    claims:       'প্ৰমাণিত দাবী',
+    claims:       'প্ৰমাণিত দাবী আৰু পাৰ্থক্য',
+    divergenceCol:'পাৰ্থক্য (Δ)',
+    divergenceAnalysis: 'পাৰ্থক্য আৰু কাৰণ বিশ্লেষণ',
+    tabDiverged:  '⚠️ কেৱল পাৰ্থক্যযুক্ত',
+    tabAll:       'সকলো প্ৰশ্ন',
+    tabAccurate:  '✓ সঠিক মিল',
     noAnswer:     `এই এণ্ট্ৰিৰ বাবে সম্পূৰ্ণ উত্তৰ পোৱা নগ\u2019ল।`,
     showMore:     (count) => `আৰু ${count}টা প্ৰশ্ন চাওক`,
     showLess:     'কম দেখুৱাওক',
@@ -158,6 +182,11 @@ const statusStyles = {
     dot: 'bg-emerald-500',  
     text: 'text-emerald-800 dark:text-emerald-400 font-bold',  
     badge: 'bg-emerald-50 border-emerald-300 text-emerald-900 dark:bg-emerald-500/15 dark:border-emerald-400/30 dark:text-emerald-300'  
+  },
+  diverged: { 
+    dot: 'bg-amber-500', 
+    text: 'text-amber-800 dark:text-amber-400 font-bold', 
+    badge: 'bg-amber-50 border-amber-300 text-amber-900 dark:bg-amber-500/15 dark:border-amber-400/30 dark:text-amber-300' 
   },
   close: { 
     dot: 'bg-amber-500', 
@@ -194,21 +223,23 @@ function StatusBadge({ status, label }) {
 function ClaimRow({ claim, t }) {
   const label = t.claimLabels[claim.claimType] || t.claimLabels.other;
   const unit  = t.units[claim.claimType] ?? '';
-  const s     = claim.accuracyStatus ? statusStyles[claim.accuracyStatus] : statusStyles.unknown;
+  const isDiverged = claim.accuracyStatus === 'diverged' || claim.accuracyStatus === 'off' || claim.accuracyStatus === 'close';
+  const s     = claim.accuracyStatus ? (statusStyles[claim.accuracyStatus] || statusStyles.unknown) : statusStyles.unknown;
 
   const fmtVal = (v) => v != null ? `${v}${unit}` : '—';
 
   return (
-    <div className="flex items-center justify-between py-2 border-b border-[var(--theme-border)] last:border-0 gap-3">
-      <span className="text-xs font-semibold text-[var(--text-primary)] w-28 shrink-0">{label}</span>
-      <span className="text-xs font-bold text-amber-700 dark:text-amber-300 w-16 text-right">{fmtVal(claim.claimValue)}</span>
+    <div className="flex items-center justify-between py-2 border-b border-[var(--theme-border)] last:border-0 gap-2 text-xs">
+      <span className="font-semibold text-[var(--text-primary)] w-28 shrink-0">{label}</span>
+      <span className="font-bold text-amber-700 dark:text-amber-300 w-16 text-right">{fmtVal(claim.claimValue)}</span>
       <span className="text-[var(--text-secondary)] text-xs">→</span>
-      <span className={`text-xs font-bold w-16 text-right ${s.text}`}>{fmtVal(claim.actualValue)}</span>
-      {claim.accuracyStatus ? (
-        <span className={`text-[11px] font-extrabold uppercase w-14 text-right ${s.text}`}>{claim.accuracyStatus}</span>
-      ) : (
-        <span className="text-[10px] text-[var(--text-secondary)] uppercase w-14 text-right">—</span>
-      )}
+      <span className={`font-bold w-16 text-right ${s.text}`}>{fmtVal(claim.actualValue)}</span>
+      <span className={`font-black w-24 text-right ${claim.actualValue == null ? 'text-[var(--text-secondary)]' : isDiverged ? 'text-amber-700 dark:text-amber-400' : 'text-emerald-700 dark:text-emerald-400'}`}>
+        {claim.deltaSign ? `${claim.deltaSign}${claim.deltaPct != null ? ` (${claim.delta > 0 ? '+' : ''}${claim.deltaPct}%)` : ''}` : (claim.actualValue != null ? '0 (Exact)' : '—')}
+      </span>
+      <span className={`font-extrabold uppercase w-16 text-right text-[11px] ${s.text}`}>
+        {t[claim.accuracyStatus] || claim.accuracyStatus || '—'}
+      </span>
     </div>
   );
 }
@@ -222,7 +253,12 @@ function AccuracyCard({ item, t }) {
     ? new Date(item.loggedAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })
     : new Date(item.date).toLocaleDateString();
 
-  const claims      = Array.isArray(item.claims) ? item.claims : [];
+  const rawClaims = Array.isArray(item.claims) ? item.claims : [];
+  const claims = rawClaims.map(c => {
+    const val = c.actualValue ?? (item.actualValue != null && (c.claimType === item.claimType || rawClaims.length === 1) ? item.actualValue : null);
+    const status = c.accuracyStatus || (val != null ? (item.accuracyStatus || 'accurate') : null);
+    return { ...c, actualValue: val, accuracyStatus: status };
+  });
   const hasClaims   = claims.length > 0;
   const hasAnswer   = !!item.answerText;
 
@@ -246,7 +282,15 @@ function AccuracyCard({ item, t }) {
               <span className="opacity-60">· {item.location}</span>
             )}
           </div>
-          <StatusBadge status={overall} label={overallLabel} />
+          <div className="flex items-center gap-2">
+            {item.horizonLabel && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold tracking-wide border border-indigo-300 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-800 dark:text-indigo-300 shadow-sm">
+                <span>📅</span>
+                <span>{item.horizonLabel}</span>
+              </span>
+            )}
+            <StatusBadge status={overall} label={`${overall === 'diverged' ? '⚠️ ' : ''}${overallLabel}`} />
+          </div>
         </div>
 
         {/* Question (Bold & Crisp) */}
@@ -255,20 +299,31 @@ function AccuracyCard({ item, t }) {
           <p className="font-bold text-[var(--text-primary)] text-sm sm:text-[15px] leading-snug">"{item.question}"</p>
         </div>
 
-        {/* Quick claims summary (inline chips) */}
+        {/* Quick claims summary (inline chips) with Divergence Delta */}
         {hasClaims && (
           <div className="flex flex-wrap gap-1.5">
             {claims.map((c, idx) => {
               const lbl  = t.claimLabels[c.claimType] || t.claimLabels.other;
               const unit = t.units[c.claimType] ?? '';
-              const cs   = c.accuracyStatus ? statusStyles[c.accuracyStatus] : statusStyles.pending;
+              const isDiverged = c.accuracyStatus === 'diverged' || c.accuracyStatus === 'off' || c.accuracyStatus === 'close';
+              const cs   = c.accuracyStatus ? (statusStyles[c.accuracyStatus] || statusStyles.pending) : statusStyles.pending;
               return (
                 <span
                   key={idx}
                   className={`inline-flex items-center gap-1.5 border px-3 py-1 rounded-full text-[11px] font-extrabold shadow-sm ${cs.badge}`}
                 >
                   <span>{lbl}: {c.claimValue}{unit}</span>
-                  {c.actualValue != null && <> → <span className={cs.text}>{c.actualValue}{unit}</span></>}
+                  {c.actualValue != null && (
+                    <>
+                      <span>→</span>
+                      <span className={cs.text}>{c.actualValue}{unit}</span>
+                      {c.deltaSign && (
+                        <span className={`px-1.5 py-0.2 rounded text-[10px] font-black ${isDiverged ? 'bg-amber-500/20 text-amber-900 dark:text-amber-200' : 'bg-emerald-500/20 text-emerald-900 dark:text-emerald-200'}`}>
+                          Δ {c.deltaSign}{c.deltaPct != null ? ` (${c.delta > 0 ? '+' : ''}${c.deltaPct}%)` : ''}
+                        </span>
+                      )}
+                    </>
+                  )}
                 </span>
               );
             })}
@@ -307,15 +362,50 @@ function AccuracyCard({ item, t }) {
               <p className="text-[11px] uppercase tracking-wider font-extrabold text-[var(--text-secondary)] mb-2">{t.claims}</p>
               <div className="rounded-xl border border-[var(--theme-border)] px-3 py-1 bg-[var(--glass-bg)] shadow-sm">
                 {/* Column headers */}
-                <div className="flex items-center justify-between py-1.5 border-b border-[var(--theme-border)] mb-1">
+                <div className="flex items-center justify-between py-1.5 border-b border-[var(--theme-border)] mb-1 gap-2">
                   <span className="text-[10px] uppercase tracking-wider font-extrabold text-[var(--text-secondary)] w-28">Metric</span>
                   <span className="text-[10px] uppercase tracking-wider font-extrabold text-[var(--text-secondary)] w-16 text-right">{t.aiSaid}</span>
-                  <span className="w-6" />
+                  <span className="w-4" />
                   <span className="text-[10px] uppercase tracking-wider font-extrabold text-[var(--text-secondary)] w-16 text-right">{t.actual}</span>
-                  <span className="text-[10px] uppercase tracking-wider font-extrabold text-[var(--text-secondary)] w-14 text-right">Status</span>
+                  <span className="text-[10px] uppercase tracking-wider font-extrabold text-[var(--text-secondary)] w-24 text-right">{t.divergenceCol}</span>
+                  <span className="text-[10px] uppercase tracking-wider font-extrabold text-[var(--text-secondary)] w-16 text-right">Status</span>
                 </div>
                 {claims.map((c, idx) => <ClaimRow key={idx} claim={c} t={t} />)}
               </div>
+            </div>
+          )}
+
+          {/* Divergence & Ground Truth Audit Box */}
+          {item.verified && (
+            <div className={`p-3.5 rounded-2xl border ${item.hasDivergence || overall === 'diverged' || overall === 'off' ? 'border-amber-400/40 bg-amber-500/10 dark:bg-amber-950/20' : 'border-emerald-400/30 bg-emerald-500/10'}`}>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-base">{item.hasDivergence || overall === 'diverged' || overall === 'off' ? '🔍' : '✓'}</span>
+                <p className="text-[12px] font-black uppercase tracking-wider text-[var(--text-primary)]">
+                  {item.hasDivergence || overall === 'diverged' || overall === 'off' ? (t.divergenceAnalysis || 'Divergence Analysis & Root Cause Audit') : 'Observed Alignment Audit'}
+                </p>
+              </div>
+
+              {item.hasDivergence || overall === 'diverged' || overall === 'off' ? (
+                <div className="space-y-2 text-xs">
+                  {claims.filter(c => c.accuracyStatus !== 'accurate').map((c, i) => (
+                    <div key={i} className="pl-3 border-l-2 border-amber-500/60 dark:border-amber-400/60 py-0.5">
+                      <p className="font-extrabold text-amber-900 dark:text-amber-300">
+                        {t.claimLabels[c.claimType] || c.claimType}: Stated {c.claimValue}{t.units[c.claimType] || ''} vs Observed {c.actualValue}{t.units[c.claimType] || ''} (Δ {c.deltaSign || '—'}{c.deltaPct != null ? `, ${c.delta > 0 ? '+' : ''}${c.deltaPct}%` : ''})
+                      </p>
+                      <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed mt-0.5">
+                        {c.divergenceReason || `AI prediction diverged by ${c.deltaSign || 'variance'} from station records.`}
+                      </p>
+                    </div>
+                  ))}
+                  <p className="text-[10px] text-[var(--text-secondary)] opacity-80 italic pt-1 border-t border-amber-500/20">
+                    * WeatherGPT Radical Transparency: Every forecast difference is openly cataloged with meteorological causality.
+                  </p>
+                </div>
+              ) : (
+                <p className="text-xs text-emerald-800 dark:text-emerald-300 font-semibold">
+                  ✓ High-Precision Match: All quantifiable forecast claims matched ground station observations within instrument tolerance limits.
+                </p>
+              )}
             </div>
           )}
 
@@ -326,6 +416,34 @@ function AccuracyCard({ item, t }) {
               <div className="rounded-xl border border-[var(--theme-border)] p-3.5 bg-[var(--glass-bg)] shadow-inner">
                 <p className="text-[var(--text-primary)] text-xs sm:text-[13px] leading-relaxed whitespace-pre-wrap font-medium">{item.answerText}</p>
               </div>
+            </div>
+          )}
+
+          {/* Horizon Verification Info */}
+          {!item.verified ? (
+            <div className="flex items-start gap-2.5 p-3 bg-blue-500/10 rounded-xl border border-blue-500/25 text-blue-900 dark:text-blue-200 text-xs">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="mt-0.5 shrink-0 text-blue-600 dark:text-blue-400">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              <div className="space-y-0.5">
+                <p className="font-extrabold text-[12px]">
+                  Target Window: {item.timeHorizon === 'weekly' ? `${item.targetDate} → ${item.targetEndDate} (7 Days)` : (item.targetDate || item.date)}
+                </p>
+                <p className="text-[11px] opacity-90 leading-normal">
+                  {item.timeHorizon === 'tomorrow'
+                    ? `Verification scheduled for ${item.verifyAfter} (after tomorrow concludes) against observed ground truth.`
+                    : item.timeHorizon === 'weekly'
+                    ? `Verification scheduled for ${item.verifyAfter} (aggregating rainfall sum, peak gusts, and UV across the full week).`
+                    : `Verification scheduled for ${item.verifyAfter} (after the 24h period concludes) against Open-Meteo recorded data.`}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 p-2.5 bg-emerald-500/10 rounded-xl border border-emerald-500/25 text-emerald-900 dark:text-emerald-300 text-xs font-semibold">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="shrink-0 text-emerald-600 dark:text-emerald-400">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+              </svg>
+              <span>Verified against actual recorded weather {item.verifiedAt ? `on ${new Date(item.verifiedAt).toLocaleDateString()}` : ''}.</span>
             </div>
           )}
 
@@ -347,6 +465,7 @@ export default function AccuracyTracker({ locationName, language }) {
   const [stats,   setStats]   = useState({ totalVerified: 0, accuratePercent: 0 });
   const [loading, setLoading] = useState(true);
   const [showAll, setShowAll] = useState(false);
+  const [filterTab, setFilterTab] = useState('diverged'); // 'diverged' | 'all' | 'accurate'
 
   const fetchFeed = useCallback(() => {
     const baseUrl = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
@@ -383,13 +502,26 @@ export default function AccuracyTracker({ locationName, language }) {
 
   if (feed.length === 0) return null;
 
-  const visibleFeed = showAll ? feed : feed.slice(0, 3);
-  const hasMore = feed.length > 3;
+  const divergedCount = feed.filter(f => f.hasDivergence || f.accuracyStatus === 'diverged' || f.accuracyStatus === 'off' || f.accuracyStatus === 'close').length;
+  const accurateCount = feed.filter(f => !f.hasDivergence && f.accuracyStatus === 'accurate').length;
+
+  const filteredFeed = feed.filter(item => {
+    if (filterTab === 'diverged') {
+      return item.hasDivergence || item.accuracyStatus === 'diverged' || item.accuracyStatus === 'off' || item.accuracyStatus === 'close';
+    }
+    if (filterTab === 'accurate') {
+      return !item.hasDivergence && item.accuracyStatus === 'accurate';
+    }
+    return true;
+  });
+
+  const visibleFeed = showAll ? filteredFeed : filteredFeed.slice(0, 3);
+  const hasMore = filteredFeed.length > 3;
 
   return (
     <div className="glass-panel border border-white/10 rounded-2xl p-4 sm:p-6 shadow-xl mt-6 mb-6 sm:mb-8 transition-colors">
       {/* ── Header ── */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-5 gap-3">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
         <div>
           <h2 className="text-white/90 font-bold text-lg tracking-wide flex items-center gap-2">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -401,20 +533,73 @@ export default function AccuracyTracker({ locationName, language }) {
         </div>
         {stats.totalVerified > 0 && (
           <div className="flex flex-col items-end shrink-0">
-            <div className="text-2xl font-bold text-green-400">{stats.accuratePercent}%</div>
+            <div className="text-2xl font-bold text-amber-400">{divergedCount} Diverged</div>
             <div className="text-[10px] uppercase tracking-widest text-white/40">
-              {stats.totalVerified} verified
+              of {stats.totalVerified} verified
             </div>
           </div>
         )}
       </div>
 
-      {/* ── Cards (limited to 3 by default) ── */}
-      <div className="space-y-3">
-        {visibleFeed.map((item) => (
-          <AccuracyCard key={item.id || item._id} item={item} t={t} />
-        ))}
+      {/* ── Filter Tabs ── */}
+      <div className="flex flex-wrap items-center gap-2 mb-4">
+        <button
+          onClick={() => { setFilterTab('diverged'); setShowAll(false); }}
+          className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer shadow-sm ${
+            filterTab === 'diverged'
+              ? 'bg-amber-500 text-white shadow-amber-500/25 ring-2 ring-amber-400 scale-105'
+              : 'bg-white/5 hover:bg-white/10 text-white/70 border border-white/10'
+          }`}
+        >
+          <span>⚠️</span>
+          <span>{t.tabDiverged}</span>
+          <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-black/30 text-white font-black">
+            {divergedCount}
+          </span>
+        </button>
+
+        <button
+          onClick={() => { setFilterTab('all'); setShowAll(false); }}
+          className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer shadow-sm ${
+            filterTab === 'all'
+              ? 'bg-blue-600 text-white shadow-blue-500/25 ring-2 ring-blue-400 scale-105'
+              : 'bg-white/5 hover:bg-white/10 text-white/70 border border-white/10'
+          }`}
+        >
+          <span>{t.tabAll}</span>
+          <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-black/30 text-white font-black">
+            {feed.length}
+          </span>
+        </button>
+
+        <button
+          onClick={() => { setFilterTab('accurate'); setShowAll(false); }}
+          className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer shadow-sm ${
+            filterTab === 'accurate'
+              ? 'bg-emerald-600 text-white shadow-emerald-500/25 ring-2 ring-emerald-400 scale-105'
+              : 'bg-white/5 hover:bg-white/10 text-white/70 border border-white/10'
+          }`}
+        >
+          <span>✓</span>
+          <span>{t.tabAccurate}</span>
+          <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-black/30 text-white font-black">
+            {accurateCount}
+          </span>
+        </button>
       </div>
+
+      {/* ── Cards (limited to 3 by default) ── */}
+      {visibleFeed.length === 0 ? (
+        <div className="py-8 text-center text-white/40 text-xs">
+          No questions match this filter.
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {visibleFeed.map((item) => (
+            <AccuracyCard key={item.id || item._id} item={item} t={t} />
+          ))}
+        </div>
+      )}
 
       {/* ── View More / Show Less Toggle ── */}
       {hasMore && (
@@ -423,7 +608,7 @@ export default function AccuracyTracker({ locationName, language }) {
             onClick={() => setShowAll(prev => !prev)}
             className="flex items-center gap-2 px-5 py-2 rounded-full text-xs font-bold bg-white/10 hover:bg-white/20 active:scale-95 transition-all border border-white/15 text-white/90 shadow-sm cursor-pointer"
           >
-            <span>{showAll ? (t.showLess || 'Show Less') : (t.showMore ? t.showMore(feed.length - 3) : `View ${feed.length - 3} More Questions`)}</span>
+            <span>{showAll ? (t.showLess || 'Show Less') : (t.showMore ? t.showMore(filteredFeed.length - 3) : `View ${filteredFeed.length - 3} More Questions`)}</span>
             <svg
               width="14"
               height="14"

@@ -1,5 +1,13 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { safeLoad, safeSave } from '../utils/cache';
+import { 
+  getSavedSessions, 
+  saveSession, 
+  deleteSession, 
+  clearAllSessions, 
+  formatIstTimestamp, 
+  generateSessionTitle 
+} from '../utils/chatSessionManager';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HOW THE CACHE WORKS:
@@ -27,12 +35,14 @@ const initialState = {
   activeSosStatus: null,
   weatherCondition: 'clear',
   severeAlert: null,
-  isOnboarded: true,
+  isOnboarded: false,
   isOnline: navigator.onLine,
   isLargeText: false,
   isHighContrast: false,
   lastCachedResponse: safeLoad('weathergpt-cache', null),
   savedLocations: safeLoad('weathergpt-saved-locations', []),
+  savedSessions: getSavedSessions(),
+  currentSessionId: null,
   userProfile: 'general',
   uiTheme: 'dark',
 };
@@ -94,20 +104,102 @@ function appReducer(state, action) {
     case 'RESET_ONBOARDING':
       return { ...state, isOnboarded: false };
 
-    case 'ADD_USER_MESSAGE':
-      return {
-        ...state,
-        messages: [...state.messages, {
-          id: action.payload.id || Date.now(),
-          role: 'user',
-          text: action.payload.text || action.payload,
-          wasVoice: action.payload.wasVoice || false,
-          timestamp: new Date().toISOString(),
-        }],
+    case 'ADD_USER_MESSAGE': {
+      const userMsg = {
+        id: action.payload.id || Date.now(),
+        role: 'user',
+        text: action.payload.text || action.payload,
+        wasVoice: action.payload.wasVoice || false,
+        timestamp: new Date().toISOString(),
+        istTimestamp: action.payload.istTimestamp || new Intl.DateTimeFormat('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', hour12: true }).format(new Date()) + ' IST',
+      };
+      const newMessages = [...state.messages, userMsg];
+
+      // Auto-save: establish or update active session
+      const sessionId = state.currentSessionId || `sess_${Date.now()}`;
+      const sessionLocation = state.weatherStageData?.locationName || state.currentWeather?.locationName || '';
+      const existingSession = state.savedSessions.find(s => s.id === sessionId);
+      const sessionTitle = existingSession?.title || generateSessionTitle(userMsg.text);
+
+      const updatedSession = {
+        id: sessionId,
+        title: sessionTitle,
+        createdAt: existingSession?.createdAt || Date.now(),
+        createdAtFormatted: existingSession?.createdAtFormatted || formatIstTimestamp(),
+        location: sessionLocation,
+        messages: newMessages,
+        preview: userMsg.text,
       };
 
+      const updatedSessions = saveSession(updatedSession);
+
+      return {
+        ...state,
+        messages: newMessages,
+        currentSessionId: sessionId,
+        savedSessions: updatedSessions,
+      };
+    }
+
+    case 'CLEAR_MESSAGES':
+    case 'START_NEW_SESSION':
+      return {
+        ...state,
+        messages: [],
+        currentSessionId: null,
+        savedSessions: getSavedSessions(),
+      };
+
+    case 'LOAD_SESSION': {
+      const sessionPayload = action.payload;
+      const session = typeof sessionPayload === 'string'
+        ? state.savedSessions.find(s => s.id === sessionPayload)
+        : sessionPayload;
+
+      if (!session) return state;
+
+      return {
+        ...state,
+        messages: Array.isArray(session.messages) ? session.messages : [],
+        currentSessionId: session.id,
+      };
+    }
+
+    case 'DELETE_SESSION': {
+      const sessionId = action.payload;
+      const updatedSessions = deleteSession(sessionId);
+      const isCurrent = state.currentSessionId === sessionId;
+      return {
+        ...state,
+        savedSessions: updatedSessions,
+        messages: isCurrent ? [] : state.messages,
+        currentSessionId: isCurrent ? null : state.currentSessionId,
+      };
+    }
+
+    case 'CLEAR_ALL_SESSIONS': {
+      clearAllSessions();
+      return {
+        ...state,
+        savedSessions: [],
+        messages: [],
+        currentSessionId: null,
+      };
+    }
+
     case 'ADD_ASSISTANT_MESSAGE': {
-      const { id, answer, followUp, relevantStat, advisory, severity, weatherData, suggestedQuestions, autoSpeak } = action.payload;
+      const { id, answer, followUp, relevantStat, advisory, severity, weatherData, suggestedQuestions, autoSpeak, timestamp, istDate, dayPhase, location: msgLocation } = action.payload;
+      const istFormattedTime = timestamp || (new Intl.DateTimeFormat('en-IN', {
+        timeZone: 'Asia/Kolkata',
+        weekday: 'short',
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      }).format(new Date()) + ' IST');
+
       const newMsg = {
         id: id || Date.now(),
         role: 'assistant',
@@ -119,14 +211,40 @@ function appReducer(state, action) {
         data: weatherData || null,
         autoSpeak: autoSpeak || false,
         suggestedQuestions: Array.isArray(suggestedQuestions) ? suggestedQuestions : [],
-        timestamp: new Date().toISOString(),
+        timestamp: istFormattedTime,
+        istDate: istDate || new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(new Date()),
+        dayPhase: dayPhase || '',
       };
       const cache = { ...newMsg, cachedAt: new Date().toISOString() };
       safeSave('weathergpt-cache', cache);
+
+      const newMessages = [...state.messages, newMsg];
+
+      // Auto-save updated consultation session
+      const sessionId = state.currentSessionId || `sess_${Date.now()}`;
+      const sessionLocation = msgLocation || state.weatherStageData?.locationName || state.currentWeather?.locationName || '';
+      const existingSession = state.savedSessions.find(s => s.id === sessionId);
+      const firstUserMsg = newMessages.find(m => m.role === 'user');
+      const sessionTitle = existingSession?.title || generateSessionTitle(firstUserMsg?.text || 'Weather Consultation');
+
+      const updatedSession = {
+        id: sessionId,
+        title: sessionTitle,
+        createdAt: existingSession?.createdAt || Date.now(),
+        createdAtFormatted: existingSession?.createdAtFormatted || formatIstTimestamp(),
+        location: sessionLocation || existingSession?.location || '',
+        messages: newMessages,
+        preview: answer || '',
+      };
+
+      const updatedSessions = saveSession(updatedSession);
+
       return {
         ...state,
-        messages: [...state.messages, newMsg],
+        messages: newMessages,
         lastCachedResponse: cache,
+        currentSessionId: sessionId,
+        savedSessions: updatedSessions,
       };
     }
 

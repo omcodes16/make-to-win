@@ -271,52 +271,34 @@ export default function Header() {
             </button>
           </div>
 
-          {/* Center (In-Between): Desktop Navigation Tabs */}
-          <div className="hidden md:flex items-center justify-center flex-1 max-w-md mx-auto min-w-0">
-            <div className="flex items-center rounded-full p-1 glass-panel border border-[var(--glass-border)] shadow-inner shrink-0">
-              <button
-                onClick={() => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'chat' })}
-                className={`px-3 py-1.5 text-xs lg:text-sm font-bold rounded-full transition-all duration-300 whitespace-nowrap ${
-                  state.activeTab === 'chat'
-                    ? 'bg-blue-500/20 text-blue-500 shadow-sm border border-blue-400/30'
-                    : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
-                }`}
-              >
-                {t.tabChat}
-              </button>
-              <button
-                onClick={() => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'stage' })}
-                className={`px-3 py-1.5 text-xs lg:text-sm font-bold rounded-full transition-all duration-300 whitespace-nowrap ${
-                  state.activeTab === 'stage'
-                    ? 'bg-blue-500/20 text-blue-500 shadow-sm border border-blue-400/30'
-                    : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
-                }`}
-              >
-                {t.tabStage}
-              </button>
-              <button
-                onClick={() => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'alerts' })}
-                className={`px-3 py-1.5 text-xs lg:text-sm font-bold rounded-full transition-all duration-300 whitespace-nowrap ${
-                  state.activeTab === 'alerts'
-                    ? 'bg-red-500/20 text-red-500 shadow-[0_0_15px_rgba(239,68,68,0.2)] border border-red-500/30'
-                    : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
-                }`}
-              >
-                <span className="flex items-center justify-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
-                  {t.tabAlerts}
-                </span>
-              </button>
-              <button
-                onClick={() => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'research' })}
-                className={`px-3 py-1.5 text-xs lg:text-sm font-bold rounded-full transition-all duration-300 whitespace-nowrap ${
-                  state.activeTab === 'research'
-                    ? 'bg-indigo-500/20 text-indigo-400 shadow-[0_0_15px_rgba(99,102,241,0.2)] border border-indigo-400/30'
-                    : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
-                }`}
-              >
-                🔬 Research
-              </button>
+          {/* Center (In-Between): Sleek Modern Segmented Navigation Control */}
+          <div className="hidden md:flex items-center justify-center flex-1 max-w-sm mx-auto min-w-0">
+            <div className="flex items-center rounded-full p-1 glass-panel border border-[var(--glass-border)] shadow-inner">
+              {[
+                { key: 'chat', icon: '💬', label: state.language === 'hi' ? 'चैट' : 'Chat' },
+                { key: 'stage', icon: '🌤️', label: state.language === 'hi' ? 'मौसम' : 'Weather' },
+                { key: 'alerts', icon: '🚨', label: state.language === 'hi' ? 'अलर्ट' : 'Alerts', isPulse: true },
+                { key: 'research', icon: '🔬', label: state.language === 'hi' ? 'टूल्स' : 'Tools' },
+              ].map((tab) => {
+                const isActive = state.activeTab === tab.key;
+                return (
+                  <button
+                    key={tab.key}
+                    onClick={() => dispatch({ type: 'SET_ACTIVE_TAB', payload: tab.key })}
+                    className={`px-3 py-1.5 text-xs font-bold rounded-full transition-all duration-300 flex items-center gap-1.5 whitespace-nowrap active:scale-95 cursor-pointer ${
+                      isActive
+                        ? 'bg-indigo-600/25 text-indigo-400 border border-indigo-400/40 shadow-sm'
+                        : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-white/5 border border-transparent'
+                    }`}
+                  >
+                    <span className="text-xs">{tab.icon}</span>
+                    <span>{tab.label}</span>
+                    {tab.isPulse && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse -ml-0.5" />
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -342,25 +324,22 @@ export default function Header() {
             </button>
           </div>
 
-          {/* Right Corner: Desktop Location + Hub + Specialty + Shield + Language + More Menu */}
-          <div className="hidden md:flex items-center justify-end gap-1.5 sm:gap-2 shrink-0">
+          {/* Right Corner: Desktop Location + Hub + Language + More Menu */}
+          <div className="hidden md:flex items-center justify-end gap-2 shrink-0">
             {/* Live Location Pill */}
             <button 
               onClick={handleLiveLocation}
               disabled={isLocating}
-              className="header-live-btn flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full font-bold text-xs whitespace-nowrap max-w-[110px] lg:max-w-[150px] overflow-hidden shadow-sm"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full glass-panel border border-[var(--theme-border)] hover:border-indigo-400/40 text-xs font-bold text-[var(--text-primary)] hover:bg-[var(--glass-bg-hover)] transition-all shadow-sm active:scale-95 cursor-pointer max-w-[150px] truncate"
               title="Get Live Location Weather"
             >
               {isLocating ? (
-                <span className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin flex-shrink-0"></span>
+                <span className="w-3.5 h-3.5 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin shrink-0" />
               ) : (
-                <svg className="flex-shrink-0 text-amber-500" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                  <circle cx="12" cy="10" r="3" fill="currentColor" opacity="0.3" />
-                </svg>
+                <span className="text-amber-400 shrink-0 text-xs">📍</span>
               )}
-              <span className="truncate font-bold">
-                {state.currentWeather?.locationName ? state.currentWeather.locationName : 'Live'}
+              <span className="truncate font-semibold text-[11px]">
+                {state.currentWeather?.locationName || state.weatherStageData?.locationName || 'Live'}
               </span>
             </button>
 
@@ -377,70 +356,43 @@ export default function Header() {
               return (
                 <button 
                   onClick={() => setIsHubOpen(true)}
-                  className="header-hub-btn flex items-center gap-1.5 px-2.5 lg:px-3 py-1.5 rounded-full cursor-pointer transition-all shadow-md shrink-0 active:scale-95"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white border border-indigo-400/30 text-xs font-bold shadow-sm transition-all active:scale-95 cursor-pointer shrink-0"
                   title="Open Profession Advisory Hub"
                 >
                   <span className="text-sm leading-none">{profMeta.icon}</span>
-                  <span className="hidden lg:inline text-[11px] font-black tracking-wider uppercase whitespace-nowrap text-white">
+                  <span className="text-[11px] font-bold tracking-wide">
                     {profName}
                   </span>
                 </button>
               );
             })()}
 
-            {/* Contextual Specialty Tool Button (XL Screens: Farmer -> Crop Doctor, Fisherman -> Sagar Rakshak, Others -> Bulletin) */}
-            {state.userProfile === 'farmer' ? (
-              <button
-                onClick={() => setShowDrishtiModal(true)}
-                className="hidden xl:flex header-icon-btn px-2.5 h-8 sm:h-9 items-center gap-1.5 rounded-full hover:!text-emerald-300 border border-emerald-500/40 bg-emerald-950/30 text-emerald-400 transition-all shadow-sm active:scale-95 cursor-pointer"
-                title="Mausam-Drishti AI Crop Doctor & Spray Window"
-                aria-label="Mausam-Drishti AI Crop Doctor"
-              >
-                <span className="text-sm">🌿</span>
-                <span className="text-[11px] font-black tracking-tight whitespace-nowrap">Mausam-Drishti</span>
-              </button>
-            ) : state.userProfile === 'fisherman' ? (
-              <button
-                onClick={() => setShowSagarModal(true)}
-                className="hidden xl:flex header-icon-btn px-2.5 h-8 sm:h-9 items-center gap-1.5 rounded-full hover:!text-cyan-300 border border-cyan-500/40 bg-cyan-950/30 text-cyan-400 transition-all shadow-sm active:scale-95 cursor-pointer"
-                title="Sagar-Rakshak Offshore Marine & IMBL Safety Suite"
-                aria-label="Sagar-Rakshak Marine Safety"
-              >
-                <span className="text-sm">🌊</span>
-                <span className="text-[11px] font-black tracking-tight whitespace-nowrap">Sagar-Rakshak</span>
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  setBulletinCategory('master');
-                  setIsBulletinOpen(true);
-                }}
-                className="hidden xl:flex items-center gap-1.5 px-3 h-8 sm:h-9 rounded-full bg-gradient-to-r from-amber-500/20 via-indigo-600/20 to-emerald-500/20 hover:from-amber-500/30 hover:to-emerald-500/30 border border-amber-400/40 text-xs font-bold text-amber-300 shadow-sm transition-all active:scale-95 whitespace-nowrap"
-                title="Official Panchayat to State Weather & Advisory Bulletin"
-              >
-                <span className="text-sm">📜</span>
-                <span>{currentLang.code === 'hi' ? 'सरकारी बुलेटिन' : currentLang.code === 'bn' ? 'বুলেটিন' : currentLang.code === 'as' ? 'বুলেটিন' : 'Bulletin'}</span>
-              </button>
-            )}
-
-            {/* AI Trust / Accuracy Shield Button */}
+            {/* Desktop Emergency SOS Button */}
             <button
-              onClick={() => setShowAccuracyModal(true)}
-              className="hidden lg:flex header-icon-btn w-8 h-8 sm:w-9 sm:h-9 items-center justify-center rounded-full hover:!text-emerald-500 transition-colors shrink-0"
-              title="AI Trust & Verification"
-              aria-label="AI Trust & Verification"
+              onClick={() => window.dispatchEvent(new CustomEvent('weathergpt-open-sos'))}
+              title={offlineSosCount > 0 ? `⚠️ ${offlineSosCount} Offline SOS in Vault` : "Emergency SOS (Disaster Dispatch)"}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-red-600 via-rose-600 to-red-700 hover:from-red-500 hover:to-rose-500 text-white font-black text-xs shadow-md shadow-red-600/30 border border-red-400/60 transition-all hover:scale-105 active:scale-95 cursor-pointer shrink-0"
             >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                <polyline points="9 12 11 14 15 10" strokeWidth="2" />
-              </svg>
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
+              </span>
+              <span className="text-xs leading-none">🆘</span>
+              <span className="tracking-wider uppercase font-black text-[11px]">
+                {['hi', 'mr', 'pa', 'gu'].includes(state.language) ? 'SOS' : 'Emergency SOS'}
+              </span>
+              {offlineSosCount > 0 && (
+                <span className="bg-amber-400 text-black font-black text-[9px] px-1.5 py-0.2 rounded-full border border-neutral-900 shadow-sm animate-pulse">
+                  {offlineSosCount}
+                </span>
+              )}
             </button>
 
             {/* Language Selector Pill */}
             <div className="relative">
               <button
                 onClick={() => { setShowLangPicker(!showLangPicker); setShowMoreMenu(false); }}
-                className="header-lang-btn px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-sm shrink-0"
+                className="header-lang-btn px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-sm shrink-0 glass-panel border border-[var(--theme-border)] hover:border-indigo-400/40"
                 title="Change Language"
               >
                 {/* Globe Icon */}
@@ -736,8 +688,22 @@ export default function Header() {
 
           </div>
 
-          {/* Mobile Right: Persona Badge + Hamburger Menu Trigger */}
-          <div className="flex md:hidden items-center justify-end gap-2 shrink-0">
+          {/* Mobile Right: Emergency SOS + Persona Badge + Hamburger Menu Trigger */}
+          <div className="flex md:hidden items-center justify-end gap-1.5 shrink-0">
+            {/* Mobile Emergency SOS Button */}
+            <button
+              onClick={() => window.dispatchEvent(new CustomEvent('weathergpt-open-sos'))}
+              className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-gradient-to-r from-red-600 to-rose-600 text-white font-black text-xs shadow-md shadow-red-600/30 border border-red-400/50 active:scale-95 shrink-0 cursor-pointer"
+              title="Emergency SOS"
+            >
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-white" />
+              </span>
+              <span className="text-xs">🆘</span>
+              <span className="text-[10px] font-black tracking-wide">SOS</span>
+            </button>
+
             {/* Persona / Profession Avatar Badge */}
             <button
               onClick={() => setIsHubOpen(true)}

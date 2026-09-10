@@ -517,54 +517,54 @@ export default function ResearchPanel() {
 
   return (
     <div className="min-h-[100dvh] overflow-y-auto pb-28 md:pb-24 relative font-body transition-colors duration-1000" style={{ color: 'var(--text-primary)' }}>
-      <div className="relative z-10 max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-20 sm:pt-28 md:pt-32 pb-20 space-y-6 animate-fade-in">
+      <div className="relative z-10 max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8 pt-16 sm:pt-24 pb-24 md:pb-20 space-y-3.5 sm:space-y-6 animate-fade-in">
         
         {/* Quick Back Navigation Bar */}
-        <div className="flex items-center justify-between mb-1">
+        <div className="flex items-center justify-between mb-0.5 sm:mb-1">
           <button
             onClick={() => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'chat' })}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-[var(--text-primary)] font-bold text-xs backdrop-blur-md border border-[var(--theme-border)] transition-all shadow-sm active:scale-95 cursor-pointer"
+            className="flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-[var(--text-primary)] font-bold text-[11px] sm:text-xs backdrop-blur-md border border-[var(--theme-border)] transition-all shadow-sm active:scale-95 cursor-pointer"
           >
             <span>←</span>
             <span>Back to Chat</span>
           </button>
-          <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-indigo-500/15 text-indigo-400 border border-indigo-500/25">
+          <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-indigo-500/15 text-indigo-400 border border-indigo-500/25">
             ERA5 Climate Analytics
           </span>
         </div>
 
         {/* HEADER SECTION */}
-        <div className="glass-panel border border-[var(--theme-border)] rounded-3xl p-6 shadow-xl relative overflow-hidden">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div className="glass-panel border border-[var(--theme-border)] rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 shadow-xl relative overflow-hidden">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
           <div>
-            <div className="flex items-center gap-2.5">
-              <span className="p-2 rounded-2xl bg-indigo-500/15 border border-indigo-500/25 text-indigo-400">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <div className="flex items-center gap-2">
+              <span className="p-1.5 sm:p-2 rounded-xl sm:rounded-2xl bg-indigo-500/15 border border-indigo-500/25 text-indigo-400">
+                <svg width="18" height="18" className="sm:w-[22px] sm:h-[22px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M14.5 2v17.5c0 1.4-1.1 2.5-2.5 2.5s-2.5-1.1-2.5-2.5V2"/>
                   <path d="M8.5 2h7"/>
                   <path d="M14.5 16h-5"/>
                 </svg>
               </span>
-              <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
+              <h1 className="text-base sm:text-2xl font-black tracking-tight">
                 Research & Climate Analytics
               </h1>
               <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
                 SIH PS-26068
               </span>
             </div>
-            <p className="mt-2 text-xs sm:text-sm text-[var(--text-secondary)]">
+            <p className="mt-1 sm:mt-2 text-[11px] sm:text-xs text-[var(--text-secondary)] leading-relaxed">
               Multi-decadal ERA5 reanalysis via Open-Meteo Archive (1990–Present). Real-time mathematical computation of climate change indices, drought runs, heatwave episodes, and agricultural growing degree days.
             </p>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center gap-2.5 shrink-0">
+          <div className="flex items-center gap-2 shrink-0">
             <button
               onClick={handleExportCSVClick}
               disabled={isLoading || !activeLocData}
-              className="px-4 py-2 text-xs sm:text-sm font-bold rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-500/25 transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer"
+              className="px-3 py-1.5 text-xs font-bold rounded-lg sm:rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-500/25 transition-all flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                 <polyline points="7 10 12 15 17 10"/>
                 <line x1="12" y1="15" x2="12" y2="3"/>
@@ -575,9 +575,9 @@ export default function ResearchPanel() {
               onClick={() => fetchAllClimateData(true)}
               disabled={isLoading}
               title="Force Refresh Climate Data (Bypasses Cache)"
-              className="p-2 rounded-xl glass-panel border border-[var(--glass-border)] text-[var(--text-primary)] hover:bg-[var(--glass-bg-hover)] transition-all cursor-pointer"
+              className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl glass-panel border border-[var(--glass-border)] text-[var(--text-primary)] hover:bg-[var(--glass-bg-hover)] transition-all cursor-pointer"
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" className={isLoading ? 'animate-spin text-indigo-400' : ''}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" className={isLoading ? 'animate-spin text-indigo-400' : ''}>
                 <polyline points="23 4 23 10 17 10"/>
                 <polyline points="1 20 1 14 7 14"/>
                 <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
@@ -587,11 +587,11 @@ export default function ResearchPanel() {
         </div>
 
         {/* CONTROLS BAR: Locations & Year Range */}
-        <div className="mt-6 pt-5 border-t border-[var(--theme-border)] grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
+        <div className="mt-3.5 sm:mt-6 pt-3 sm:pt-5 border-t border-[var(--theme-border)] grid grid-cols-1 lg:grid-cols-12 gap-2.5 sm:gap-4 items-center">
           
           {/* Location Autocomplete Input (5 cols) */}
           <div className="lg:col-span-6 relative" ref={dropdownRef}>
-            <label className="block text-[11px] font-bold uppercase tracking-wider text-[var(--text-secondary)] mb-1.5">
+            <label className="block text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-[var(--text-secondary)] mb-1">
               Compare Locations (Up to 3)
             </label>
             <div className="relative">
@@ -601,53 +601,53 @@ export default function ResearchPanel() {
                 onChange={handleSearchChange}
                 placeholder={locations.length >= 3 ? "Max 3 locations reached" : "Search Indian city or district to compare..."}
                 disabled={locations.length >= 3}
-                className="w-full pl-9 pr-8 py-2 text-xs sm:text-sm rounded-xl bg-[var(--input-bg)] border border-[var(--input-border)] text-[var(--input-text)] placeholder-[var(--text-secondary)] focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all disabled:opacity-50"
+                className="w-full pl-8 pr-7 py-1.5 sm:py-2 text-xs sm:text-sm rounded-lg sm:rounded-xl bg-[var(--input-bg)] border border-[var(--input-border)] text-[var(--input-text)] placeholder-[var(--text-secondary)] focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all disabled:opacity-50"
               />
-              <svg className="w-4 h-4 absolute left-3 top-2.5 text-[var(--text-secondary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 absolute left-2.5 sm:left-3 top-2 sm:top-2.5 text-[var(--text-secondary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
               {isSearching && (
-                <div className="w-3.5 h-3.5 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin absolute right-3 top-3"></div>
+                <div className="w-3 h-3 sm:w-3.5 sm:h-3.5 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin absolute right-2.5 sm:right-3 top-2.5 sm:top-3"></div>
               )}
             </div>
 
             {/* Suggestions Dropdown */}
             {showDropdown && suggestions.length > 0 && (
-              <div className="absolute left-0 right-0 top-full mt-1.5 z-50 rounded-2xl bg-[var(--modal-bg)] border border-[var(--modal-border)] shadow-2xl overflow-hidden max-h-56 overflow-y-auto backdrop-blur-xl">
+              <div className="absolute left-0 right-0 top-full mt-1.5 z-50 rounded-xl sm:rounded-2xl bg-[var(--modal-bg)] border border-[var(--modal-border)] shadow-2xl overflow-hidden max-h-56 overflow-y-auto backdrop-blur-xl">
                 {suggestions.map((loc, idx) => (
                   <button
                     key={`${loc.name}-${idx}`}
                     onClick={() => handleAddLocation(loc)}
-                    className="w-full px-4 py-2.5 text-left text-xs sm:text-sm text-[var(--text-primary)] hover:bg-indigo-500/15 flex items-center justify-between transition-colors border-b border-[var(--theme-border)] last:border-none cursor-pointer"
+                    className="w-full px-3.5 py-2 text-left text-xs sm:text-sm text-[var(--text-primary)] hover:bg-indigo-500/15 flex items-center justify-between transition-colors border-b border-[var(--theme-border)] last:border-none cursor-pointer"
                   >
                     <div>
                       <span className="font-bold">{loc.name}</span>
-                      {loc.state && <span className="text-[var(--text-secondary)] text-[11px] ml-1.5">({loc.state})</span>}
+                      {loc.state && <span className="text-[var(--text-secondary)] text-[10px] sm:text-[11px] ml-1.5">({loc.state})</span>}
                     </div>
-                    <span className="text-[10px] text-indigo-400 font-bold uppercase">+ Add</span>
+                    <span className="text-[9px] sm:text-[10px] text-indigo-400 font-bold uppercase">+ Add</span>
                   </button>
                 ))}
               </div>
             )}
 
             {/* Selected Location Chips */}
-            <div className="flex flex-wrap items-center gap-2 mt-2.5">
+            <div className="flex flex-wrap items-center gap-1.5 mt-2">
               {locations.map((loc, idx) => (
                 <div
                   key={idx}
-                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border transition-all"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:py-1 rounded-full text-[11px] sm:text-xs font-bold border transition-all"
                   style={{
                     backgroundColor: `${LOCATION_COLORS[idx]}15`,
                     borderColor: `${LOCATION_COLORS[idx]}40`,
                     color: LOCATION_COLORS[idx]
                   }}
                 >
-                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: LOCATION_COLORS[idx] }}></span>
+                  <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full" style={{ backgroundColor: LOCATION_COLORS[idx] }}></span>
                   <span>{loc.name}</span>
                   {locations.length > 1 && (
                     <button
                       onClick={() => handleRemoveLocation(idx)}
-                      className="ml-1 hover:opacity-75 focus:outline-none cursor-pointer text-xs font-black"
+                      className="ml-1 hover:opacity-75 focus:outline-none cursor-pointer text-[10px] sm:text-xs font-black"
                       title="Remove location"
                     >
                       ✕
@@ -660,24 +660,24 @@ export default function ResearchPanel() {
 
           {/* Year Range Picker (4 cols) */}
           <div className="lg:col-span-4">
-            <label className="block text-[11px] font-bold uppercase tracking-wider text-[var(--text-secondary)] mb-1.5">
+            <label className="block text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-[var(--text-secondary)] mb-1">
               Time Period (ERA5 Reanalysis)
             </label>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2">
               <select
                 value={startYear}
                 onChange={(e) => setStartYear(Number(e.target.value))}
-                className="flex-1 py-2 px-2.5 text-xs sm:text-sm rounded-xl bg-[var(--input-bg)] border border-[var(--input-border)] text-[var(--input-text)] focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                className="flex-1 py-1.5 px-2 text-xs sm:text-sm rounded-lg sm:rounded-xl bg-[var(--input-bg)] border border-[var(--input-border)] text-[var(--input-text)] focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
               >
                 {Array.from({ length: CURRENT_YEAR - 1990 + 1 }, (_, i) => 1990 + i).map(yr => (
                   <option key={yr} value={yr} className="bg-slate-900 text-white">{yr}</option>
                 ))}
               </select>
-              <span className="text-[var(--text-secondary)] text-xs font-bold">to</span>
+              <span className="text-[var(--text-secondary)] text-[11px] sm:text-xs font-bold">to</span>
               <select
                 value={endYear}
                 onChange={(e) => setEndYear(Number(e.target.value))}
-                className="flex-1 py-2 px-2.5 text-xs sm:text-sm rounded-xl bg-[var(--input-bg)] border border-[var(--input-border)] text-[var(--input-text)] focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                className="flex-1 py-1.5 px-2 text-xs sm:text-sm rounded-lg sm:rounded-xl bg-[var(--input-bg)] border border-[var(--input-border)] text-[var(--input-text)] focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
               >
                 {Array.from({ length: CURRENT_YEAR - 1990 + 1 }, (_, i) => 1990 + i).map(yr => (
                   <option key={yr} value={yr} className="bg-slate-900 text-white">{yr}</option>
@@ -686,22 +686,22 @@ export default function ResearchPanel() {
             </div>
             
             {/* Quick Presets */}
-            <div className="flex items-center gap-1.5 mt-2">
+            <div className="flex items-center gap-1 sm:gap-1.5 mt-1.5 sm:mt-2">
               <button
                 onClick={() => { setStartYear(1990); setEndYear(CURRENT_YEAR); }}
-                className="px-2 py-0.5 text-[10px] font-semibold rounded-md bg-[var(--glass-bg)] border border-[var(--glass-border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all cursor-pointer"
+                className="px-2 py-0.5 text-[9px] sm:text-[10px] font-semibold rounded-md bg-[var(--glass-bg)] border border-[var(--glass-border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all cursor-pointer"
               >
                 1990–Present
               </button>
               <button
                 onClick={() => { setStartYear(2000); setEndYear(CURRENT_YEAR); }}
-                className="px-2 py-0.5 text-[10px] font-semibold rounded-md bg-[var(--glass-bg)] border border-[var(--glass-border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all cursor-pointer"
+                className="px-2 py-0.5 text-[9px] sm:text-[10px] font-semibold rounded-md bg-[var(--glass-bg)] border border-[var(--glass-border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all cursor-pointer"
               >
                 2000–Present
               </button>
               <button
                 onClick={() => { setStartYear(CURRENT_YEAR - 10); setEndYear(CURRENT_YEAR); }}
-                className="px-2 py-0.5 text-[10px] font-semibold rounded-md bg-[var(--glass-bg)] border border-[var(--glass-border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all cursor-pointer"
+                className="px-2 py-0.5 text-[9px] sm:text-[10px] font-semibold rounded-md bg-[var(--glass-bg)] border border-[var(--glass-border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all cursor-pointer"
               >
                 Last 10Y
               </button>
@@ -710,12 +710,12 @@ export default function ResearchPanel() {
 
           {/* Trend Line Toggle (2 cols) */}
           <div className="lg:col-span-2 flex flex-col justify-center">
-            <label className="block text-[11px] font-bold uppercase tracking-wider text-[var(--text-secondary)] mb-1.5">
+            <label className="block text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-[var(--text-secondary)] mb-1">
               Trend Overlay
             </label>
             <button
               onClick={() => setShowTrendLine(prev => !prev)}
-              className={`w-full py-2 px-3 rounded-xl text-xs font-bold border transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+              className={`w-full py-1.5 sm:py-2 px-2.5 sm:px-3 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold border transition-all flex items-center justify-center gap-1 cursor-pointer ${
                 showTrendLine 
                   ? 'bg-indigo-500/20 text-indigo-400 border-indigo-500/30' 
                   : 'bg-[var(--input-bg)] text-[var(--text-secondary)] border-[var(--input-border)]'
@@ -746,121 +746,121 @@ export default function ResearchPanel() {
 
       {/* KPI STATS CARDS (Primary Location) */}
       {activeLocData && (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
           
           {/* Card 1: Temp Trend */}
-          <div className="glass-panel border border-[var(--theme-border)] rounded-2xl p-4 shadow-md">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
+          <div className="glass-panel border border-[var(--theme-border)] rounded-xl sm:rounded-2xl p-2.5 sm:p-4 shadow-md">
+            <div className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
               Temp Trend (OLS)
             </div>
-            <div className="text-xl font-black mt-1 text-sky-400">
+            <div className="text-base sm:text-xl font-black mt-0.5 sm:mt-1 text-sky-400">
               {activeLocData.indices.tempTrend.slopePerDecade > 0 ? '+' : ''}
               {activeLocData.indices.tempTrend.slopePerDecade}°C
-              <span className="text-[10px] font-normal text-[var(--text-secondary)]"> /decade</span>
+              <span className="text-[9px] sm:text-[10px] font-normal text-[var(--text-secondary)]"> /dec</span>
             </div>
-            <div className="text-[10px] text-[var(--text-muted)] mt-0.5">
+            <div className="text-[9px] sm:text-[10px] text-[var(--text-muted)] mt-0.5">
               ({activeLocData.indices.tempTrend.slopePerYear}°C/yr)
             </div>
-            <div className="mt-2 pt-1.5 border-t border-[var(--theme-border)] text-[10px] font-medium text-sky-300">
+            <div className="mt-1.5 pt-1 border-t border-[var(--theme-border)] text-[9px] sm:text-[10px] font-medium text-sky-300 line-clamp-1 sm:line-clamp-none">
               {['hi', 'mr', 'pa', 'gu'].includes(state.language)
-                ? (activeLocData.indices.tempTrend.slopePerDecade > 0 ? '📈 दशक दर दशक तापमान में बढ़ोत्तरी' : '📉 तापमान स्थिर अथवा गिरावट')
-                : (activeLocData.indices.tempTrend.slopePerDecade > 0 ? '📈 Decadal Warming Trend' : '📉 Stable / Cooling Trend')}
+                ? (activeLocData.indices.tempTrend.slopePerDecade > 0 ? '📈 दशक दर दशक तापमान वृद्धि' : '📉 तापमान स्थिर')
+                : (activeLocData.indices.tempTrend.slopePerDecade > 0 ? '📈 Warming Trend' : '📉 Stable Trend')}
             </div>
           </div>
 
           {/* Card 2: Rainfall Trend */}
-          <div className="glass-panel border border-[var(--theme-border)] rounded-2xl p-4 shadow-md">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
+          <div className="glass-panel border border-[var(--theme-border)] rounded-xl sm:rounded-2xl p-2.5 sm:p-4 shadow-md">
+            <div className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
               Precip Trend
             </div>
-            <div className="text-xl font-black mt-1 text-blue-400">
+            <div className="text-base sm:text-xl font-black mt-0.5 sm:mt-1 text-blue-400">
               {activeLocData.indices.precipTrend.slopePerDecade > 0 ? '+' : ''}
               {activeLocData.indices.precipTrend.slopePerDecade}mm
-              <span className="text-[10px] font-normal text-[var(--text-secondary)]"> /decade</span>
+              <span className="text-[9px] sm:text-[10px] font-normal text-[var(--text-secondary)]"> /dec</span>
             </div>
-            <div className="text-[10px] text-[var(--text-muted)] mt-0.5">
+            <div className="text-[9px] sm:text-[10px] text-[var(--text-muted)] mt-0.5">
               ({activeLocData.indices.precipTrend.slopePerYear}mm/yr)
             </div>
-            <div className="mt-2 pt-1.5 border-t border-[var(--theme-border)] text-[10px] font-medium text-blue-300">
+            <div className="mt-1.5 pt-1 border-t border-[var(--theme-border)] text-[9px] sm:text-[10px] font-medium text-blue-300 line-clamp-1 sm:line-clamp-none">
               {['hi', 'mr', 'pa', 'gu'].includes(state.language)
-                ? (activeLocData.indices.precipTrend.slopePerDecade > 0 ? '🌧️ प्रति दशक वर्षा में बढ़ोतरी' : '☀️ प्रति दशक वर्षा में कमी')
-                : (activeLocData.indices.precipTrend.slopePerDecade > 0 ? '🌧️ Increasing Rainfall Pattern' : '☀️ Decreasing Rainfall Pattern')}
+                ? (activeLocData.indices.precipTrend.slopePerDecade > 0 ? '🌧️ वर्षा में वृद्धि' : '☀️ वर्षा में कमी')
+                : (activeLocData.indices.precipTrend.slopePerDecade > 0 ? '🌧️ Increasing Rain' : '☀️ Decreasing Rain')}
             </div>
           </div>
 
           {/* Card 3: Max Drought Run (CDD) */}
-          <div className="glass-panel border border-[var(--theme-border)] rounded-2xl p-4 shadow-md">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
+          <div className="glass-panel border border-[var(--theme-border)] rounded-xl sm:rounded-2xl p-2.5 sm:p-4 shadow-md">
+            <div className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
               Peak Dry Spell (CDD)
             </div>
-            <div className="text-xl font-black mt-1 text-amber-400">
+            <div className="text-base sm:text-xl font-black mt-0.5 sm:mt-1 text-amber-400">
               {activeLocData.indices.maxCdd}
-              <span className="text-[10px] font-normal text-[var(--text-secondary)]"> days</span>
+              <span className="text-[9px] sm:text-[10px] font-normal text-[var(--text-secondary)]"> days</span>
             </div>
-            <div className="text-[10px] text-[var(--text-muted)] mt-0.5">
-              Rainfall &lt; 1.0mm
+            <div className="text-[9px] sm:text-[10px] text-[var(--text-muted)] mt-0.5">
+              Rain &lt; 1.0mm
             </div>
-            <div className="mt-2 pt-1.5 border-t border-[var(--theme-border)] text-[10px] font-medium text-amber-300">
+            <div className="mt-1.5 pt-1 border-t border-[var(--theme-border)] text-[9px] sm:text-[10px] font-medium text-amber-300 line-clamp-1 sm:line-clamp-none">
               {['hi', 'mr', 'pa', 'gu'].includes(state.language)
-                ? `☀️ लगातार ${activeLocData.indices.maxCdd} दिन सूखा दौर`
-                : `☀️ Longest Dry Streak: ${activeLocData.indices.maxCdd} Days`}
+                ? `☀️ लगातार ${activeLocData.indices.maxCdd}d सूखा`
+                : `☀️ Dry Streak: ${activeLocData.indices.maxCdd}d`}
             </div>
           </div>
 
           {/* Card 4: Heatwaves */}
-          <div className="glass-panel border border-[var(--theme-border)] rounded-2xl p-4 shadow-md">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
+          <div className="glass-panel border border-[var(--theme-border)] rounded-xl sm:rounded-2xl p-2.5 sm:p-4 shadow-md">
+            <div className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
               Heatwave Days
             </div>
-            <div className="text-xl font-black mt-1 text-rose-400">
+            <div className="text-base sm:text-xl font-black mt-0.5 sm:mt-1 text-rose-400">
               {activeLocData.indices.totalHeatwaveDays}
-              <span className="text-[10px] font-normal text-[var(--text-secondary)]"> total</span>
+              <span className="text-[9px] sm:text-[10px] font-normal text-[var(--text-secondary)]"> total</span>
             </div>
-            <div className="text-[10px] text-[var(--text-muted)] mt-0.5">
-              (&gt; Seasonal + 5°C, 3+ d)
+            <div className="text-[9px] sm:text-[10px] text-[var(--text-muted)] mt-0.5">
+              (&gt; Seasonal + 5°C)
             </div>
-            <div className="mt-2 pt-1.5 border-t border-[var(--theme-border)] text-[10px] font-medium text-rose-300">
+            <div className="mt-1.5 pt-1 border-t border-[var(--theme-border)] text-[9px] sm:text-[10px] font-medium text-rose-300 line-clamp-1 sm:line-clamp-none">
               {['hi', 'mr', 'pa', 'gu'].includes(state.language)
-                ? `🔥 कुल ${activeLocData.indices.totalHeatwaveDays} दिन भीषण लू की स्थिति`
-                : `🔥 Total ${activeLocData.indices.totalHeatwaveDays} Extreme Heat Days`}
+                ? `🔥 कुल ${activeLocData.indices.totalHeatwaveDays} दिन भीषण लू`
+                : `🔥 ${activeLocData.indices.totalHeatwaveDays} Heat Days`}
             </div>
           </div>
 
           {/* Card 5: Extreme Rain Days */}
-          <div className="glass-panel border border-[var(--theme-border)] rounded-2xl p-4 shadow-md">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
+          <div className="glass-panel border border-[var(--theme-border)] rounded-xl sm:rounded-2xl p-2.5 sm:p-4 shadow-md">
+            <div className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
               Downpours &gt;100mm
             </div>
-            <div className="text-xl font-black mt-1 text-cyan-400">
+            <div className="text-base sm:text-xl font-black mt-0.5 sm:mt-1 text-cyan-400">
               {activeLocData.indices.totalExtremeRainDays}
-              <span className="text-[10px] font-normal text-[var(--text-secondary)]"> days</span>
+              <span className="text-[9px] sm:text-[10px] font-normal text-[var(--text-secondary)]"> days</span>
             </div>
-            <div className="text-[10px] text-[var(--text-muted)] mt-0.5">
+            <div className="text-[9px] sm:text-[10px] text-[var(--text-muted)] mt-0.5">
               R100mm extreme index
             </div>
-            <div className="mt-2 pt-1.5 border-t border-[var(--theme-border)] text-[10px] font-medium text-cyan-300">
+            <div className="mt-1.5 pt-1 border-t border-[var(--theme-border)] text-[9px] sm:text-[10px] font-medium text-cyan-300 line-clamp-1 sm:line-clamp-none">
               {['hi', 'mr', 'pa', 'gu'].includes(state.language)
-                ? `⚡ ${activeLocData.indices.totalExtremeRainDays} दिन अतिवृष्टि (बाढ़ जोखिम)`
-                : `⚡ ${activeLocData.indices.totalExtremeRainDays} Torrential Downpour Days`}
+                ? `⚡ ${activeLocData.indices.totalExtremeRainDays} दिन अतिवृष्टि`
+                : `⚡ ${activeLocData.indices.totalExtremeRainDays} Heavy Downpour Days`}
             </div>
           </div>
 
           {/* Card 6: GDD (Growing Degree Days) */}
-          <div className="glass-panel border border-[var(--theme-border)] rounded-2xl p-4 shadow-md">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
+          <div className="glass-panel border border-[var(--theme-border)] rounded-xl sm:rounded-2xl p-2.5 sm:p-4 shadow-md">
+            <div className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
               Avg Yearly GDD
             </div>
-            <div className="text-xl font-black mt-1 text-emerald-400">
+            <div className="text-base sm:text-xl font-black mt-0.5 sm:mt-1 text-emerald-400">
               {activeLocData.indices.avgGdd}
-              <span className="text-[10px] font-normal text-[var(--text-secondary)]"> units</span>
+              <span className="text-[9px] sm:text-[10px] font-normal text-[var(--text-secondary)]"> units</span>
             </div>
-            <div className="text-[10px] text-[var(--text-muted)] mt-0.5">
+            <div className="text-[9px] sm:text-[10px] text-[var(--text-muted)] mt-0.5">
               Base threshold 10°C
             </div>
-            <div className="mt-2 pt-1.5 border-t border-[var(--theme-border)] text-[10px] font-medium text-emerald-300">
+            <div className="mt-1.5 pt-1 border-t border-[var(--theme-border)] text-[9px] sm:text-[10px] font-medium text-emerald-300 line-clamp-1 sm:line-clamp-none">
               {['hi', 'mr', 'pa', 'gu'].includes(state.language)
-                ? '🌾 फसलों के पकने हेतु थर्मल ऊर्जा'
-                : '🌾 Crop Maturity Thermal Units'}
+                ? '🌾 फसलों हेतु थर्मल ऊर्जा'
+                : '🌾 Crop Maturity Units'}
             </div>
           </div>
 
@@ -868,32 +868,32 @@ export default function ResearchPanel() {
       )}
 
       {/* CHART SECTION */}
-      <div className="glass-panel border border-[var(--theme-border)] rounded-3xl p-6 shadow-xl relative">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+      <div className="glass-panel border border-[var(--theme-border)] rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 shadow-xl relative">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
           <div>
-            <h2 className="text-lg sm:text-xl font-black tracking-tight flex items-center gap-2">
+            <h2 className="text-sm sm:text-xl font-black tracking-tight flex items-center gap-1.5 sm:gap-2">
               <span>📈</span>
-              <span>Historical Trajectory & Multi-Decadal Regression</span>
+              <span>Historical Trajectory & Regression</span>
             </h2>
-            <p className="text-xs text-[var(--text-secondary)] mt-0.5">
-              Comparing yearly values and Ordinary Least Squares (OLS) linear trendlines across {startYear}–{endYear}.
+            <p className="text-[11px] sm:text-xs text-[var(--text-secondary)] mt-0.5">
+              Comparing yearly values and OLS linear trendlines across {startYear}–{endYear}.
             </p>
           </div>
 
           {/* Variable Selector Tabs */}
-          <div className="flex flex-wrap items-center gap-1.5 bg-[var(--input-bg)] p-1 rounded-2xl border border-[var(--input-border)]">
+          <div className="flex overflow-x-auto scrollbar-none max-w-full items-center gap-1 bg-[var(--input-bg)] p-1 rounded-xl sm:rounded-2xl border border-[var(--input-border)]">
             {[
-              { id: 'meanTemp', label: 'Mean Temp (°C)' },
-              { id: 'maxTemp', label: 'Max Temp (°C)' },
-              { id: 'totalPrecip', label: 'Precip (mm)' },
+              { id: 'meanTemp', label: 'Mean Temp' },
+              { id: 'maxTemp', label: 'Max Temp' },
+              { id: 'totalPrecip', label: 'Precip' },
               { id: 'gdd', label: 'GDD' },
-              { id: 'cdd', label: 'Dry Days (CDD)' },
-              { id: 'heatwaveDays', label: 'Heatwave Days' }
+              { id: 'cdd', label: 'Dry Days' },
+              { id: 'heatwaveDays', label: 'Heatwaves' }
             ].map(v => (
               <button
                 key={v.id}
                 onClick={() => setSelectedVariable(v.id)}
-                className={`px-3 py-1 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                className={`px-2.5 py-1 text-[11px] sm:text-xs font-bold rounded-lg sm:rounded-xl whitespace-nowrap transition-all cursor-pointer ${
                   selectedVariable === v.id
                     ? 'bg-indigo-600 text-white shadow-md'
                     : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
@@ -906,44 +906,46 @@ export default function ResearchPanel() {
         </div>
 
         {/* CHART CONTAINER */}
-        <div className="w-full h-80 sm:h-96">
+        <div className="w-full h-64 sm:h-96">
           {isLoading ? (
             <div className="w-full h-full flex flex-col items-center justify-center gap-3">
-              <div className="w-8 h-8 border-3 border-indigo-400 border-t-transparent rounded-full animate-spin"></div>
-              <span className="text-xs font-semibold text-[var(--text-secondary)]">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 border-3 border-indigo-400 border-t-transparent rounded-full animate-spin"></div>
+              <span className="text-[11px] sm:text-xs font-semibold text-[var(--text-secondary)]">
                 Fetching live ERA5 reanalysis data from Open-Meteo Archive...
               </span>
             </div>
           ) : chartData.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData} margin={{ top: 15, right: 25, left: 10, bottom: 15 }}>
+              <LineChart data={chartData} margin={{ top: 10, right: 15, left: -10, bottom: 10 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
                 <XAxis 
                   dataKey="year" 
                   stroke={axisLineColor} 
                   tickLine={{ stroke: axisLineColor, strokeWidth: 1.5 }}
                   axisLine={{ stroke: axisLineColor, strokeWidth: 1.5 }}
-                  fontSize={11} 
-                  tickMargin={8} 
-                  tick={{ fill: axisColor, fontSize: 11, fontWeight: 700 }}
+                  fontSize={10} 
+                  tickMargin={6} 
+                  tick={{ fill: axisColor, fontSize: 10, fontWeight: 700 }}
                 />
                 <YAxis 
                   stroke={axisLineColor} 
                   tickLine={{ stroke: axisLineColor, strokeWidth: 1.5 }}
                   axisLine={{ stroke: axisLineColor, strokeWidth: 1.5 }}
-                  width={55}
-                  fontSize={11} 
+                  width={45}
+                  fontSize={10} 
                   tickFormatter={(val) => `${val}${activeMeta.unit}`} 
-                  tick={{ fill: axisColor, fontSize: 11, fontWeight: 700 }}
+                  tick={{ fill: axisColor, fontSize: 10, fontWeight: 700 }}
                 />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: tooltipBg,
                     border: tooltipBorder,
-                    borderRadius: '16px',
+                    borderRadius: '12px',
                     color: tooltipText,
-                    boxShadow: '0 10px 30px rgba(0,0,0,0.25)',
-                    backdropFilter: 'blur(12px)'
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
+                    backdropFilter: 'blur(12px)',
+                    fontSize: '11px',
+                    padding: '8px 12px'
                   }}
                   formatter={(value, name) => {
                     return [`${value} ${activeMeta.unit}`, name];
@@ -952,7 +954,7 @@ export default function ResearchPanel() {
                 <Legend 
                   verticalAlign="top" 
                   align="right" 
-                  wrapperStyle={{ paddingBottom: '10px', fontSize: '12px', fontWeight: 600 }} 
+                  wrapperStyle={{ paddingBottom: '6px', fontSize: '11px', fontWeight: 600 }} 
                 />
 
                 {/* Draw Lines for each location */}
@@ -969,9 +971,9 @@ export default function ResearchPanel() {
                         dataKey={locKey}
                         name={`${locResult.location.name} (${activeMeta.label})`}
                         stroke={color}
-                        strokeWidth={2.5}
-                        dot={{ r: 3, fill: color }}
-                        activeDot={{ r: 6 }}
+                        strokeWidth={2.2}
+                        dot={{ r: 2.5, fill: color }}
+                        activeDot={{ r: 5 }}
                       />
                       {/* OLS linear regression trend line */}
                       {showTrendLine && (
@@ -980,7 +982,7 @@ export default function ResearchPanel() {
                           dataKey={trendKey}
                           name={`${locResult.location.name} (Trendline)`}
                           stroke={color}
-                          strokeWidth={1.8}
+                          strokeWidth={1.6}
                           strokeDasharray="5 5"
                           dot={false}
                           activeDot={false}
@@ -1000,26 +1002,26 @@ export default function ResearchPanel() {
       </div>
 
       {/* SORTABLE CLIMATE INDICES TABLE */}
-      <div className="glass-panel border border-[var(--theme-border)] rounded-3xl p-6 shadow-xl relative overflow-hidden">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+      <div className="glass-panel border border-[var(--theme-border)] rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 shadow-xl relative overflow-hidden">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
           <div>
-            <h2 className="text-lg sm:text-xl font-black tracking-tight flex items-center gap-2">
+            <h2 className="text-sm sm:text-xl font-black tracking-tight flex items-center gap-1.5 sm:gap-2">
               <span>📋</span>
-              <span>Year-by-Year Climate Indices Breakdown</span>
+              <span>Year-by-Year Climate Indices</span>
             </h2>
-            <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+            <p className="text-[11px] sm:text-xs text-[var(--text-secondary)] mt-0.5">
               Click any column header to sort ascending or descending.
             </p>
           </div>
 
           {/* Location Tab Switcher for Table (if multiple locations) */}
           {locationsData.length > 1 && (
-            <div className="flex items-center gap-1 bg-[var(--input-bg)] p-1 rounded-xl border border-[var(--input-border)]">
+            <div className="flex items-center gap-1 bg-[var(--input-bg)] p-1 rounded-lg sm:rounded-xl border border-[var(--input-border)]">
               {locationsData.map((locRes, idx) => (
                 <button
                   key={idx}
                   onClick={() => setActiveTableLocIndex(idx)}
-                  className={`px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                  className={`px-2.5 py-1 text-[11px] sm:text-xs font-bold rounded-md sm:rounded-lg transition-all cursor-pointer ${
                     activeTableLocIndex === idx
                       ? 'bg-indigo-600 text-white'
                       : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
@@ -1033,10 +1035,10 @@ export default function ResearchPanel() {
         </div>
 
         {/* TABLE WRAPPER */}
-        <div className="overflow-x-auto rounded-2xl border border-[var(--theme-border)]">
+        <div className="overflow-x-auto rounded-xl sm:rounded-2xl border border-[var(--theme-border)]">
           <table className="w-full text-left text-xs sm:text-sm border-collapse">
             <thead>
-              <tr className="bg-[var(--input-bg)] border-b border-[var(--theme-border)] text-[var(--text-secondary)] font-extrabold uppercase text-[10px] sm:text-[11px] tracking-wider">
+              <tr className="bg-[var(--input-bg)] border-b border-[var(--theme-border)] text-[var(--text-secondary)] font-extrabold uppercase text-[9px] sm:text-[11px] tracking-wider">
                 {[
                   { field: 'year', label: 'Year' },
                   { field: 'meanTemp', label: 'Mean Temp (°C)' },
@@ -1044,14 +1046,14 @@ export default function ResearchPanel() {
                   { field: 'totalPrecip', label: 'Rainfall (mm)' },
                   { field: 'cdd', label: 'Dry Days (CDD)' },
                   { field: 'cwd', label: 'Wet Days (CWD)' },
-                  { field: 'heatwaveDays', label: 'Heatwave Days' },
-                  { field: 'extremeRainDays', label: 'Extreme Rain (>100mm)' },
+                  { field: 'heatwaveDays', label: 'Heatwaves' },
+                  { field: 'extremeRainDays', label: 'Extreme Rain' },
                   { field: 'gdd', label: 'GDD (Base 10°C)' }
                 ].map(col => (
                   <th
                     key={col.field}
                     onClick={() => handleSort(col.field)}
-                    className="py-3 px-3.5 cursor-pointer hover:text-[var(--text-primary)] transition-colors select-none whitespace-nowrap"
+                    className="py-2.5 px-2.5 sm:py-3 sm:px-3.5 cursor-pointer hover:text-[var(--text-primary)] transition-colors select-none whitespace-nowrap"
                   >
                     <div className="flex items-center gap-1">
                       <span>{col.label}</span>
@@ -1068,7 +1070,7 @@ export default function ResearchPanel() {
             <tbody className="divide-y divide-[var(--theme-border)] font-medium">
               {isLoading ? (
                 <tr>
-                  <td colSpan={9} className="py-8 text-center text-xs text-[var(--text-secondary)]">
+                  <td colSpan={9} className="py-6 sm:py-8 text-center text-xs text-[var(--text-secondary)]">
                     <div className="inline-flex items-center gap-2">
                       <div className="w-3.5 h-3.5 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin"></div>
                       <span>Loading records...</span>
@@ -1078,28 +1080,28 @@ export default function ResearchPanel() {
               ) : sortedTableData.length > 0 ? (
                 sortedTableData.map((row) => (
                   <tr key={row.year} className="hover:bg-white/5 transition-colors">
-                    <td className="py-2.5 px-3.5 font-bold text-indigo-400">{row.year}</td>
-                    <td className="py-2.5 px-3.5">{row.meanTemp != null ? `${row.meanTemp}°C` : '--'}</td>
-                    <td className="py-2.5 px-3.5 font-semibold text-orange-400">{row.maxTemp != null ? `${row.maxTemp}°C` : '--'}</td>
-                    <td className="py-2.5 px-3.5 font-semibold text-blue-400">{row.totalPrecip != null ? `${row.totalPrecip} mm` : '--'}</td>
-                    <td className="py-2.5 px-3.5">{row.cdd} d</td>
-                    <td className="py-2.5 px-3.5">{row.cwd} d</td>
-                    <td className="py-2.5 px-3.5">
+                    <td className="py-2 px-2.5 sm:py-2.5 sm:px-3.5 font-bold text-indigo-400">{row.year}</td>
+                    <td className="py-2 px-2.5 sm:py-2.5 sm:px-3.5">{row.meanTemp != null ? `${row.meanTemp}°C` : '--'}</td>
+                    <td className="py-2 px-2.5 sm:py-2.5 sm:px-3.5 font-semibold text-orange-400">{row.maxTemp != null ? `${row.maxTemp}°C` : '--'}</td>
+                    <td className="py-2 px-2.5 sm:py-2.5 sm:px-3.5 font-semibold text-blue-400">{row.totalPrecip != null ? `${row.totalPrecip} mm` : '--'}</td>
+                    <td className="py-2 px-2.5 sm:py-2.5 sm:px-3.5">{row.cdd} d</td>
+                    <td className="py-2 px-2.5 sm:py-2.5 sm:px-3.5">{row.cwd} d</td>
+                    <td className="py-2 px-2.5 sm:py-2.5 sm:px-3.5">
                       <span className={row.heatwaveDays > 0 ? 'text-rose-400 font-bold' : 'text-[var(--text-secondary)]'}>
                         {row.heatwaveDays} d
                       </span>
                     </td>
-                    <td className="py-2.5 px-3.5">
+                    <td className="py-2 px-2.5 sm:py-2.5 sm:px-3.5">
                       <span className={row.extremeRainDays > 0 ? 'text-cyan-400 font-bold' : 'text-[var(--text-secondary)]'}>
                         {row.extremeRainDays} d
                       </span>
                     </td>
-                    <td className="py-2.5 px-3.5 text-emerald-400 font-semibold">{row.gdd}</td>
+                    <td className="py-2 px-2.5 sm:py-2.5 sm:px-3.5 text-emerald-400 font-semibold">{row.gdd}</td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={9} className="py-8 text-center text-xs text-[var(--text-secondary)]">
+                  <td colSpan={9} className="py-6 sm:py-8 text-center text-xs text-[var(--text-secondary)]">
                     No data records available.
                   </td>
                 </tr>
@@ -1109,9 +1111,9 @@ export default function ResearchPanel() {
         </div>
 
         {/* METADATA FOOTER */}
-        <div className="mt-4 flex flex-col sm:flex-row items-center justify-between text-[11px] text-[var(--text-secondary)] gap-2">
-          <span>Source: <strong>ERA5 Reanalysis via Open-Meteo Archive API</strong> (Resolution ~25 km).</span>
-          <span>Last fetched: <strong>{new Date().toLocaleTimeString()}</strong> (Real-time Live Fetch)</span>
+        <div className="mt-3 sm:mt-4 flex flex-col sm:flex-row items-center justify-between text-[10px] sm:text-[11px] text-[var(--text-secondary)] gap-1.5 sm:gap-2">
+          <span>Source: <strong>ERA5 Reanalysis via Open-Meteo Archive API</strong> (~25 km).</span>
+          <span>Last fetched: <strong>{new Date().toLocaleTimeString()}</strong></span>
         </div>
       </div>
 

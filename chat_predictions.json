@@ -14,5 +14,34 @@
     "actualValue": null,
     "accuracyStatus": "unknown",
     "claims": []
+  },
+  {
+    "id": "1788996723416zxik9",
+    "location": "Indore",
+    "lat": 0,
+    "lng": 0,
+    "date": "2026-09-10",
+    "timeHorizon": "today",
+    "targetDate": "2026-09-10",
+    "targetEndDate": "2026-09-10",
+    "verifyAfter": "2026-09-11",
+    "verifyAfterTimestamp": 1789039923416,
+    "minObservationHours": 12,
+    "horizonLabel": "Today",
+    "question": "क्या आज Juni Indore Tahsil में बारिश होगी? प्रति घंटा पूर्वानुमान बताएं।",
+    "answerText": "Indore में आज हल्की बारिश की संभावना है, लगभग 35%। कुल वर्षा 0.8 mm हो सकती है। अधिकतम तापमान 29.8 °C और न्यूनतम 21.8 °C रहेगा। धुंध और ओवरकास्ट के कारण दृश्यता कम होगी, इसलिए खेत में काम करते समय सावधानी बरतें। यदि आप फसल के लिए कीटनाशक या उर्वरक छिड़काव की योजना बना रहे हैं, तो बारिश से पहले या बाद में काम करें ताकि द्रव्यमान कम हो और फसल सुरक्षित रहे।\n\nसामान्य सलाह: आज शाम 5  बजे के बाद हल्की बूंदाबांदी हो सकती है, इसलिए खेत से बाहर निकलते समय हल्का कपड़ा या छाता साथ रखें।",
+    "severity": "none",
+    "loggedAt": "2026-09-09T23:32:03.416Z",
+    "verified": false,
+    "accuracyStatus": null,
+    "claims": [
+      {
+        "claimType": "rain_mm",
+        "claimValue": 0.8,
+        "unit": "mm",
+        "actualValue": null,
+        "accuracyStatus": null
+      }
+    ]
   }
 ]
