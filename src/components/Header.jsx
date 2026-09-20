@@ -25,6 +25,9 @@ export default function Header() {
   const [showDrishtiModal, setShowDrishtiModal] = useState(false);
   const [showSagarModal, setShowSagarModal] = useState(false);
   const [bulletinCategory, setBulletinCategory] = useState('master');
+  const [customDrishtiLoc, setCustomDrishtiLoc] = useState(null);
+  const [customSagarLoc, setCustomSagarLoc] = useState(null);
+  const [customBulletinLoc, setCustomBulletinLoc] = useState(null);
   const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
   const [showAccuracyModal, setShowAccuracyModal] = useState(false);
   const [showA11y, setShowA11y] = useState(false);
@@ -55,13 +58,26 @@ export default function Header() {
   }, []);
 
   useEffect(() => {
-    const handleOpenDrishti = () => setShowDrishtiModal(true);
-    const handleOpenSagar = () => setShowSagarModal(true);
+    const handleOpenDrishti = (e) => {
+      if (e?.detail?.locationData) setCustomDrishtiLoc(e.detail.locationData);
+      setShowDrishtiModal(true);
+    };
+    const handleOpenSagar = (e) => {
+      if (e?.detail?.locationData) setCustomSagarLoc(e.detail.locationData);
+      setShowSagarModal(true);
+    };
+    const handleOpenBulletin = (e) => {
+      if (e?.detail?.category) setBulletinCategory(e.detail.category);
+      if (e?.detail?.location) setCustomBulletinLoc(e.detail.location);
+      setIsBulletinOpen(true);
+    };
     window.addEventListener('weathergpt-open-mausam-drishti', handleOpenDrishti);
     window.addEventListener('weathergpt-open-sagar-rakshak', handleOpenSagar);
+    window.addEventListener('weathergpt-open-bulletin', handleOpenBulletin);
     return () => {
       window.removeEventListener('weathergpt-open-mausam-drishti', handleOpenDrishti);
       window.removeEventListener('weathergpt-open-sagar-rakshak', handleOpenSagar);
+      window.removeEventListener('weathergpt-open-bulletin', handleOpenBulletin);
     };
   }, []);
 
@@ -135,118 +151,133 @@ export default function Header() {
     }
     
     setIsLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
+
+    const onLocationSuccess = async (position) => {
+      try {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        const accuracy = Math.round(position.coords.accuracy || 10);
         try {
-          const lat = position.coords.latitude;
-          const lng = position.coords.longitude;
-          
-          dispatch({ type: 'SET_LOADING', payload: true });
-          
-          // Fetch reverse geocode and live weather concurrently
-          const [location, weatherData] = await Promise.all([
-            reverseGeocode(lat, lng),
-            getWeather(lat, lng)
-          ]);
-          const weatherInfo = getWeatherInfo(weatherData.weatherCode);
-          
-          dispatch({ type: 'SET_WEATHER_CONDITION', payload: weatherInfo.condition });
-          dispatch({
-            type: 'SET_CURRENT_WEATHER',
-            payload: { ...weatherData, locationName: location.name, lat, lng },
-          });
-          // Also update the Weather Stage and Alerts screen
-          dispatch({
-            type: 'SET_WEATHER_STAGE_DATA',
-            payload: { locationName: location.name, lat, lng, weather: weatherData }
-          });
+          localStorage.setItem("weathergpt_last_known_gps", JSON.stringify({ lat, lng, accuracy, time: Date.now() }));
+        } catch (e) {}
+        
+        dispatch({ type: 'SET_LOADING', payload: true });
+        
+        // Fetch reverse geocode and live weather concurrently
+        const [location, weatherData] = await Promise.all([
+          reverseGeocode(lat, lng),
+          getWeather(lat, lng)
+        ]);
+        const weatherInfo = getWeatherInfo(weatherData.weatherCode);
+        
+        dispatch({ type: 'SET_WEATHER_CONDITION', payload: weatherInfo.condition });
+        dispatch({
+          type: 'SET_CURRENT_WEATHER',
+          payload: { ...weatherData, locationName: location.name, lat, lng },
+        });
+        // Also update the Weather Stage and Alerts screen
+        dispatch({
+          type: 'SET_WEATHER_STAGE_DATA',
+          payload: { locationName: location.name, lat, lng, weather: weatherData }
+        });
 
-          const baseUrl = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
-          fetch(`${baseUrl}/api/alerts?state=${encodeURIComponent(location.state || location.name)}&district=${encodeURIComponent(location.district || '')}&lat=${lat}&lng=${lng}`).then(r => r.ok ? r.json() : []).then(a => dispatch({ type: 'SET_GOVERNMENT_ALERTS', payload: a })).catch(() => dispatch({ type: 'SET_GOVERNMENT_ALERTS', payload: [] }));
-          
-          const severityCheck = checkSeverity(weatherData, location.name);
-          if (severityCheck && severityCheck.isSevere) {
-            dispatch({ type: 'SET_SEVERE_ALERT', payload: severityCheck });
-          } else {
-            dispatch({ type: 'DISMISS_ALERT' });
-          }
-
-          // Let AI introduce the location
-          const text = `Give me a quick weather summary for my current live location: ${location.name}`;
-          dispatch({ type: 'ADD_USER_MESSAGE', payload: `📍 Current Location: ${location.name}` });
-          
-          try {
-            const aiResponse = await sendChatMessage(text, state.language, {
-              location: location.name,
-              state: location.state,
-              ...weatherData,
-              conditionLabel: weatherInfo.label,
-            }, [], state.userProfile);
-
-            dispatch({
-              type: 'ADD_ASSISTANT_MESSAGE',
-              payload: {
-                answer: aiResponse.answer,
-                followUp: aiResponse.followUp,
-                relevantStat: aiResponse.relevantStat || '',
-                advisory: aiResponse.advisory || (severityCheck ? severityCheck.summary : ''),
-                severity: aiResponse.severity || (severityCheck?.isSevere ? 'severe' : 'none'),
-                weatherData: {
-                  temperature: weatherData.temperature,
-                  feelsLike: weatherData.feelsLike,
-                  humidity: weatherData.humidity,
-                  windSpeed: weatherData.windSpeed,
-                  precipitation: weatherData.precipitation,
-                  weatherCode: weatherData.weatherCode,
-                  uvIndex: weatherData.uvIndex,
-                  visibility: weatherData.visibility,
-                  locationName: location.name,
-                },
-              },
-            });
-          } catch (aiErr) {
-            console.warn("AI summary fallback:", aiErr.message);
-            // Graceful direct weather summary fallback without showing a failure bubble
-            dispatch({
-              type: 'ADD_ASSISTANT_MESSAGE',
-              payload: {
-                answer: `Current weather in ${location.name}: ${weatherInfo.label} with ${weatherData.temperature}°C (feels like ${weatherData.feelsLike}°C). Humidity is at ${weatherData.humidity}%, wind speed is ${weatherData.windSpeed} km/h.`,
-                followUp: '',
-                relevantStat: `RAIN: ${weatherData.rain || 0} MM`,
-                advisory: severityCheck ? severityCheck.summary : '',
-                severity: severityCheck?.isSevere ? 'severe' : 'none',
-                weatherData: {
-                  temperature: weatherData.temperature,
-                  feelsLike: weatherData.feelsLike,
-                  humidity: weatherData.humidity,
-                  windSpeed: weatherData.windSpeed,
-                  precipitation: weatherData.precipitation,
-                  weatherCode: weatherData.weatherCode,
-                  uvIndex: weatherData.uvIndex,
-                  visibility: weatherData.visibility,
-                  locationName: location.name,
-                },
-              },
-            });
-          }
-          
-        } catch (err) {
-          console.error("Live location error:", err);
-          dispatch({ type: 'ADD_ERROR_MESSAGE', payload: "Failed to get weather for your live location." });
-        } finally {
-          setIsLocating(false);
-          dispatch({ type: 'SET_LOADING', payload: false });
+        const baseUrl = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
+        fetch(`${baseUrl}/api/alerts?state=${encodeURIComponent(location.state || location.name)}&district=${encodeURIComponent(location.district || '')}&lat=${lat}&lng=${lng}`).then(r => r.ok ? r.json() : []).then(a => dispatch({ type: 'SET_GOVERNMENT_ALERTS', payload: a })).catch(() => dispatch({ type: 'SET_GOVERNMENT_ALERTS', payload: [] }));
+        
+        const severityCheck = checkSeverity(weatherData, location.name);
+        if (severityCheck && severityCheck.isSevere) {
+          dispatch({ type: 'SET_SEVERE_ALERT', payload: severityCheck });
+        } else {
+          dispatch({ type: 'DISMISS_ALERT' });
         }
-      },
-      (err) => {
-        console.error(err);
-        alert("Unable to retrieve your location. Please check browser permissions.");
+
+        // Let AI introduce the location
+        const text = `Give me a quick weather summary for my current live location: ${location.name}`;
+        dispatch({ type: 'ADD_USER_MESSAGE', payload: `📍 Current Location: ${location.name}` });
+        
+        try {
+          const aiResponse = await sendChatMessage(text, state.language, {
+            location: location.name,
+            state: location.state,
+            ...weatherData,
+            conditionLabel: weatherInfo.label,
+          }, [], state.userProfile);
+
+          dispatch({
+            type: 'ADD_ASSISTANT_MESSAGE',
+            payload: {
+              answer: aiResponse.answer,
+              followUp: aiResponse.followUp,
+              relevantStat: aiResponse.relevantStat || '',
+              advisory: aiResponse.advisory || (severityCheck ? severityCheck.summary : ''),
+              severity: aiResponse.severity || (severityCheck?.isSevere ? 'severe' : 'none'),
+              weatherData: {
+                temperature: weatherData.temperature,
+                feelsLike: weatherData.feelsLike,
+                humidity: weatherData.humidity,
+                windSpeed: weatherData.windSpeed,
+                precipitation: weatherData.precipitation,
+                weatherCode: weatherData.weatherCode,
+                uvIndex: weatherData.uvIndex,
+                visibility: weatherData.visibility,
+                locationName: location.name,
+              },
+            },
+          });
+        } catch (aiErr) {
+          console.warn("AI summary fallback:", aiErr.message);
+          // Graceful direct weather summary fallback without showing a failure bubble
+          dispatch({
+            type: 'ADD_ASSISTANT_MESSAGE',
+            payload: {
+              answer: `Current weather in ${location.name}: ${weatherInfo.label} with ${weatherData.temperature}°C (feels like ${weatherData.feelsLike}°C). Humidity is at ${weatherData.humidity}%, wind speed is ${weatherData.windSpeed} km/h.`,
+              followUp: '',
+              relevantStat: `RAIN: ${weatherData.rain || 0} MM`,
+              advisory: severityCheck ? severityCheck.summary : '',
+              severity: severityCheck?.isSevere ? 'severe' : 'none',
+              weatherData: {
+                temperature: weatherData.temperature,
+                feelsLike: weatherData.feelsLike,
+                humidity: weatherData.humidity,
+                windSpeed: weatherData.windSpeed,
+                precipitation: weatherData.precipitation,
+                weatherCode: weatherData.weatherCode,
+                uvIndex: weatherData.uvIndex,
+                visibility: weatherData.visibility,
+                locationName: location.name,
+              },
+            },
+          });
+        }
+        
+      } catch (err) {
+        console.error("Live location error:", err);
+        dispatch({ type: 'ADD_ERROR_MESSAGE', payload: "Failed to get weather for your live location." });
+      } finally {
         setIsLocating(false);
+        dispatch({ type: 'SET_LOADING', payload: false });
+      }
+    };
+
+    // Attempt high-accuracy GPS with automatic fallback to standard network accuracy
+    navigator.geolocation.getCurrentPosition(
+      onLocationSuccess,
+      (err) => {
+        console.warn("High-accuracy GPS timed out, trying standard accuracy:", err.message);
+        navigator.geolocation.getCurrentPosition(
+          onLocationSuccess,
+          (stdErr) => {
+            console.error("Standard geolocation error:", stdErr);
+            alert("Unable to retrieve your location. Please check browser permissions.");
+            setIsLocating(false);
+          },
+          { enableHighAccuracy: false, timeout: 6000, maximumAge: 60000 }
+        );
       },
       {
         enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
+        timeout: 8000,
+        maximumAge: 15000
       }
     );
   };
@@ -797,8 +828,11 @@ export default function Header() {
       {isBulletinOpen && (
         <OfficialBulletinModal
           isOpen={isBulletinOpen}
-          onClose={() => setIsBulletinOpen(false)}
-          initialLocation={{
+          onClose={() => {
+            setIsBulletinOpen(false);
+            setCustomBulletinLoc(null);
+          }}
+          initialLocation={customBulletinLoc || {
             name: state.weatherStageData?.locationName || state.currentWeather?.locationName || 'New Delhi',
             district: state.weatherStageData?.district || state.currentWeather?.district || '',
             state: state.weatherStageData?.state || state.currentWeather?.state || '',
@@ -814,8 +848,11 @@ export default function Header() {
       {showDrishtiModal && (
         <MausamDrishtiModal
           isOpen={showDrishtiModal}
-          onClose={() => setShowDrishtiModal(false)}
-          locationData={{
+          onClose={() => {
+            setShowDrishtiModal(false);
+            setCustomDrishtiLoc(null);
+          }}
+          locationData={customDrishtiLoc || {
             name: state.weatherStageData?.locationName || state.currentWeather?.locationName || 'Bhopal',
             district: state.weatherStageData?.district || state.currentWeather?.district || '',
             state: state.weatherStageData?.state || state.currentWeather?.state || '',
@@ -830,8 +867,11 @@ export default function Header() {
       {showSagarModal && (
         <SagarRakshakModal
           isOpen={showSagarModal}
-          onClose={() => setShowSagarModal(false)}
-          locationData={{
+          onClose={() => {
+            setShowSagarModal(false);
+            setCustomSagarLoc(null);
+          }}
+          locationData={customSagarLoc || {
             name: state.weatherStageData?.locationName || state.currentWeather?.locationName || 'Chennai Coast',
             district: state.weatherStageData?.district || state.currentWeather?.district || '',
             state: state.weatherStageData?.state || state.currentWeather?.state || '',

@@ -100,6 +100,36 @@ export default function SosButton() {
     window.addEventListener('weathergpt-sos-queue-changed', refreshQueue);
     window.addEventListener('weathergpt-sos-flushed', refreshQueue);
 
+    // Proactively pre-warm high-accuracy GPS fix in the background
+    if (typeof navigator !== "undefined" && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          const accuracy = Math.round(pos.coords.accuracy || 10);
+          try {
+            localStorage.setItem("weathergpt_last_known_gps", JSON.stringify({ lat, lng, accuracy, time: Date.now() }));
+          } catch (e) {}
+        },
+        () => {
+          // If high accuracy times out on background pre-warm, try standard accuracy
+          navigator.geolocation.getCurrentPosition(
+            (pos) => {
+              const lat = pos.coords.latitude;
+              const lng = pos.coords.longitude;
+              const accuracy = Math.round(pos.coords.accuracy || 50);
+              try {
+                localStorage.setItem("weathergpt_last_known_gps", JSON.stringify({ lat, lng, accuracy, time: Date.now() }));
+              } catch (e) {}
+            },
+            () => {},
+            { enableHighAccuracy: false, timeout: 6000, maximumAge: 60000 }
+          );
+        },
+        { enableHighAccuracy: true, timeout: 7000, maximumAge: 30000 }
+      );
+    }
+
     return () => {
       window.removeEventListener('weathergpt-open-sos', handleOpenSos);
       window.removeEventListener('online', handleOnline);
@@ -131,38 +161,70 @@ export default function SosButton() {
     reader.readAsDataURL(file);
   };
 
-  // Multi-tier location resolver: Live Satellite GPS -> Cached GPS Fix -> Active Dashboard City -> Default
+  // Multi-tier high-precision location resolver
   const resolveLocation = async () => {
-    // 1. Hardware Geolocation: Attempt high accuracy with 3.5s timeout (fails fast in Airplane mode)
     if (typeof navigator !== "undefined" && navigator.geolocation) {
+      // Pass 1: Hardware Satellite GPS with generous 7.5s timeout
       try {
         const pos = await new Promise((resolve, reject) => {
           navigator.geolocation.getCurrentPosition(resolve, reject, {
             enableHighAccuracy: true,
-            timeout: 3500,
-            maximumAge: 300000, // Accept any GPS fix from the last 5 minutes
+            timeout: 7500,
+            maximumAge: 10000,
           });
         });
         const lat = pos.coords.latitude;
         const lng = pos.coords.longitude;
+        const acc = Math.round(pos.coords.accuracy || 10);
         try {
-          localStorage.setItem("weathergpt_last_known_gps", JSON.stringify({ lat, lng, time: Date.now() }));
+          localStorage.setItem("weathergpt_last_known_gps", JSON.stringify({ lat, lng, accuracy: acc, time: Date.now() }));
         } catch (e) {}
-        return { lat, lng, source: "live_gps", note: "Live Satellite GPS Fix" };
-      } catch (err) {
-        console.warn("Live GPS unavailable (normal in Airplane/offline mode):", err.message);
+        return { 
+          lat, 
+          lng, 
+          source: "live_gps", 
+          note: `🛰️ Live Satellite GPS (±${acc}m)` 
+        };
+      } catch (errHigh) {
+        console.warn("High-accuracy GPS timed out or unavailable, trying standard accuracy...", errHigh.message);
+        // Pass 2: Standard Wi-Fi / Cell tower geolocation (very fast, 5s timeout)
+        try {
+          const pos = await new Promise((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject, {
+              enableHighAccuracy: false,
+              timeout: 5000,
+              maximumAge: 60000,
+            });
+          });
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          const acc = Math.round(pos.coords.accuracy || 40);
+          try {
+            localStorage.setItem("weathergpt_last_known_gps", JSON.stringify({ lat, lng, accuracy: acc, time: Date.now() }));
+          } catch (e) {}
+          return { 
+            lat, 
+            lng, 
+            source: "live_gps", 
+            note: `📍 Live Network GPS (±${acc}m)` 
+          };
+        } catch (errStd) {
+          console.warn("Standard geolocation failed/offline:", errStd.message);
+        }
       }
     }
 
-    // 2. Fallback: Last known hardware GPS fix saved on this device
+    // 2. Fallback: Last known hardware GPS fix saved on this device (within 24h)
     try {
       const savedGps = JSON.parse(localStorage.getItem("weathergpt_last_known_gps") || "null");
       if (savedGps && savedGps.lat && savedGps.lng) {
+        const ageMinutes = Math.round((Date.now() - (savedGps.time || Date.now())) / 60000);
+        const ageStr = ageMinutes < 60 ? `${ageMinutes}m ago` : `${Math.round(ageMinutes / 60)}h ago`;
         return {
           lat: Number(savedGps.lat),
           lng: Number(savedGps.lng),
           source: "cached_gps",
-          note: `Cached Device GPS (${new Date(savedGps.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})`
+          note: `📍 Cached Device GPS (${ageStr}${savedGps.accuracy ? `, ±${savedGps.accuracy}m` : ''})`
         };
       }
     } catch (e) {}
@@ -186,7 +248,7 @@ export default function SosButton() {
       lat: 28.6139,
       lng: 77.2090,
       source: "emergency_default",
-      note: "Offline Airplane Mode (Default Location)"
+      note: "Offline Airplane Mode (Default Coordinates)"
     };
   };
 
@@ -430,10 +492,10 @@ export default function SosButton() {
                     <div className="bg-black/40 border border-amber-500/20 rounded-xl p-2 font-mono text-[11px] text-amber-200/90 space-y-0.5">
                       <div className="flex items-center gap-1.5">
                         <span>📍</span>
-                        <span className="font-bold">{coords.lat?.toFixed(4)}°, {coords.lng?.toFixed(4)}°</span>
+                        <span className="font-bold">{typeof coords.lat === 'number' ? coords.lat.toFixed(5) : '--'}°, {typeof coords.lng === 'number' ? coords.lng.toFixed(5) : '--'}°</span>
                       </div>
-                      <div className="text-[10px] text-amber-300/60 pl-4">
-                        Source: {coords.note || 'Hardware GPS Lock'}
+                      <div className="text-[10px] text-amber-300/70 pl-4">
+                        {coords.note || 'Hardware GPS Lock'}
                       </div>
                     </div>
                   )}
@@ -454,7 +516,7 @@ export default function SosButton() {
 
                   <a
                     href={`sms:112?body=${encodeURIComponent(
-                      `EMERGENCY SOS [${form.helpType}]: Name: ${form.name || 'Citizen'}, GPS: ${coords?.lat?.toFixed(4)}, ${coords?.lng?.toFixed(4)} (https://maps.google.com/?q=${coords?.lat},${coords?.lng}). ${form.message || ''}`
+                      `EMERGENCY SOS [${form.helpType}]: Name: ${form.name || 'Citizen'}, GPS: ${typeof coords?.lat === 'number' ? coords.lat.toFixed(5) : ''}, ${typeof coords?.lng === 'number' ? coords.lng.toFixed(5) : ''} (https://www.google.com/maps/search/?api=1&query=${coords?.lat},${coords?.lng}&zoom=17). ${form.message || ''}`
                     )}`}
                     className="w-full py-2.5 px-3 bg-red-600/20 hover:bg-red-600/30 border border-red-500/40 text-red-300 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all active:scale-95"
                   >

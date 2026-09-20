@@ -8,39 +8,47 @@ const DOMAINS = [
     emoji: '🌾',
     title: 'Farmer',
     hindi: 'किसान',
-    desc: 'Crop health, pesticide timing & safe spray alerts',
+    subtitle: 'फसल स्वास्थ्य, मौसम व छिड़काव सलाह',
+    tag: 'Agri AI',
+    color: '#10b981',
   },
   {
     code: 'fisherman',
     emoji: '🎣',
     title: 'Fisherman',
     hindi: 'मछुआरा',
-    desc: 'Sea conditions, wave heights & coastal warnings',
+    subtitle: 'समुद्री लहरें, तेज हवा व चक्रवात चेतावनी',
+    tag: 'Marine',
+    color: '#06b6d4',
   },
   {
     code: 'aviation',
     emoji: '✈️',
     title: 'Aviation & Drone',
     hindi: 'उड्डयन / ड्रोन',
-    desc: 'Runway visibility, wind shear & flight weather',
+    subtitle: 'रनवे दृश्यता, विंड शियर व उड़ान मौसम',
+    tag: 'Aero',
+    color: '#3b82f6',
   },
   {
     code: 'urbanPlanning',
     emoji: '🏙️',
     title: 'City & Commute',
     hindi: 'शहरी नागरिक',
-    desc: 'Air quality (AQI), heatwave & drainage flood risk',
+    subtitle: 'वायु गुणवत्ता (AQI), लू व जलभराव अलर्ट',
+    tag: 'Urban AQI',
+    color: '#8b5cf6',
   },
   {
     code: 'general',
     emoji: '🌍',
     title: 'General Citizen',
     hindi: 'आम नागरिक',
-    desc: 'Daily weather forecast, rain alerts & SOS safety',
+    subtitle: 'दैनिक बारिश, तापमान व SOS आपातकालीन सुरक्षा',
+    tag: 'Civil SOS',
+    color: '#14b8a6',
   },
 ];
-
-const POPULAR_LANGS = ['hi', 'en', 'bn', 'mr', 'ta', 'te', 'gu', 'pa', 'kn', 'ml', 'or', 'as'];
 
 const JUDGE_PRESETS = [
   { label: '🌾 Kisan (Hi)', role: 'farmer', lang: 'hi' },
@@ -51,8 +59,10 @@ const JUDGE_PRESETS = [
 
 export default function Onboarding() {
   const { state, dispatch } = useApp();
-  const [selectedDomain, setSelectedDomain] = useState('farmer');
-  const [selectedLang, setSelectedLang] = useState('hi');
+  const [selectedDomain, setSelectedDomain] = useState(state.userProfile || 'farmer');
+  const [selectedLang, setSelectedLang] = useState(state.language || 'hi');
+  const [showLangModal, setShowLangModal] = useState(false);
+  const [searchLang, setSearchLang] = useState('');
 
   const isLight = state.uiTheme === 'light';
 
@@ -65,11 +75,39 @@ export default function Onboarding() {
   const handlePreset = (p) => {
     setSelectedDomain(p.role);
     setSelectedLang(p.lang);
-    dispatch({ type: 'SET_PROFILE', payload: p.role });
-    dispatch({ type: 'SET_LANGUAGE', payload: p.lang });
   };
 
-  const activeLangObj = LANGUAGES.find(l => l.code === selectedLang) || { label: 'Hindi', nativeLabel: 'हिन्दी' };
+  const activeLangObj =
+    LANGUAGES.find((l) => l.code === selectedLang) || {
+      code: 'hi',
+      label: 'Hindi',
+      nativeLabel: 'हिन्दी',
+    };
+
+  const filteredLanguages = LANGUAGES.filter((l) => {
+    const q = searchLang.toLowerCase().trim();
+    if (!q) return true;
+    return (
+      l.label.toLowerCase().includes(q) ||
+      l.nativeLabel.toLowerCase().includes(q) ||
+      l.code.toLowerCase().includes(q)
+    );
+  });
+
+  // UI Theme Colors with guaranteed high contrast
+  const colors = {
+    bg: isLight ? '#f1f5f9' : '#080d1a',
+    cardBg: isLight ? '#ffffff' : '#0f172a',
+    cardBorder: isLight ? '#e2e8f0' : 'rgba(255, 255, 255, 0.1)',
+    textPrimary: isLight ? '#0f172a' : '#f8fafc',
+    textSecondary: isLight ? '#475569' : '#94a3b8',
+    textMuted: isLight ? '#64748b' : '#64748b',
+    accent: isLight ? '#059669' : '#10b981',
+    accentGlow: isLight ? 'rgba(5, 150, 105, 0.2)' : 'rgba(16, 185, 129, 0.25)',
+    itemHover: isLight ? '#f8fafc' : '#1e293b',
+    itemBorder: isLight ? '#e2e8f0' : '#1e293b',
+    modalBg: isLight ? '#ffffff' : '#0f172a',
+  };
 
   return (
     <div
@@ -80,363 +118,676 @@ export default function Onboarding() {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '16px',
+        padding: '10px 12px',
         boxSizing: 'border-box',
-        backgroundColor: isLight ? '#f6f7fb' : '#0a0e17',
-        color: isLight ? '#1e293b' : '#f8fafc',
-        fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+        backgroundColor: colors.bg,
+        color: colors.textPrimary,
+        fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif",
+        position: 'relative',
       }}
     >
-      {/* Top Simple Bar */}
+      {/* Ambient Cool Glow Elements */}
+      <div
+        style={{
+          position: 'fixed',
+          top: '-10%',
+          left: '-10%',
+          width: '320px',
+          height: '320px',
+          borderRadius: '50%',
+          background: isLight
+            ? 'radial-gradient(circle, rgba(16,185,129,0.15) 0%, transparent 70%)'
+            : 'radial-gradient(circle, rgba(16,185,129,0.18) 0%, transparent 70%)',
+          pointerEvents: 'none',
+          zIndex: 0,
+        }}
+      />
+      <div
+        style={{
+          position: 'fixed',
+          bottom: '-10%',
+          right: '-10%',
+          width: '320px',
+          height: '320px',
+          borderRadius: '50%',
+          background: isLight
+            ? 'radial-gradient(circle, rgba(56,189,248,0.12) 0%, transparent 70%)'
+            : 'radial-gradient(circle, rgba(56,189,248,0.15) 0%, transparent 70%)',
+          pointerEvents: 'none',
+          zIndex: 0,
+        }}
+      />
+
       <div
         style={{
           width: '100%',
-          maxWidth: '560px',
+          maxWidth: '480px',
+          position: 'relative',
+          zIndex: 1,
           display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginBottom: '16px',
+          flexDirection: 'column',
+          gap: '8px',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <img src="/logo.png" alt="Logo" style={{ width: '28px', height: '28px', borderRadius: '7px' }} />
-          <span style={{ fontSize: '17px', fontWeight: 800, letterSpacing: '-0.3px' }}>
-            Weather<span style={{ color: '#f59e0b' }}>GPT</span>
-          </span>
-          <span
-            style={{
-              fontSize: '10px',
-              fontWeight: 700,
-              padding: '2px 6px',
-              borderRadius: '6px',
-              backgroundColor: isLight ? '#e2e8f0' : '#1e293b',
-              color: isLight ? '#475569' : '#94a3b8',
-            }}
-          >
-            SIH 2026
-          </span>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <button
-            onClick={() => dispatch({ type: 'SET_UI_THEME', payload: isLight ? 'dark' : 'light' })}
-            title="Toggle theme"
-            style={{
-              padding: '5px 9px',
-              borderRadius: '8px',
-              border: `1px solid ${isLight ? '#cbd5e1' : '#334155'}`,
-              backgroundColor: isLight ? '#ffffff' : '#1e293b',
-              color: isLight ? '#334155' : '#e2e8f0',
-              fontSize: '12px',
-              cursor: 'pointer',
-            }}
-          >
-            {isLight ? '🌙' : '☀️'}
-          </button>
-
-          <button
-            onClick={() => dispatch({ type: 'SET_ONBOARDED' })}
-            style={{
-              padding: '5px 12px',
-              borderRadius: '8px',
-              border: 'none',
-              backgroundColor: 'transparent',
-              color: isLight ? '#64748b' : '#94a3b8',
-              fontSize: '13px',
-              fontWeight: 600,
-              cursor: 'pointer',
-            }}
-          >
-            Skip →
-          </button>
-        </div>
-      </div>
-
-      {/* Main Clean Card */}
-      <div
-        style={{
-          width: '100%',
-          maxWidth: '560px',
-          backgroundColor: isLight ? '#ffffff' : '#111827',
-          border: `1px solid ${isLight ? '#e2e8f0' : '#1f2937'}`,
-          borderRadius: '20px',
-          padding: '24px 20px',
-          boxShadow: isLight ? '0 10px 30px rgba(0,0,0,0.05)' : '0 12px 40px rgba(0,0,0,0.4)',
-          boxSizing: 'border-box',
-        }}
-      >
-        {/* Title */}
-        <div style={{ marginBottom: '20px' }}>
-          <h1
-            style={{
-              margin: '0 0 4px',
-              fontSize: '22px',
-              fontWeight: 800,
-              letterSpacing: '-0.4px',
-              color: isLight ? '#0f172a' : '#ffffff',
-            }}
-          >
-            Welcome to WeatherGPT
-          </h1>
-          <p
-            style={{
-              margin: 0,
-              fontSize: '13px',
-              color: isLight ? '#64748b' : '#94a3b8',
-              lineHeight: 1.4,
-            }}
-          >
-            मौसम की सटीक जानकारी, आपके काम के अनुसार। Choose your role to get started.
-          </p>
-        </div>
-
-        {/* Question 1: Select Category */}
-        <div style={{ marginBottom: '20px' }}>
-          <label
-            style={{
-              display: 'block',
-              fontSize: '12px',
-              fontWeight: 700,
-              textTransform: 'uppercase',
-              letterSpacing: '0.6px',
-              color: isLight ? '#475569' : '#94a3b8',
-              marginBottom: '10px',
-            }}
-          >
-            1. What do you do? / आपकी श्रेणी
-          </label>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {DOMAINS.map((d) => {
-              const isSelected = selectedDomain === d.code;
-              return (
-                <button
-                  key={d.code}
-                  onClick={() => setSelectedDomain(d.code)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '10px 14px',
-                    borderRadius: '12px',
-                    border: `1.5px solid ${isSelected ? (isLight ? '#059669' : '#10b981') : (isLight ? '#e2e8f0' : '#1f2937')}`,
-                    backgroundColor: isSelected
-                      ? (isLight ? '#ecfdf5' : 'rgba(16,185,129,0.12)')
-                      : (isLight ? '#f8fafc' : '#161e2e'),
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    transition: 'all 0.15s ease',
-                    boxSizing: 'border-box',
-                    width: '100%',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
-                    <span style={{ fontSize: '22px', flexShrink: 0 }}>{d.emoji}</span>
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ fontSize: '14px', fontWeight: 700, color: isSelected ? (isLight ? '#065f46' : '#34d399') : (isLight ? '#0f172a' : '#f1f5f9') }}>
-                        {d.title} <span style={{ fontSize: '12px', fontWeight: 500, color: isLight ? '#64748b' : '#94a3b8' }}>({d.hindi})</span>
-                      </div>
-                      <div style={{ fontSize: '11px', color: isLight ? '#64748b' : '#94a3b8', marginTop: '1px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {d.desc}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div
-                    style={{
-                      width: '18px',
-                      height: '18px',
-                      borderRadius: '50%',
-                      border: `1.5px solid ${isSelected ? (isLight ? '#059669' : '#10b981') : (isLight ? '#94a3b8' : '#475569')}`,
-                      backgroundColor: isSelected ? (isLight ? '#059669' : '#10b981') : 'transparent',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexShrink: 0,
-                      marginLeft: '10px',
-                    }}
-                  >
-                    {isSelected && <span style={{ color: '#ffffff', fontSize: '10px', fontWeight: 900 }}>✓</span>}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Question 2: Select Language */}
-        <div style={{ marginBottom: '24px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-            <label
+        {/* Top Navbar */}
+        <header
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '2px 4px',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div
               style={{
-                fontSize: '12px',
-                fontWeight: 700,
-                textTransform: 'uppercase',
-                letterSpacing: '0.6px',
-                color: isLight ? '#475569' : '#94a3b8',
+                width: '26px',
+                height: '26px',
+                borderRadius: '7px',
+                background: 'linear-gradient(135deg, #10b981, #06b6d4)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 2px 8px rgba(16,185,129,0.3)',
               }}
             >
-              2. Select Language / भाषा
-            </label>
-            <span style={{ fontSize: '12px', fontWeight: 600, color: isLight ? '#059669' : '#10b981' }}>
-              {activeLangObj.nativeLabel} ({activeLangObj.label})
+              <img
+                src="/logo.png"
+                alt="Logo"
+                style={{ width: '22px', height: '22px', borderRadius: '5px', objectFit: 'contain' }}
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                }}
+              />
+            </div>
+            <span style={{ fontSize: '16px', fontWeight: 900, letterSpacing: '-0.3px', color: colors.textPrimary }}>
+              Weather<span style={{ color: colors.accent }}>GPT</span>
+            </span>
+            <span
+              style={{
+                fontSize: '9.5px',
+                fontWeight: 800,
+                padding: '2px 6px',
+                borderRadius: '20px',
+                backgroundColor: isLight ? '#ecfdf5' : 'rgba(16,185,129,0.15)',
+                color: isLight ? '#047857' : '#34d399',
+                border: `1px solid ${isLight ? '#a7f3d0' : 'rgba(16,185,129,0.3)'}`,
+              }}
+            >
+              SIH 2026
             </span>
           </div>
 
-          {/* Quick Scrollable Chips ("Select from scroll") */}
-          <div
-            style={{
-              display: 'flex',
-              gap: '6px',
-              overflowX: 'auto',
-              paddingBottom: '8px',
-              marginBottom: '8px',
-              WebkitOverflowScrolling: 'touch',
-            }}
-            className="wg-lang-scroll"
-          >
-            {POPULAR_LANGS.map((code) => {
-              const lo = LANGUAGES.find(l => l.code === code) || { nativeLabel: code, label: code };
-              const isSel = selectedLang === code;
-              return (
-                <button
-                  key={code}
-                  onClick={() => setSelectedLang(code)}
-                  style={{
-                    flexShrink: 0,
-                    padding: '6px 12px',
-                    borderRadius: '20px',
-                    border: `1px solid ${isSel ? (isLight ? '#059669' : '#10b981') : (isLight ? '#cbd5e1' : '#334155')}`,
-                    backgroundColor: isSel
-                      ? (isLight ? '#059669' : '#10b981')
-                      : (isLight ? '#f1f5f9' : '#1e293b'),
-                    color: isSel ? '#ffffff' : (isLight ? '#334155' : '#cbd5e1'),
-                    fontSize: '12px',
-                    fontWeight: isSel ? 700 : 500,
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease',
-                  }}
-                >
-                  {lo.nativeLabel}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Dropdown for All Languages */}
-          <div style={{ position: 'relative' }}>
-            <select
-              value={selectedLang}
-              onChange={(e) => setSelectedLang(e.target.value)}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <button
+              type="button"
+              onClick={() =>
+                dispatch({
+                  type: 'SET_UI_THEME',
+                  payload: isLight ? 'dark' : 'light',
+                })
+              }
+              title={isLight ? 'Dark Mode' : 'Light Mode'}
               style={{
-                width: '100%',
-                appearance: 'none',
-                WebkitAppearance: 'none',
-                padding: '8px 32px 8px 12px',
-                borderRadius: '10px',
-                border: `1px solid ${isLight ? '#cbd5e1' : '#334155'}`,
-                backgroundColor: isLight ? '#f8fafc' : '#161e2e',
-                color: isLight ? '#0f172a' : '#f8fafc',
+                padding: '4px 8px',
+                borderRadius: '8px',
+                border: `1px solid ${colors.cardBorder}`,
+                backgroundColor: colors.cardBg,
+                color: colors.textSecondary,
+                fontSize: '12px',
+                cursor: 'pointer',
+              }}
+            >
+              {isLight ? '🌙' : '☀️'}
+            </button>
+            <button
+              type="button"
+              onClick={() => dispatch({ type: 'SET_ONBOARDED' })}
+              style={{
+                padding: '4px 10px',
+                borderRadius: '8px',
+                border: 'none',
+                backgroundColor: 'transparent',
+                color: colors.textSecondary,
                 fontSize: '12px',
                 fontWeight: 600,
                 cursor: 'pointer',
-                outline: 'none',
               }}
             >
-              {LANGUAGES.map((l) => (
-                <option key={l.code} value={l.code} style={{ backgroundColor: isLight ? '#ffffff' : '#1e293b', color: isLight ? '#0f172a' : '#ffffff' }}>
-                  {l.nativeLabel} — {l.label}
-                </option>
-              ))}
-            </select>
-            <div
-              style={{
-                position: 'absolute',
-                right: '12px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                pointerEvents: 'none',
-                fontSize: '10px',
-                color: isLight ? '#64748b' : '#94a3b8',
-              }}
-            >
-              ▼
-            </div>
+              Skip →
+            </button>
           </div>
-        </div>
+        </header>
 
-        {/* Primary Action Button */}
-        <button
-          onClick={handleStart}
+        {/* Main Card (Fits perfectly on mobile) */}
+        <main
           style={{
-            width: '100%',
-            padding: '13px',
-            borderRadius: '12px',
-            border: 'none',
-            backgroundColor: isLight ? '#059669' : '#10b981',
-            color: '#ffffff',
-            fontSize: '15px',
-            fontWeight: 800,
-            letterSpacing: '-0.2px',
-            cursor: 'pointer',
-            boxShadow: '0 4px 14px rgba(16, 185, 129, 0.35)',
-            transition: 'opacity 0.2s',
+            backgroundColor: colors.cardBg,
+            border: `1px solid ${colors.cardBorder}`,
+            borderRadius: '18px',
+            padding: '14px 14px 12px',
+            boxShadow: isLight
+              ? '0 10px 25px -5px rgba(0,0,0,0.06), 0 4px 6px -2px rgba(0,0,0,0.02)'
+              : '0 20px 40px -10px rgba(0,0,0,0.6)',
+            boxSizing: 'border-box',
           }}
         >
-          Get Started →
-        </button>
+          {/* Card Header */}
+          <div style={{ marginBottom: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2px' }}>
+              <h1
+                style={{
+                  margin: 0,
+                  fontSize: '18px',
+                  fontWeight: 900,
+                  letterSpacing: '-0.3px',
+                  color: colors.textPrimary,
+                }}
+              >
+                Welcome to Weather<span style={{ color: colors.accent }}>GPT</span>
+              </h1>
+              <span
+                style={{
+                  fontSize: '10px',
+                  fontWeight: 700,
+                  color: colors.accent,
+                  backgroundColor: isLight ? '#ecfdf5' : 'rgba(16,185,129,0.15)',
+                  padding: '2px 7px',
+                  borderRadius: '12px',
+                  border: `1px solid ${isLight ? '#a7f3d0' : 'rgba(16,185,129,0.3)'}`,
+                }}
+              >
+                Hyperlocal AI
+              </span>
+            </div>
+            <p
+              style={{
+                margin: 0,
+                fontSize: '11.5px',
+                color: colors.textSecondary,
+                lineHeight: 1.35,
+              }}
+            >
+              मौसम की सटीक जानकारी, आपके काम के अनुसार · Choose your role & language.
+            </p>
+          </div>
 
-        {/* Judge Quick Presets (Subtle, discreet for SIH evaluation) */}
-        <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: `1px solid ${isLight ? '#f1f5f9' : '#1f2937'}` }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '6px' }}>
-            <span style={{ fontSize: '11px', color: isLight ? '#94a3b8' : '#64748b' }}>
-              Quick Presets:
+          {/* Section 1: Domain Selection (Direct, Cool, Bilingual) */}
+          <section style={{ marginBottom: '10px' }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: '6px',
+              }}
+            >
+              <span
+                style={{
+                  fontSize: '11px',
+                  fontWeight: 800,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.4px',
+                  color: colors.textSecondary,
+                }}
+              >
+                1. Select Profession / अपनी श्रेणी चुनें:
+              </span>
+              <span style={{ fontSize: '10px', color: colors.textMuted }}>
+                Tailors radar & AI
+              </span>
+            </div>
+
+            {/* 5 Compact, Punchy Cards */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+              {DOMAINS.map((d) => {
+                const isSelected = selectedDomain === d.code;
+                return (
+                  <button
+                    key={d.code}
+                    type="button"
+                    onClick={() => setSelectedDomain(d.code)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '7px 10px',
+                      borderRadius: '11px',
+                      border: `1.5px solid ${isSelected ? colors.accent : colors.itemBorder}`,
+                      backgroundColor: isSelected
+                        ? (isLight ? '#ecfdf5' : 'rgba(16,185,129,0.12)')
+                        : (isLight ? '#f8fafc' : '#131b2e'),
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      transition: 'all 0.12s ease',
+                      boxSizing: 'border-box',
+                      width: '100%',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '9px', minWidth: 0, flex: 1 }}>
+                      {/* Vibrant Emoji Container */}
+                      <div
+                        style={{
+                          width: '32px',
+                          height: '32px',
+                          borderRadius: '8px',
+                          backgroundColor: isSelected
+                            ? (isLight ? '#d1fae5' : 'rgba(16,185,129,0.25)')
+                            : (isLight ? '#ffffff' : '#1e293b'),
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '18px',
+                          flexShrink: 0,
+                          boxShadow: isSelected ? '0 2px 6px rgba(16,185,129,0.2)' : 'none',
+                        }}
+                      >
+                        {d.emoji}
+                      </div>
+
+                      {/* Direct Hindi & English Info */}
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span
+                            style={{
+                              fontSize: '13px',
+                              fontWeight: 800,
+                              color: isSelected
+                                ? (isLight ? '#065f46' : '#34d399')
+                                : colors.textPrimary,
+                            }}
+                          >
+                            {d.title}
+                          </span>
+                          <span
+                            style={{
+                              fontSize: '11px',
+                              fontWeight: 700,
+                              color: isSelected
+                                ? (isLight ? '#059669' : '#6ee7b7')
+                                : colors.textSecondary,
+                            }}
+                          >
+                            · {d.hindi}
+                          </span>
+                          <span
+                            style={{
+                              marginLeft: 'auto',
+                              fontSize: '9px',
+                              fontWeight: 700,
+                              padding: '1px 5px',
+                              borderRadius: '4px',
+                              backgroundColor: isSelected
+                                ? (isLight ? '#a7f3d0' : 'rgba(16,185,129,0.3)')
+                                : (isLight ? '#e2e8f0' : '#1e293b'),
+                              color: isSelected
+                                ? (isLight ? '#065f46' : '#6ee7b7')
+                                : colors.textMuted,
+                            }}
+                          >
+                            {d.tag}
+                          </span>
+                        </div>
+                        <div
+                          style={{
+                            fontSize: '10.5px',
+                            color: colors.textSecondary,
+                            marginTop: '1px',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                          }}
+                        >
+                          {d.subtitle}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Radio Indicator */}
+                    <div
+                      style={{
+                        width: '16px',
+                        height: '16px',
+                        borderRadius: '50%',
+                        border: `1.5px solid ${isSelected ? colors.accent : (isLight ? '#cbd5e1' : '#475569')}`,
+                        backgroundColor: isSelected ? colors.accent : 'transparent',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                        marginLeft: '8px',
+                      }}
+                    >
+                      {isSelected && (
+                        <span style={{ color: '#ffffff', fontSize: '9px', fontWeight: 900 }}>
+                          ✓
+                        </span>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+
+          {/* Section 2: Compact Language Window Trigger ("choti si window se select kare") */}
+          <section style={{ marginBottom: '12px' }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '8px 10px',
+                borderRadius: '11px',
+                border: `1px solid ${colors.itemBorder}`,
+                backgroundColor: isLight ? '#f8fafc' : '#131b2e',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '18px' }}>🌐</span>
+                <div>
+                  <div style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: colors.textMuted }}>
+                    Language / भाषा:
+                  </div>
+                  <div style={{ fontSize: '12.5px', fontWeight: 800, color: colors.accent }}>
+                    {activeLangObj.nativeLabel}{' '}
+                    <span style={{ fontSize: '11px', fontWeight: 600, color: colors.textSecondary }}>
+                      ({activeLangObj.label})
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Click opens the small window/modal */}
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchLang('');
+                  setShowLangModal(true);
+                }}
+                style={{
+                  padding: '5px 12px',
+                  borderRadius: '8px',
+                  border: `1.5px solid ${colors.accent}`,
+                  backgroundColor: isLight ? '#ecfdf5' : 'rgba(16,185,129,0.18)',
+                  color: isLight ? '#065f46' : '#34d399',
+                  fontSize: '11.5px',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                <span>भाषा बदलें</span>
+                <span style={{ fontSize: '10px' }}>▼</span>
+              </button>
+            </div>
+          </section>
+
+          {/* Primary CTA Button */}
+          <button
+            onClick={handleStart}
+            type="button"
+            style={{
+              width: '100%',
+              padding: '11px',
+              borderRadius: '11px',
+              border: 'none',
+              backgroundColor: colors.accent,
+              color: '#ffffff',
+              fontSize: '14.5px',
+              fontWeight: 800,
+              letterSpacing: '-0.2px',
+              cursor: 'pointer',
+              boxShadow: '0 4px 14px rgba(16, 185, 129, 0.35)',
+              transition: 'transform 0.15s, opacity 0.15s',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+            }}
+          >
+            <span>Get Started · डैशबोर्ड शुरू करें</span>
+            <span style={{ fontSize: '16px' }}>→</span>
+          </button>
+
+          {/* Evaluation Presets (SIH Judges / Demo) */}
+          <div
+            style={{
+              marginTop: '10px',
+              paddingTop: '8px',
+              borderTop: `1px solid ${colors.cardBorder}`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '4px',
+            }}
+          >
+            <span style={{ fontSize: '10.5px', fontWeight: 700, color: colors.textMuted }}>
+              ⚡ Quick Presets:
             </span>
-            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-              {JUDGE_PRESETS.map((p, i) => (
-                <button
-                  key={i}
-                  onClick={() => handlePreset(p)}
-                  style={{
-                    padding: '3px 8px',
-                    borderRadius: '6px',
-                    border: `1px solid ${isLight ? '#e2e8f0' : '#334155'}`,
-                    backgroundColor: isLight ? '#f8fafc' : '#1e293b',
-                    color: isLight ? '#64748b' : '#94a3b8',
-                    fontSize: '11px',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                  }}
-                >
-                  {p.label}
-                </button>
-              ))}
+            <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+              {JUDGE_PRESETS.map((p, i) => {
+                const isCurrent = selectedDomain === p.role && selectedLang === p.lang;
+                return (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => handlePreset(p)}
+                    style={{
+                      padding: '2.5px 7px',
+                      borderRadius: '6px',
+                      border: `1px solid ${isCurrent ? colors.accent : colors.itemBorder}`,
+                      backgroundColor: isCurrent ? (isLight ? '#ecfdf5' : 'rgba(16,185,129,0.2)') : (isLight ? '#f1f5f9' : '#1e293b'),
+                      color: isCurrent ? (isLight ? '#065f46' : '#34d399') : colors.textSecondary,
+                      fontSize: '10.5px',
+                      fontWeight: isCurrent ? 800 : 500,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {p.label}
+                  </button>
+                );
+              })}
             </div>
           </div>
+        </main>
+
+        {/* Footer */}
+        <footer
+          style={{
+            fontSize: '10.5px',
+            color: colors.textMuted,
+            textAlign: 'center',
+            padding: '2px 0',
+          }}
+        >
+          IMD & MoES Weather Feeds · 100% Client-Side · Zero Login Required
+        </footer>
+      </div>
+
+      {/* ─────────────────────────────────────────────────────────────
+          "CHOTI SI WINDOW" — Small, Cool Language Selection Modal
+          ───────────────────────────────────────────────────────────── */}
+      {showLangModal && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.65)',
+            backdropFilter: 'blur(5px)',
+            WebkitBackdropFilter: 'blur(5px)',
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '16px',
+            boxSizing: 'border-box',
+          }}
+          onClick={() => setShowLangModal(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: '100%',
+              maxWidth: '380px',
+              backgroundColor: colors.modalBg,
+              border: `1.5px solid ${isLight ? '#cbd5e1' : '#334155'}`,
+              borderRadius: '18px',
+              padding: '16px',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+              maxHeight: '80vh',
+              display: 'flex',
+              flexDirection: 'column',
+              boxSizing: 'border-box',
+            }}
+          >
+            {/* Modal Header */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: '10px',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ fontSize: '18px' }}>🌐</span>
+                <span style={{ fontSize: '14px', fontWeight: 800, color: colors.textPrimary }}>
+                  Choose Language / भाषा चुनें
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowLangModal(false)}
+                style={{
+                  width: '26px',
+                  height: '26px',
+                  borderRadius: '50%',
+                  border: `1px solid ${colors.cardBorder}`,
+                  backgroundColor: isLight ? '#f1f5f9' : '#1e293b',
+                  color: colors.textSecondary,
+                  fontSize: '12px',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Quick Search */}
+            <div style={{ marginBottom: '10px' }}>
+              <input
+                type="text"
+                value={searchLang}
+                onChange={(e) => setSearchLang(e.target.value)}
+                placeholder="Search language / भाषा खोजें..."
+                autoFocus
+                style={{
+                  width: '100%',
+                  padding: '7px 10px',
+                  borderRadius: '9px',
+                  border: `1px solid ${isLight ? '#cbd5e1' : '#334155'}`,
+                  backgroundColor: isLight ? '#f8fafc' : '#131b2e',
+                  color: colors.textPrimary,
+                  fontSize: '12px',
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                }}
+              />
+            </div>
+
+            {/* Language Grid (17 Indian Languages) */}
+            <div
+              style={{
+                overflowY: 'auto',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(2, 1fr)',
+                gap: '6px',
+                paddingRight: '2px',
+                maxHeight: '320px',
+              }}
+            >
+              {filteredLanguages.map((l) => {
+                const isSelected = selectedLang === l.code;
+                return (
+                  <button
+                    key={l.code}
+                    type="button"
+                    onClick={() => {
+                      setSelectedLang(l.code);
+                      setShowLangModal(false);
+                    }}
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'flex-start',
+                      padding: '8px 10px',
+                      borderRadius: '10px',
+                      border: `1.5px solid ${isSelected ? colors.accent : colors.itemBorder}`,
+                      backgroundColor: isSelected
+                        ? (isLight ? '#ecfdf5' : 'rgba(16,185,129,0.18)')
+                        : (isLight ? '#f8fafc' : '#131b2e'),
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      transition: 'all 0.1s ease',
+                      position: 'relative',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                      <span
+                        style={{
+                          fontSize: '13px',
+                          fontWeight: 800,
+                          color: isSelected
+                            ? (isLight ? '#065f46' : '#34d399')
+                            : colors.textPrimary,
+                        }}
+                      >
+                        {l.nativeLabel}
+                      </span>
+                      {isSelected && (
+                        <span style={{ fontSize: '11px', color: colors.accent, fontWeight: 900 }}>
+                          ✓
+                        </span>
+                      )}
+                    </div>
+                    <span
+                      style={{
+                        fontSize: '10.5px',
+                        color: colors.textSecondary,
+                        marginTop: '1px',
+                      }}
+                    >
+                      {l.label} ({l.code.toUpperCase()})
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {filteredLanguages.length === 0 && (
+              <div
+                style={{
+                  padding: '20px',
+                  textAlign: 'center',
+                  fontSize: '12px',
+                  color: colors.textMuted,
+                }}
+              >
+                No matching language found.
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-
-      {/* Subtle Footer */}
-      <div
-        style={{
-          marginTop: '16px',
-          fontSize: '11px',
-          color: isLight ? '#94a3b8' : '#64748b',
-          textAlign: 'center',
-        }}
-      >
-        IMD & MoES Weather Feeds · 100% Client-Side · Zero Login Required
-      </div>
-
-      <style>{`
-        .wg-lang-scroll::-webkit-scrollbar {
-          display: none;
-        }
-        .wg-lang-scroll {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-      `}</style>
+      )}
     </div>
   );
 }

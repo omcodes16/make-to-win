@@ -3,7 +3,7 @@
  * Part of WeatherGPT (SIH PS-26068)
  */
 
-export async function requestMarineSafety({ lat, lng, locationName, language = 'en' }) {
+export async function requestMarineSafety({ lat, lng, locationName, language = 'en', scenario = null }) {
   const baseUrl = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
   const params = new URLSearchParams({
     lat: lat || 13.0827,
@@ -11,6 +11,9 @@ export async function requestMarineSafety({ lat, lng, locationName, language = '
     locationName: locationName || 'Coastal India',
     language
   });
+  if (scenario) {
+    params.append('scenario', scenario);
+  }
 
   const res = await fetch(`${baseUrl}/api/marine-safety?${params.toString()}`);
   if (!res.ok) {

@@ -8,9 +8,7 @@ import { getFarmerAdvisory } from '../utils/farmerAdvisory';
 import { getFishermanAdvisory } from '../utils/fishermanAdvisory';
 import { getAviationAdvisory } from '../utils/aviationAdvisory';
 import { getUrbanPlanningAdvisory } from '../utils/urbanPlanningAdvisory';
-import OfficialBulletinModal from './OfficialBulletinModal';
-import MausamDrishtiModal from './MausamDrishtiModal';
-import SagarRakshakModal from './SagarRakshakModal';
+
 
 // --- TRANSLATIONS DICTIONARY ---
 const tHub = {
@@ -219,9 +217,42 @@ export default function ProfessionModal({ lat, lng, locationName, weather, onClo
   
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [showBulletinModal, setShowBulletinModal] = useState(false);
-  const [showDrishtiModal, setShowDrishtiModal] = useState(false);
-  const [showSagarModal, setShowSagarModal] = useState(false);
+  const handleOpenDrishti = () => {
+    onClose();
+    window.dispatchEvent(new CustomEvent('weathergpt-open-mausam-drishti', {
+      detail: {
+        locationData: {
+          name: locationName || 'Current Location',
+          district: '',
+          state: '',
+          lat: lat || 23.2599,
+          lng: lng || 77.4126
+        }
+      }
+    }));
+  };
+
+  const handleOpenSagar = () => {
+    onClose();
+    window.dispatchEvent(new CustomEvent('weathergpt-open-sagar-rakshak', {
+      detail: {
+        locationData: {
+          name: locationName || 'Coastal Zone',
+          district: '',
+          state: '',
+          lat: lat || 13.0827,
+          lng: lng || 80.2707
+        }
+      }
+    }));
+  };
+
+  const handleOpenBulletin = () => {
+    onClose();
+    window.dispatchEvent(new CustomEvent('weathergpt-open-bulletin', {
+      detail: { category: displayProfile === 'urbanPlanning' ? 'urban' : displayProfile }
+    }));
+  };
 
   useEffect(() => {
     async function fetchData() {
@@ -301,8 +332,9 @@ export default function ProfessionModal({ lat, lng, locationName, weather, onClo
 
     // --- FARMER (AGRICULTURE HUB) ---
     if (displayProfile === 'farmer') {
-      const moisturePct = (data.soil_moisture * 100).toFixed(1);
-      const isDry = data.soil_moisture < 0.2;
+      const moistureVal = typeof data?.soil_moisture === 'number' ? data.soil_moisture : 0;
+      const moisturePct = (moistureVal * 100).toFixed(1);
+      const isDry = moistureVal < 0.2;
       const windSpeed = weather?.windSpeed || 0;
       const isWindy = windSpeed > 15;
       const isRaining = (weather?.rain || 0) > 0 || (weather?.precipitation || 0) > 0;
@@ -315,6 +347,8 @@ export default function ProfessionModal({ lat, lng, locationName, weather, onClo
 
       const heatStress = (weather?.feelsLike || 0) > 35;
       const fungalRisk = ((weather?.feelsLike || 0) > 25 && (weather?.humidity || 0) > 85);
+      const soilTempDisplay = typeof data?.soil_temp === 'number' ? `${data.soil_temp.toFixed(1)}°C` : '--°C';
+      const evapoDisplay = typeof data?.evapotranspiration === 'number' ? `${data.evapotranspiration.toFixed(2)} mm` : '-- mm';
 
       return (
         <div className="space-y-6">
@@ -346,7 +380,7 @@ export default function ProfessionModal({ lat, lng, locationName, weather, onClo
             </div>
 
             <button
-              onClick={() => setShowDrishtiModal(true)}
+              onClick={handleOpenDrishti}
               className="header-icon-btn px-4 py-2 flex items-center justify-center gap-1.5 rounded-full hover:!text-emerald-300 border border-emerald-500/50 bg-emerald-950/60 text-emerald-300 transition-all shadow-md active:scale-95 cursor-pointer font-black text-xs shrink-0 self-start sm:self-auto"
             >
               <span className="text-sm">🌿</span>
@@ -373,7 +407,7 @@ export default function ProfessionModal({ lat, lng, locationName, weather, onClo
               <div className="text-white/50 text-[10px] sm:text-xs font-bold uppercase tracking-widest mb-2 flex items-center gap-2">
                 <span className="text-amber-500">🌡️</span> {t.soilTemp}
               </div>
-              <div className="text-3xl font-black text-white tracking-tight">{data.soil_temp.toFixed(1)}°C</div>
+              <div className="text-3xl font-black text-white tracking-tight">{soilTempDisplay}</div>
               <p className="text-white/40 text-[10px] sm:text-xs mt-2 font-medium">{t.seedGermination}</p>
             </div>
           </div>
@@ -381,7 +415,7 @@ export default function ProfessionModal({ lat, lng, locationName, weather, onClo
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="glass-panel border border-white/5 rounded-2xl p-4">
               <div className="text-white/50 text-[10px] font-bold uppercase tracking-wider mb-1">{t.evapo}</div>
-              <div className="text-lg font-bold text-white">{data.evapotranspiration.toFixed(2)} mm</div>
+              <div className="text-lg font-bold text-white">{evapoDisplay}</div>
               <p className="text-white/40 text-[9px] mt-1">{t.waterLoss}</p>
             </div>
             
@@ -405,10 +439,10 @@ export default function ProfessionModal({ lat, lng, locationName, weather, onClo
 
     // --- FISHERMAN (MARINE HUB) ---
     if (displayProfile === 'fisherman') {
-      const isDangerous = data.wave_height > 1.5;
+      const isDangerous = typeof data?.wave_height === 'number' && data.wave_height > 1.5;
       const windSpeed = weather?.windSpeed || 0;
       const activityHigh = !isDangerous && windSpeed < 20;
-      const isDataUnavailable = data.wave_height === null;
+      const isDataUnavailable = data?.wave_height === null || data?.wave_height === undefined;
 
       return (
         <div className="space-y-6">
@@ -440,7 +474,7 @@ export default function ProfessionModal({ lat, lng, locationName, weather, onClo
             </div>
 
             <button
-              onClick={() => setShowSagarModal(true)}
+              onClick={handleOpenSagar}
               className="header-icon-btn px-4 py-2 flex items-center justify-center gap-1.5 rounded-full hover:!text-cyan-300 border border-cyan-500/50 bg-cyan-950/60 text-cyan-300 transition-all shadow-md active:scale-95 cursor-pointer font-black text-xs shrink-0 self-start sm:self-auto"
             >
               <span className="text-sm">🌊</span>
@@ -461,13 +495,13 @@ export default function ProfessionModal({ lat, lng, locationName, weather, onClo
             <div className="bg-gradient-to-br from-blue-900/40 to-black/40 border border-blue-500/30 rounded-2xl p-5 col-span-2 sm:col-span-3 flex items-center justify-between shadow-[0_0_30px_rgba(59,130,246,0.1)]">
               <div>
                 <div className="text-blue-400/80 text-[10px] sm:text-xs font-bold uppercase tracking-widest mb-1">{t.waveHeight}</div>
-                <div className="text-5xl font-black text-white tracking-tight">{data.wave_height ? data.wave_height.toFixed(1) : '--'} <span className="text-xl text-white/50 font-medium">m</span></div>
+                <div className="text-5xl font-black text-white tracking-tight">{typeof data?.wave_height === 'number' ? data.wave_height.toFixed(1) : '--'} <span className="text-xl text-white/50 font-medium">m</span></div>
               </div>
               <div className="text-7xl opacity-20 drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]">🌊</div>
             </div>
             <div className="glass-panel border border-white/5 rounded-2xl p-5">
               <div className="text-white/50 text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-2">{t.wavePeriod}</div>
-              <div className="text-2xl font-bold text-white">{data.wave_period ? data.wave_period.toFixed(1) : '--'}s</div>
+              <div className="text-2xl font-bold text-white">{typeof data?.wave_period === 'number' ? `${data.wave_period.toFixed(1)}s` : '--s'}</div>
             </div>
             <div className="glass-panel border border-white/5 rounded-2xl p-5">
               <div className="text-white/50 text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-2">{t.surfaceWind}</div>
@@ -484,22 +518,22 @@ export default function ProfessionModal({ lat, lng, locationName, weather, onClo
 
     // --- AVIATION ---
     if (displayProfile === 'aviation') {
-      const isBadVis = data.visibility < 3000 || data.cloudcover_low > 80;
+      const isBadVis = (typeof data?.visibility === 'number' && data.visibility < 3000) || (typeof data?.cloudcover_low === 'number' && data.cloudcover_low > 80);
       return (
         <div className="space-y-4">
           <AdvisoryCard />
           <div className="grid grid-cols-2 gap-4">
             <div className="glass-panel border border-white/5 rounded-2xl p-5 shadow-lg">
               <div className="text-white/50 text-xs font-bold uppercase tracking-wider mb-1">{t.visibility}</div>
-              <div className="text-3xl font-black text-white">{(data.visibility / 1000).toFixed(1)} km</div>
+              <div className="text-3xl font-black text-white">{typeof data?.visibility === 'number' ? `${(data.visibility / 1000).toFixed(1)} km` : '-- km'}</div>
             </div>
             <div className="glass-panel border border-white/5 rounded-2xl p-5 shadow-lg">
               <div className="text-white/50 text-xs font-bold uppercase tracking-wider mb-1">{t.lowClouds}</div>
-              <div className="text-3xl font-black text-white">{data.cloudcover_low}%</div>
+              <div className="text-3xl font-black text-white">{typeof data?.cloudcover_low === 'number' ? `${data.cloudcover_low}%` : '--%'}</div>
             </div>
             <div className="glass-panel border border-white/5 rounded-2xl p-4">
               <div className="text-white/50 text-[10px] font-bold uppercase tracking-wider mb-1">{t.windGusts}</div>
-              <div className="text-xl font-bold text-white">{data.windgusts.toFixed(1)} km/h</div>
+              <div className="text-xl font-bold text-white">{typeof data?.windgusts === 'number' ? `${data.windgusts.toFixed(1)} km/h` : '-- km/h'}</div>
             </div>
             <div className="glass-panel border border-white/5 rounded-2xl p-4">
               <div className="text-white/50 text-[10px] font-bold uppercase tracking-wider mb-1">{t.droneSafety}</div>
@@ -512,23 +546,23 @@ export default function ProfessionModal({ lat, lng, locationName, weather, onClo
 
     // --- URBAN PLANNING ---
     if (displayProfile === 'urbanPlanning') {
-      const isSevereHeat = data.feels_like > 38;
-      const isPolluted = data.pm2_5 > 50;
+      const isSevereHeat = typeof data?.feels_like === 'number' && data.feels_like > 38;
+      const isPolluted = typeof data?.pm2_5 === 'number' && data.pm2_5 > 50;
       return (
         <div className="space-y-4">
           <AdvisoryCard />
           <div className="grid grid-cols-2 gap-4">
             <div className="glass-panel border border-white/5 rounded-2xl p-4 shadow-lg">
               <div className="text-white/50 text-xs font-bold uppercase tracking-wider mb-1">{t.pm25}</div>
-              <div className={`text-3xl font-black ${isPolluted ? 'text-red-400' : 'text-white'}`}>{data.pm2_5.toFixed(1)} <span className="text-sm font-normal text-white/40">µg/m³</span></div>
+              <div className={`text-3xl font-black ${isPolluted ? 'text-red-400' : 'text-white'}`}>{typeof data?.pm2_5 === 'number' ? data.pm2_5.toFixed(1) : '--'} <span className="text-sm font-normal text-white/40">µg/m³</span></div>
             </div>
             <div className="glass-panel border border-white/5 rounded-2xl p-4 shadow-lg">
               <div className="text-white/50 text-xs font-bold uppercase tracking-wider mb-1">{t.heatIndex}</div>
-              <div className={`text-3xl font-black ${isSevereHeat ? 'text-red-400' : 'text-white'}`}>{data.feels_like.toFixed(1)}°C</div>
+              <div className={`text-3xl font-black ${isSevereHeat ? 'text-red-400' : 'text-white'}`}>{typeof data?.feels_like === 'number' ? `${data.feels_like.toFixed(1)}°C` : '--°C'}</div>
             </div>
             <div className="glass-panel border border-white/5 rounded-2xl p-4">
               <div className="text-white/50 text-[10px] font-bold uppercase tracking-wider mb-1">{t.uvIndex}</div>
-              <div className="text-xl font-bold text-white">{data.uv_index.toFixed(1)}</div>
+              <div className="text-xl font-bold text-white">{typeof data?.uv_index === 'number' ? data.uv_index.toFixed(1) : '--'}</div>
             </div>
             <div className="glass-panel border border-white/5 rounded-2xl p-4">
               <div className="text-white/50 text-[10px] font-bold uppercase tracking-wider mb-1">{t.workerSafety}</div>
@@ -561,7 +595,7 @@ export default function ProfessionModal({ lat, lng, locationName, weather, onClo
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-sm animate-fade-in" onClick={onClose}>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-sm animate-fade-in" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div 
         className="w-full max-w-xl theme-modal rounded-3xl border border-[var(--modal-border)] shadow-2xl overflow-hidden animate-slide-up flex flex-col max-h-[90vh]" 
         onClick={e => e.stopPropagation()}
@@ -618,7 +652,7 @@ export default function ProfessionModal({ lat, lng, locationName, weather, onClo
           </div>
 
           <button
-            onClick={() => setShowBulletinModal(true)}
+            onClick={handleOpenBulletin}
             className="ml-auto px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500/20 via-indigo-600/20 to-emerald-500/20 hover:from-amber-500/30 hover:to-emerald-500/30 border border-amber-500/40 text-[11px] font-black text-amber-300 shadow-sm flex items-center gap-1.5 transition-all active:scale-95 shrink-0"
             title="Open Official Printable Bulletin"
           >
@@ -636,7 +670,7 @@ export default function ProfessionModal({ lat, lng, locationName, weather, onClo
           <div className="flex items-center gap-2">
             {/* Mausam-Drishti AI Crop Doctor Option */}
             <button
-              onClick={() => setShowDrishtiModal(true)}
+              onClick={handleOpenDrishti}
               className="header-icon-btn px-2.5 sm:px-3 h-8 flex items-center gap-1.5 rounded-full hover:!text-emerald-300 border border-emerald-500/40 bg-emerald-950/30 text-emerald-400 transition-all shadow-sm active:scale-95 cursor-pointer text-xs font-black tracking-tight"
               title="Mausam-Drishti AI Crop Doctor & Spray Window"
               aria-label="Mausam-Drishti AI Crop Doctor"
@@ -647,7 +681,7 @@ export default function ProfessionModal({ lat, lng, locationName, weather, onClo
 
             {/* Sagar-Rakshak Marine Safety Option */}
             <button
-              onClick={() => setShowSagarModal(true)}
+              onClick={handleOpenSagar}
               className="header-icon-btn px-2.5 sm:px-3 h-8 flex items-center gap-1.5 rounded-full hover:!text-cyan-300 border border-cyan-500/40 bg-cyan-950/30 text-cyan-400 transition-all shadow-sm active:scale-95 cursor-pointer text-xs font-black tracking-tight"
               title="Sagar-Rakshak Offshore Marine & IMBL Safety Suite"
               aria-label="Sagar-Rakshak Marine Safety"
@@ -680,55 +714,6 @@ export default function ProfessionModal({ lat, lng, locationName, weather, onClo
           </button>
         </div>
       </div>
-
-      {/* Official Bulletin Modal */}
-      {showBulletinModal && (
-        <OfficialBulletinModal
-          isOpen={showBulletinModal}
-          onClose={() => setShowBulletinModal(false)}
-          initialLocation={{
-            name: locationName || 'Current Location',
-            district: '',
-            state: '',
-            lat: lat,
-            lng: lng,
-          }}
-          initialCategory={displayProfile === 'urbanPlanning' ? 'urban' : displayProfile}
-          defaultLang={lang}
-        />
-      )}
-
-      {/* Mausam-Drishti Crop Diagnostic Modal */}
-      {showDrishtiModal && (
-        <MausamDrishtiModal
-          isOpen={showDrishtiModal}
-          onClose={() => setShowDrishtiModal(false)}
-          locationData={{
-            name: locationName || 'Current Location',
-            district: '',
-            state: '',
-            lat: lat || 23.2599,
-            lng: lng || 77.4126
-          }}
-          language={lang}
-        />
-      )}
-
-      {/* Sagar-Rakshak Marine Safety Modal */}
-      {showSagarModal && (
-        <SagarRakshakModal
-          isOpen={showSagarModal}
-          onClose={() => setShowSagarModal(false)}
-          locationData={{
-            name: locationName || 'Coastal Zone',
-            district: '',
-            state: '',
-            lat: lat || 13.0827,
-            lng: lng || 80.2707
-          }}
-          language={lang}
-        />
-      )}
     </div>
   , document.body);
 }

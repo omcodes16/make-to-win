@@ -3,7 +3,7 @@
  * Part of Mausam-Drishti (SIH PS-26068)
  */
 
-export async function requestCropDiagnostic({ image, lat, lng, locationName, cropType = 'auto', language = 'en' }) {
+export async function requestCropDiagnostic({ image, lat, lng, locationName, cropType = 'auto', language = 'en', sampleKey = null }) {
   const baseUrl = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
   const res = await fetch(`${baseUrl}/api/crop-diagnostic`, {
     method: 'POST',
@@ -14,7 +14,8 @@ export async function requestCropDiagnostic({ image, lat, lng, locationName, cro
       lng,
       locationName,
       cropType,
-      language
+      language,
+      sampleKey
     }),
   });
 

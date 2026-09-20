@@ -631,7 +631,7 @@ const REVERSE_GEOCODE_CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 export async function reverseGeocode(lat, lng) {
   if (lat == null || lng == null) return { name: "Current Location", state: "", district: "", lat, lng };
 
-  const roundedKey = `${Number(lat).toFixed(2)}_${Number(lng).toFixed(2)}`;
+  const roundedKey = `${Number(lat).toFixed(4)}_${Number(lng).toFixed(4)}`;
   if (REVERSE_GEOCODE_CACHE.has(roundedKey)) {
     const cached = REVERSE_GEOCODE_CACHE.get(roundedKey);
     if (Date.now() - cached.timestamp < REVERSE_GEOCODE_CACHE_TTL_MS) {
@@ -639,29 +639,27 @@ export async function reverseGeocode(lat, lng) {
     }
   }
 
-  // Quick coordinate check for known special localities (e.g. Ranjhi, Jabalpur)
-  if (Math.abs(lat - 23.2030) < 0.06 && Math.abs(lng - 80.0003) < 0.06) {
-    const resRanjhi = { name: "Ranjhi, Jabalpur", state: "Madhya Pradesh", district: "Jabalpur", lat, lng };
-    REVERSE_GEOCODE_CACHE.set(roundedKey, { data: resRanjhi, timestamp: Date.now() });
-    return resRanjhi;
-  }
-
+  // 1. High-precision Nominatim reverse geocode (zoom=18 for street / building / neighborhood)
   try {
     const res = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=14`,
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18`,
       { 
         headers: { 'User-Agent': 'WeatherGPT-SIH2026' },
-        signal: AbortSignal.timeout(3500) // 3.5s timeout: Prevents 10-15s hangs on free Nominatim
+        signal: AbortSignal.timeout(4000)
       }
     );
     if (res.ok) {
       const data = await res.json();
       const a = data.address || {};
-      const name = a.suburb || a.neighbourhood || a.tehsil || a.county || a.village || a.town || a.city_district || a.city || data.name || a.state || "Current Location";
+      const streetOrLocality = a.road || a.pedestrian || a.suburb || a.neighbourhood || a.village || a.town || a.hamlet;
+      const cityOrDistrict = a.city || a.city_district || a.state_district || a.county || a.district;
+      const name = streetOrLocality && cityOrDistrict && streetOrLocality !== cityOrDistrict
+        ? `${streetOrLocality}, ${cityOrDistrict}`
+        : (streetOrLocality || cityOrDistrict || data.name || a.state || "Current Location");
       const result = {
         name: name,
         state: a.state || '',
-        district: a.state_district || a.county || a.district || '',
+        district: a.state_district || a.county || a.district || cityOrDistrict || '',
         lat: lat,
         lng: lng
       };
@@ -669,8 +667,32 @@ export async function reverseGeocode(lat, lng) {
       return result;
     }
   } catch (err) {
-    console.warn('Reverse geocoding timed out or failed, using coordinate fallback:', err.message);
+    console.warn('Nominatim reverse geocode failed, trying BigDataCloud fallback:', err.message);
   }
+
+  // 2. Fast reliable fallback: BigDataCloud
+  try {
+    const bdcRes = await fetch(
+      `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`,
+      { signal: AbortSignal.timeout(3500) }
+    );
+    if (bdcRes.ok) {
+      const d = await bdcRes.json();
+      const locality = d.locality || d.city || d.principalSubdivision;
+      const result = {
+        name: locality ? `${locality}${d.countryName ? `, ${d.countryName}` : ''}` : "Current Location",
+        state: d.principalSubdivision || '',
+        district: d.city || '',
+        lat: lat,
+        lng: lng
+      };
+      REVERSE_GEOCODE_CACHE.set(roundedKey, { data: result, timestamp: Date.now() });
+      return result;
+    }
+  } catch (err) {
+    console.warn('BigDataCloud fallback failed:', err.message);
+  }
+
   return { name: "Current Location", state: "", district: "", lat, lng };
 }
 

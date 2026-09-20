@@ -619,11 +619,16 @@ export default function ManagerDashboard() {
                             OFFLINE SYNCED
                           </span>
                         )}
-                        {sos.locationNote && (
+                        {sos.locationSource === 'live_gps' ? (
+                          <span className="bg-emerald-500/20 text-emerald-300 text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded border border-emerald-500/40 flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                            {sos.locationNote || 'Live Satellite GPS'}
+                          </span>
+                        ) : sos.locationNote ? (
                           <span className="bg-amber-500/10 text-amber-200 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded border border-amber-500/30 font-mono">
                             📍 {sos.locationNote}
                           </span>
-                        )}
+                        ) : null}
                       </div>
                       {sos.phone && <p className="text-[11px] sm:text-xs text-white/60">📞 {sos.phone}</p>}
                       {sos.message && <p className="text-xs sm:text-sm text-white/80 mt-0.5 sm:mt-1">{sos.message}</p>}
@@ -643,12 +648,13 @@ export default function ManagerDashboard() {
 
                   <div className="flex flex-wrap gap-1.5 sm:gap-2 pt-1 border-t border-white/10 mt-1.5 sm:mt-2 items-center">
                     <a
-                      href={`https://www.google.com/maps?q=${sos.lat},${sos.lng}`}
+                      href={`https://www.google.com/maps/search/?api=1&query=${sos.lat},${sos.lng}&zoom=17`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-[11px] sm:text-xs bg-blue-600/40 hover:bg-blue-600/70 text-blue-300 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg transition-colors font-bold flex items-center gap-1"
+                      className="text-[11px] sm:text-xs bg-blue-600/40 hover:bg-blue-600/70 text-blue-300 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg transition-colors font-bold flex items-center gap-1 shadow-sm"
+                      title="Open high-precision coordinates with pin marker in Google Maps"
                     >
-                      📍 Maps ({sos.lat?.toFixed(2)}, {sos.lng?.toFixed(2)})
+                      📍 Maps ({typeof sos.lat === 'number' ? sos.lat.toFixed(5) : '--'}, {typeof sos.lng === 'number' ? sos.lng.toFixed(5) : '--'})
                     </a>
                     {sos.status === 'pending' && (
                       <button onClick={() => updateSosStatus(sos._id || sos.id, 'dispatched')} className="text-[11px] sm:text-xs bg-amber-600/40 hover:bg-amber-600/70 text-amber-300 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg transition-colors">

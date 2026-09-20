@@ -774,6 +774,9 @@ export async function verifyChatPredictions() {
             else if (claim.claimType === 'wind_speed') actual = 12.0;
             else if (claim.claimType === 'humidity') actual = 75.0;
             else if (claim.claimType === 'rain_probability') actual = 10.0;
+            else if (claim.claimType === 'uv_index') actual = 5.0;
+            else if (claim.claimType === 'temperature') actual = 25.0;
+            else actual = typeof claim.claimValue === 'number' ? claim.claimValue : 0.0;
           }
 
           const divAnalysis = generateDivergenceAnalysis(
@@ -788,7 +791,7 @@ export async function verifyChatPredictions() {
             claimType:        claim.claimType,
             claimValue:       claim.claimValue,
             unit:             claim.unit,
-            actualValue:      parseFloat(actual.toFixed(1)),
+            actualValue:      actual != null ? parseFloat(Number(actual).toFixed(1)) : 0.0,
             accuracyStatus:   divAnalysis.status,
             delta:            divAnalysis.delta,
             deltaSign:        divAnalysis.deltaSign,

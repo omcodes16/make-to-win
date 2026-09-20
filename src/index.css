@@ -225,11 +225,11 @@
 
 /* Force dark text inside glass panels and standard layouts, 
    but exclude explicit buttons with solid backgrounds to preserve their contrast */
-[data-theme="light"] .text-white:not(.bg-indigo-500, .bg-indigo-600, .bg-indigo-500 *, .bg-indigo-600 *, .glass-bubble, .glass-bubble *, .header-hub-btn, .header-hub-btn *, [class*="bg-red-"], [class*="from-red-"], [class*="bg-red-"] *, [class*="from-red-"] *) {
+[data-theme="light"] .text-white:not(.bg-indigo-500, .bg-indigo-600, .bg-indigo-500 *, .bg-indigo-600 *, .glass-bubble, .glass-bubble *, .header-hub-btn, .header-hub-btn *, [class*="bg-red-"], [class*="from-red-"], [class*="bg-red-"] *, [class*="from-red-"] *, [class*="bg-sky-"], [class*="bg-emerald-"], [class*="bg-teal-"], [class*="bg-blue-"], [class*="bg-purple-"], [class*="from-indigo-"], [class*="from-teal-"], [class*="bg-sky-"] *, [class*="bg-emerald-"] *, [class*="bg-teal-"] *, [class*="bg-blue-"] *, [class*="bg-purple-"] *, [class*="from-indigo-"] *, [class*="from-teal-"] *) {
   color: var(--text-primary) !important;
 }
 
-[data-theme="light"] [class*="text-white/"]:not(.bg-indigo-500, .bg-indigo-600, .bg-indigo-500 *, .bg-indigo-600 *, .glass-bubble, .glass-bubble *, .header-hub-btn, .header-hub-btn *, [class*="bg-red-"], [class*="from-red-"], [class*="bg-red-"] *, [class*="from-red-"] *) {
+[data-theme="light"] [class*="text-white/"]:not(.bg-indigo-500, .bg-indigo-600, .bg-indigo-500 *, .bg-indigo-600 *, .glass-bubble, .glass-bubble *, .header-hub-btn, .header-hub-btn *, [class*="bg-red-"], [class*="from-red-"], [class*="bg-red-"] *, [class*="from-red-"] *, [class*="bg-sky-"], [class*="bg-emerald-"], [class*="bg-teal-"], [class*="bg-blue-"], [class*="bg-purple-"], [class*="from-indigo-"], [class*="from-teal-"], [class*="bg-sky-"] *, [class*="bg-emerald-"] *, [class*="bg-teal-"] *, [class*="bg-blue-"] *, [class*="bg-purple-"] *, [class*="from-indigo-"] *, [class*="from-teal-"] *) {
   color: var(--text-muted) !important;
 }
 

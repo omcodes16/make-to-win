@@ -72,23 +72,17 @@ export default function MausamDrishtiModal({ isOpen, onClose, locationData, lang
     reader.readAsDataURL(file);
   };
 
-  // Handle 1-click SIH demo sample click
-  const handleSelectSample = (sample) => {
-    setActiveSampleKey(sample.key);
-    setCropType(sample.crop);
-    setError(null);
-    setDiagnosticResult(null);
-
-    const sampleDataUrl = getSampleCropImage(sample.key);
-    setSelectedImage(sampleDataUrl);
-    setPreviewUrl(sampleDataUrl);
-  };
-
   // Execute Diagnostic Request
-  const handleRunDiagnostic = async () => {
-    if (!selectedImage) {
+  const runDiagnostic = async (imageToUse, cropToUse, sampleKeyToUse) => {
+    const targetImage = imageToUse || selectedImage;
+    if (!targetImage) {
       setError(language === 'hi' ? 'कृपया पहले फसल/पत्ती की फोटो चुनें या 1-क्लिक नमूना टैप करें।' : 'Please select a leaf photo or tap a 1-click sample first.');
       return;
+    }
+
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
     }
 
     setIsLoading(true);
@@ -96,12 +90,13 @@ export default function MausamDrishtiModal({ isOpen, onClose, locationData, lang
 
     try {
       const res = await requestCropDiagnostic({
-        image: selectedImage,
+        image: targetImage,
         lat,
         lng,
         locationName,
-        cropType,
-        language
+        cropType: cropToUse || cropType || 'auto',
+        language,
+        sampleKey: sampleKeyToUse || activeSampleKey || null
       });
 
       if (res?.diagnostic) {
@@ -116,6 +111,25 @@ export default function MausamDrishtiModal({ isOpen, onClose, locationData, lang
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Handle 1-click SIH demo sample click
+  const handleSelectSample = (sample) => {
+    setActiveSampleKey(sample.key);
+    setCropType(sample.crop);
+    setError(null);
+
+    const sampleDataUrl = getSampleCropImage(sample.key);
+    setSelectedImage(sampleDataUrl);
+    setPreviewUrl(sampleDataUrl);
+
+    // Automatically trigger diagnosis on sample click for instant 1-click feedback
+    runDiagnostic(sampleDataUrl, sample.crop, sample.key);
+  };
+
+  // Manual Trigger Button
+  const handleRunDiagnostic = () => {
+    runDiagnostic(selectedImage, cropType, activeSampleKey);
   };
 
   // Speech Readout
@@ -155,8 +169,14 @@ export default function MausamDrishtiModal({ isOpen, onClose, locationData, lang
   const isHi = language === 'hi';
 
   const modalContent = (
-    <div className="fixed inset-0 z-[120] flex items-center justify-center p-3 sm:p-6 overflow-y-auto bg-black/60 backdrop-blur-md animate-fade-in font-body">
-      <div className="relative w-full max-w-4xl theme-modal border border-emerald-500/30 rounded-3xl shadow-[0_0_50px_rgba(16,185,129,0.15)] overflow-hidden flex flex-col max-h-[92vh] text-[var(--text-primary)]">
+    <div 
+      className="fixed inset-0 z-[120] flex items-center justify-center p-3 sm:p-6 overflow-y-auto bg-black/60 backdrop-blur-md animate-fade-in font-body"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div 
+        className="relative w-full max-w-4xl theme-modal border border-emerald-500/30 rounded-3xl shadow-[0_0_50px_rgba(16,185,129,0.15)] overflow-hidden flex flex-col max-h-[92vh] text-[var(--text-primary)]"
+        onClick={(e) => e.stopPropagation()}
+      >
         
         {/* Top Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--modal-border)] bg-emerald-500/5">
@@ -204,44 +224,49 @@ export default function MausamDrishtiModal({ isOpen, onClose, locationData, lang
             </div>
           </div>
 
-          {/* Setup / Upload & Sample Selector (Visible when no result or when editing) */}
+          {/* 1-Click SIH Presentation Demo Samples (Always visible for quick-switching) */}
+          <div className="space-y-2.5">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-300 flex items-center gap-1.5">
+                <span>⚡</span> {isHi ? '1-क्लिक त्वरित प्रस्तुति नमूने (SIH Demo)' : '1-Click SIH Presentation Demo Samples'}
+              </span>
+              <span className="text-[10px] text-[var(--text-secondary)]">
+                {isLoading ? (isHi ? 'जांच जारी...' : 'Diagnosing...') : (isHi ? 'क्लिक करते ही तुरंत जांच' : 'Tap to switch & test')}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              {DEMO_SAMPLE_ITEMS.map((s) => (
+                <button
+                  key={s.key}
+                  onClick={() => handleSelectSample(s)}
+                  disabled={isLoading}
+                  className={`p-3 rounded-2xl text-left border transition-all duration-200 flex flex-col gap-1.5 cursor-pointer disabled:opacity-60 ${
+                    activeSampleKey === s.key
+                      ? 'bg-emerald-600/25 border-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.3)] scale-[1.02]'
+                      : 'glass-panel hover:bg-[var(--glass-bg-hover)] border-[var(--glass-border)] hover:border-emerald-400/50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-2xl">{s.icon}</span>
+                    <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded border ${s.color}`}>
+                      {s.badge}
+                    </span>
+                  </div>
+                  <div className="font-bold text-xs text-white line-clamp-1">
+                    {isHi ? s.nameHi : s.name}
+                  </div>
+                  <div className="text-[10px] text-white/50">
+                    {activeSampleKey === s.key && isLoading ? 'Diagnosing...' : 'Tap to load & test'}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Setup / Upload & Manual Selector (Visible when no result or when editing) */}
           {!diagnosticResult && (
             <div className="space-y-6">
-              
-              {/* 1-Click SIH Presentation Demo Samples */}
-              <div className="space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-300 flex items-center gap-1.5">
-                    <span>⚡</span> {isHi ? '1-क्लिक त्वरित प्रस्तुति नमूने (SIH Demo)' : '1-Click SIH Presentation Demo Samples'}
-                  </span>
-                  <span className="text-[10px] text-[var(--text-secondary)]">Instant Evaluation</span>
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                  {DEMO_SAMPLE_ITEMS.map((s) => (
-                    <button
-                      key={s.key}
-                      onClick={() => handleSelectSample(s)}
-                      className={`p-3 rounded-2xl text-left border transition-all duration-200 flex flex-col gap-1.5 ${
-                        activeSampleKey === s.key
-                          ? 'bg-emerald-600/20 border-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.2)] scale-[1.02]'
-                          : 'glass-panel hover:bg-[var(--glass-bg-hover)] border-[var(--glass-border)] hover:border-[var(--theme-accent)]'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-2xl">{s.icon}</span>
-                        <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded border ${s.color}`}>
-                          {s.badge}
-                        </span>
-                      </div>
-                      <div className="font-bold text-xs text-white line-clamp-1">
-                        {isHi ? s.nameHi : s.name}
-                      </div>
-                      <div className="text-[10px] text-white/50">Tap to load & test</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
 
               {/* Upload Box or Camera */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
@@ -349,7 +374,15 @@ export default function MausamDrishtiModal({ isOpen, onClose, locationData, lang
 
           {/* DIAGNOSTIC RESULTS VIEW */}
           {diagnosticResult && (
-            <div className="space-y-6 animate-fade-in">
+            <div className="space-y-6 animate-fade-in relative">
+              {isLoading && (
+                <div className="absolute inset-0 z-30 bg-black/70 backdrop-blur-xs rounded-3xl flex flex-col items-center justify-center gap-3 min-h-[300px]">
+                  <div className="w-10 h-10 border-3 border-emerald-400 border-t-transparent rounded-full animate-spin"></div>
+                  <span className="text-xs font-bold text-emerald-300 uppercase tracking-wider animate-pulse">
+                    {isHi ? 'नई फसल की जांच हो रही है...' : 'Analyzing selected crop sample...'}
+                  </span>
+                </div>
+              )}
               
               {/* Top Banner: Identified Crop & Condition */}
               <div className="glass-panel border border-emerald-500/40 bg-gradient-to-r from-emerald-950/40 via-slate-900 to-teal-950/40 rounded-3xl p-5 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">

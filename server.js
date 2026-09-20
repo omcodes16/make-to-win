@@ -2747,9 +2747,9 @@ app.get('/api/research/historical', researchRateLimiter, async (req, res) => {
 // ------------------------------------------------------------------
 app.post('/api/crop-diagnostic', async (req, res) => {
   try {
-    const { image, lat, lng, locationName, cropType, language } = req.body;
-    if (!image) {
-      return res.status(400).json({ error: 'Image data is required for crop diagnostic.' });
+    const { image, lat, lng, locationName, cropType, language, sampleKey } = req.body;
+    if (!image && !sampleKey) {
+      return res.status(400).json({ error: 'Image data or sampleKey is required for crop diagnostic.' });
     }
 
     const result = await diagnoseCropLeaf({
@@ -2758,7 +2758,8 @@ app.post('/api/crop-diagnostic', async (req, res) => {
       lng: lng || 77.4126,
       locationName: locationName || 'India',
       cropType: cropType || 'auto',
-      language: language || 'en'
+      language: language || 'en',
+      sampleKey: sampleKey || null
     });
 
     return res.json(result);
@@ -2777,8 +2778,9 @@ app.get('/api/marine-safety', async (req, res) => {
     const lng = req.query.lng ? parseFloat(req.query.lng) : 80.2707;
     const locationName = req.query.locationName || req.query.name || 'Coastal India';
     const language = req.query.language || 'en';
+    const scenario = req.query.scenario || null;
 
-    const report = await getMarineSafetyReport({ lat, lng, locationName, language });
+    const report = await getMarineSafetyReport({ lat, lng, locationName, language, scenario });
     return res.json(report);
   } catch (err) {
     console.error('Error in /api/marine-safety:', err);

@@ -116,38 +116,58 @@ export default function WeatherStage() {
     
     setIsLoading(true);
     setErrorMsg('');
-    
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
+
+    const onGeoSuccess = async (position) => {
+      try {
+        const { latitude, longitude } = position.coords;
+        const accuracy = Math.round(position.coords.accuracy || 10);
         try {
-          const { latitude, longitude } = position.coords;
-          let locName = t.fallbackName;
-          
-          try {
-            const res = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`);
-            const data = await res.json();
-            if (data.city || data.locality || data.principalSubdivision) {
-              locName = data.city || data.locality || data.principalSubdivision;
-            }
-          } catch (e) {
-            console.error('Reverse geocoding failed', e);
+          localStorage.setItem("weathergpt_last_known_gps", JSON.stringify({ lat: latitude, lng: longitude, accuracy, time: Date.now() }));
+        } catch (e) {}
+
+        let locName = t.fallbackName;
+        
+        try {
+          const res = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`);
+          const data = await res.json();
+          if (data.locality || data.city || data.principalSubdivision) {
+            locName = [data.locality || data.city, data.principalSubdivision].filter(Boolean).join(', ');
           }
-          
-          const weather = await getWeather(latitude, longitude);
-          dispatch({ 
-            type: 'SET_WEATHER_STAGE_DATA', 
-            payload: { locationName: locName, lat: latitude, lng: longitude, weather } 
-          });
-        } catch (err) {
-          setErrorMsg(t.fetchFailed);
-        } finally {
-          setIsLoading(false);
+        } catch (e) {
+          console.error('Reverse geocoding failed', e);
         }
-      },
-      (err) => {
-        setErrorMsg(t.fallbackLocation);
+        
+        const weather = await getWeather(latitude, longitude);
+        dispatch({ 
+          type: 'SET_WEATHER_STAGE_DATA', 
+          payload: { locationName: locName, lat: latitude, lng: longitude, weather } 
+        });
+        dispatch({
+          type: 'SET_CURRENT_WEATHER',
+          payload: { ...weather, locationName: locName, lat: latitude, lng: longitude }
+        });
+      } catch (err) {
+        setErrorMsg(t.fetchFailed);
+      } finally {
         setIsLoading(false);
       }
+    };
+
+    navigator.geolocation.getCurrentPosition(
+      onGeoSuccess,
+      (err) => {
+        console.warn("High-accuracy geolocation timed out, falling back to standard accuracy:", err.message);
+        navigator.geolocation.getCurrentPosition(
+          onGeoSuccess,
+          (stdErr) => {
+            console.error("Standard geolocation failed:", stdErr.message);
+            setErrorMsg(t.fallbackLocation);
+            setIsLoading(false);
+          },
+          { enableHighAccuracy: false, timeout: 6000, maximumAge: 60000 }
+        );
+      },
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 15000 }
     );
   };
 

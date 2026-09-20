@@ -120,7 +120,7 @@ export default function AuthorityQrScannerModal({ onClose, onScanSuccess }) {
       name: parsed.name || 'Citizen (Airplane Mode)',
       phone: parsed.phone || '',
       helpType: parsed.help || 'General Emergency',
-      message: ('[DIRECT AIR OPTICAL SCAN — Airplane Mode Incident] ' + (parsed.msg || '')).trim(),
+      message: ('[DIRECT AIR OPTICAL SCAN ï¿½ Airplane Mode Incident] ' + (parsed.msg || '')).trim(),
       lat: Number(parsed.lat),
       lng: Number(parsed.lng),
       locationNote: 'Direct Air Scan (' + (parsed.note || 'Airplane Mode') + ')',
@@ -154,7 +154,7 @@ export default function AuthorityQrScannerModal({ onClose, onScanSuccess }) {
         <div className='space-y-1 mb-3'>
           <div className='inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'>
             <span className='w-2 h-2 rounded-full bg-emerald-400 animate-ping'></span>
-            Direct Air Intake • Optical Scanner
+            Direct Air Intake ï¿½ Optical Scanner
           </div>
           <h2 className='text-xl font-black text-[var(--text-primary)] tracking-tight'>
             Scan Citizen Rescue Code
@@ -215,7 +215,7 @@ export default function AuthorityQrScannerModal({ onClose, onScanSuccess }) {
               </div>
               <div className='flex justify-between border-b border-white/10 pb-1.5'>
                 <span className='text-neutral-500'>GPS COORDS:</span>
-                <span className='font-bold text-amber-300'>{Number(scannedSos.lat)?.toFixed(4)}°, {Number(scannedSos.lng)?.toFixed(4)}°</span>
+                <span className='font-bold text-amber-300'>{Number(scannedSos.lat)?.toFixed(5)}Â°, {Number(scannedSos.lng)?.toFixed(5)}Â°</span>
               </div>
               {scannedSos.phone && (
                 <div className='flex justify-between border-b border-white/10 pb-1.5'>
@@ -226,7 +226,7 @@ export default function AuthorityQrScannerModal({ onClose, onScanSuccess }) {
             </div>
 
             <a
-              href={'https://www.google.com/maps?q=' + scannedSos.lat + ',' + scannedSos.lng}
+              href={`https://www.google.com/maps/search/?api=1&query=${scannedSos.lat},${scannedSos.lng}&zoom=17`}
               target='_blank'
               rel='noopener noreferrer'
               className='w-full py-2.5 px-3 bg-blue-600/40 hover:bg-blue-600/70 border border-blue-500/40 text-blue-300 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all'

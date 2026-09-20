@@ -20,28 +20,17 @@ import { getUrbanPlanningAdvisory } from '../utils/urbanPlanningAdvisory';
 import { getSeasonalContext } from '../utils/climateSeasonal';
 import { FEATURE_I18N } from '../utils/featureTranslations';
 import ModelConfidence from './ModelConfidence';
-import OfficialBulletinModal from './OfficialBulletinModal';
 import AawazEMausam from './AawazEMausam';
-import MausamDrishtiModal from './MausamDrishtiModal';
 
 
 export default function WeatherDashboard() {
   const { state, dispatch } = useApp();
-  const [showBulletinModal, setShowBulletinModal] = useState(false);
-  const [showDrishtiModal, setShowDrishtiModal] = useState(false);
   const [searchInput, setSearchInput] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const debounceRef = useRef(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshingWeather, setIsRefreshingWeather] = useState(false);
-
-  // Listen for global open Mausam-Drishti events from Header or Quick Hub
-  useEffect(() => {
-    const handleOpenDrishti = () => setShowDrishtiModal(true);
-    window.addEventListener('weathergpt-open-mausam-drishti', handleOpenDrishti);
-    return () => window.removeEventListener('weathergpt-open-mausam-drishti', handleOpenDrishti);
-  }, []);
 
   // Initialize WebSocket and Service Worker for Live Alerts
   useEffect(() => {
@@ -1305,7 +1294,17 @@ return (
 
           <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-center">
             <button
-              onClick={() => setShowDrishtiModal(true)}
+              onClick={() => window.dispatchEvent(new CustomEvent('weathergpt-open-mausam-drishti', {
+                detail: {
+                  locationData: {
+                    name: stageData.locationName || 'Current Location',
+                    district: stageData.district || '',
+                    state: stageData.state || '',
+                    lat: stageData.lat || 23.2599,
+                    lng: stageData.lng || 77.4126
+                  }
+                }
+              }))}
               className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-2xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 text-xs font-bold transition-all active:scale-95 shadow-sm cursor-pointer"
             >
               <span>🌿</span>
@@ -1313,7 +1312,17 @@ return (
             </button>
 
             <button
-              onClick={() => window.dispatchEvent(new CustomEvent('weathergpt-open-sagar-rakshak'))}
+              onClick={() => window.dispatchEvent(new CustomEvent('weathergpt-open-sagar-rakshak', {
+                detail: {
+                  locationData: {
+                    name: stageData.locationName || 'Coastal Zone',
+                    district: stageData.district || '',
+                    state: stageData.state || '',
+                    lat: stageData.lat || 13.0827,
+                    lng: stageData.lng || 80.2707
+                  }
+                }
+              }))}
               className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-2xl bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-500/30 text-xs font-bold transition-all active:scale-95 shadow-sm cursor-pointer"
             >
               <span>🌊</span>
@@ -1321,7 +1330,18 @@ return (
             </button>
 
             <button
-              onClick={() => setShowBulletinModal(true)}
+              onClick={() => window.dispatchEvent(new CustomEvent('weathergpt-open-bulletin', { 
+                detail: { 
+                  category: state.userProfile === 'general' ? 'master' : state.userProfile,
+                  location: {
+                    name: stageData.locationName || 'New Delhi',
+                    district: stageData.district || '',
+                    state: stageData.state || '',
+                    lat: stageData.lat || 28.6139,
+                    lng: stageData.lng || 77.2090,
+                  }
+                } 
+              }))}
               className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-2xl bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-300 border border-indigo-500/30 text-xs font-bold transition-all active:scale-95 shadow-sm cursor-pointer"
             >
               <span>📜</span>
@@ -1340,39 +1360,6 @@ return (
         <CommunityReports locationName={stageData.locationName} />
 
       </div>
-
-      {/* Official Bulletin Modal */}
-      {showBulletinModal && (
-        <OfficialBulletinModal
-          isOpen={showBulletinModal}
-          onClose={() => setShowBulletinModal(false)}
-          initialLocation={{
-            name: stageData.locationName || 'New Delhi',
-            district: stageData.district || '',
-            state: stageData.state || '',
-            lat: stageData.lat || 28.6139,
-            lng: stageData.lng || 77.2090,
-          }}
-          initialCategory={state.userProfile === 'general' ? 'master' : state.userProfile}
-          defaultLang={state.language}
-        />
-      )}
-
-      {/* Mausam-Drishti Crop Diagnostic Modal */}
-      {showDrishtiModal && (
-        <MausamDrishtiModal
-          isOpen={showDrishtiModal}
-          onClose={() => setShowDrishtiModal(false)}
-          locationData={{
-            name: stageData.locationName || 'Bhopal',
-            district: stageData.district || '',
-            state: stageData.state || '',
-            lat: stageData.lat || 23.2599,
-            lng: stageData.lng || 77.4126
-          }}
-          language={state.language}
-        />
-      )}
     </div>
   );
 }
