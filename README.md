@@ -397,11 +397,6 @@ docker-compose up --build
 
 ---
 
-## Project Architecture Visual
-
-![WeatherGPT Prototype Architecture](./prototype_architecture.jpg)
-
----
 
 ## Standards and references we implemented
 
